@@ -99,4 +99,7 @@ jobs:
             SHA256SUMS.txt
           body: |
             Unsigned binaries: Windows SmartScreen will warn on first start. Verify the
-            SHA-256 sums in SHA256SUMS.txt. See CHANGELOG.md for what changed.
+            SHA-256 sums in SHA256SUMS.txt. Installation guide (variants, verification,
+            file type, updating, removal):
+            https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/docs/INSTALL.md
+            See CHANGELOG.md for what changed.

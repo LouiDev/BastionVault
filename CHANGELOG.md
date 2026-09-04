@@ -7,6 +7,12 @@ separately in `docs/FORMAT.md` and only changes with a major release.
 
 ## [Unreleased]
 
+### Added
+- `docs/INSTALL.md`: installation guide for the zip releases (choosing a variant, verifying
+  the download, the SmartScreen prompt, the optional `.bastion` file type and why the program
+  folder must not move afterwards, what is written under `%LOCALAPPDATA%`, updating, complete
+  removal, command line). Linked from `README.md` and from the release notes the CI drafts.
+
 ### Changed
 - CI no longer runs a separate build for pushes to `main`; the `v*` tag pushed alongside
   already builds, tests and packages that commit. Pull requests against `main` are unchanged.
