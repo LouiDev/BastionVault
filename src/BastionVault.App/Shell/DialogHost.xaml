@@ -1,0 +1,40 @@
+<UserControl x:Class="BastionVault.App.Shell.DialogHost"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Focusable="False"
+             Visibility="Collapsed"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True">
+
+    <Grid x:Name="Root">
+        <!-- Scrim: swallows every click that misses the card. -->
+        <Rectangle x:Name="Scrim" Fill="{DynamicResource Brush.Scrim}" />
+
+        <Grid x:Name="CardArea" Margin="24">
+            <!-- The card. A focus scope with cycling tab navigation, so focus cannot leave it. -->
+            <Border x:Name="Card"
+                    MinWidth="380" MaxWidth="660"
+                    MaxHeight="{Binding ActualHeight, ElementName=CardArea}"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Background="{DynamicResource Brush.Bg1}"
+                    BorderBrush="{DynamicResource Brush.StrokeDivider}"
+                    BorderThickness="1"
+                    CornerRadius="{DynamicResource Radius.Dialog}"
+                    FocusManager.IsFocusScope="True"
+                    KeyboardNavigation.TabNavigation="Cycle"
+                    KeyboardNavigation.ControlTabNavigation="None"
+                    KeyboardNavigation.DirectionalNavigation="Contained"
+                    AutomationProperties.IsDialog="True">
+                <Border.RenderTransform>
+                    <TranslateTransform x:Name="CardLift" Y="8" />
+                </Border.RenderTransform>
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="28" ShadowDepth="6" Direction="270" Opacity="0.55" Color="#FF05070A" />
+                </Border.Effect>
+
+                <ContentPresenter x:Name="Presenter"
+                                  Content="{Binding CurrentDialog, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

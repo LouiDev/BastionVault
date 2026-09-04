@@ -1,0 +1,56 @@
+<UserControl x:Class="BastionVault.App.Dialogs.ProgressDialogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:dialogs="clr-namespace:BastionVault.App.ViewModels.Dialogs"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=dialogs:ProgressDialogViewModel}">
+
+    <StackPanel Margin="24" MinWidth="440" MaxWidth="560">
+        <TextBlock Style="{StaticResource Text.Title}" Text="{Binding Title}" />
+
+        <TextBlock Style="{StaticResource Text.Mono}"
+                   Margin="0,10,0,0"
+                   TextTrimming="None"
+                   Text="{Binding CurrentItemDisplay}" />
+
+        <ProgressBar Style="{StaticResource ProgressBar.Dialog}"
+                     Margin="0,12,0,0"
+                     Minimum="0" Maximum="100"
+                     Value="{Binding Operation.Percent, Mode=OneWay}"
+                     IsIndeterminate="{Binding Operation.IsIndeterminate}" />
+
+        <Grid Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                <TextBlock Style="{StaticResource Text.Mono}" Text="{Binding CountDisplay}" />
+                <TextBlock Style="{StaticResource Text.Mono}" Margin="12,0,0,0" Text="{Binding BytesDisplay}" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <TextBlock Style="{StaticResource Text.Mono}" Text="{Binding Operation.Throughput}" />
+                <TextBlock Style="{StaticResource Text.Mono}" Margin="12,0,0,0" Text="{Binding Operation.Eta}" />
+            </StackPanel>
+        </Grid>
+
+        <Separator Style="{StaticResource Style.Seam}" Margin="0,16,0,12" />
+
+        <TextBlock Style="{StaticResource Text.Caption}"
+                   TextWrapping="Wrap"
+                   Text="{Binding Operation.CancelSemantics}" />
+
+        <Button HorizontalAlignment="Right"
+                Margin="0,16,0,0"
+                MinWidth="180"
+                Style="{StaticResource Button.Default}"
+                Height="36"
+                IsEnabled="{Binding Operation.IsCancellable}"
+                Content="{Binding CancelLabel}"
+                Command="{Binding RequestCancelCommand}" />
+    </StackPanel>
+</UserControl>

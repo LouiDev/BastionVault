@@ -1,0 +1,68 @@
+<UserControl x:Class="BastionVault.App.Dialogs.PendingChangesPopover"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:BastionVault.App.Controls"
+             xmlns:dialogs="clr-namespace:BastionVault.App.ViewModels.Dialogs"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=dialogs:PendingChangesViewModel}">
+
+    <Border Width="380"
+            Background="{DynamicResource Brush.Bg2}"
+            BorderBrush="{DynamicResource Brush.StrokeDivider}"
+            BorderThickness="1"
+            CornerRadius="{DynamicResource Radius.Medium}"
+            Padding="16">
+        <StackPanel>
+            <controls:SectionHeader Text="Unsaved changes" />
+
+            <TextBlock Style="{StaticResource Text.Mono}" Text="{Binding CountsLine}" />
+            <TextBlock Style="{StaticResource Text.Mono}" Text="{Binding BytesLine}" />
+
+            <TextBlock Style="{StaticResource Text.Caption}" Margin="0,8,0,0" TextWrapping="Wrap"
+                       Foreground="{DynamicResource Brush.Warning}"
+                       Visibility="{Binding HasCredentialChange, Converter={StaticResource Converter.BoolToVisibility}}"
+                       Text="A credential change is waiting; the next save applies it." />
+
+            <Separator Style="{StaticResource Style.Seam}" Margin="0,12,0,8" />
+
+            <ScrollViewer MaxHeight="260" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Ellipse Grid.Column="0" Width="6" Height="6"
+                                         VerticalAlignment="Center" HorizontalAlignment="Center"
+                                         Fill="{DynamicResource Brush.Accent}" />
+
+                                <TextBlock Grid.Column="1" Margin="6,0,8,0"
+                                           Style="{StaticResource Text.Body}"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip="{Binding Path}"
+                                           Text="{Binding Path}" />
+
+                                <TextBlock Grid.Column="2"
+                                           Style="{StaticResource Text.Mono}"
+                                           Text="{Binding SizeText}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <Button Margin="0,12,0,0"
+                    HorizontalAlignment="Right"
+                    Style="{StaticResource Button.Default}"
+                    Height="32"
+                    Content="Undo last change"
+                    Command="{Binding UndoCommand}" />
+        </StackPanel>
+    </Border>
+</UserControl>

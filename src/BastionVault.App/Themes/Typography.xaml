@@ -1,0 +1,126 @@
+<!--
+    Lamplight typography (UI-CONTRACT.md §2). Families are the Windows 11 variable
+    faces with a hard fallback that exists on every Windows 10/11 machine.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+    <FontFamily x:Key="Font.Small">Segoe UI Variable Small, Segoe UI</FontFamily>
+    <FontFamily x:Key="Font.Text">Segoe UI Variable Text, Segoe UI</FontFamily>
+    <FontFamily x:Key="Font.Display">Segoe UI Variable Display, Segoe UI</FontFamily>
+    <FontFamily x:Key="Font.Mono">Cascadia Mono, Consolas</FontFamily>
+
+    <sys:Double x:Key="Size.Caption">11</sys:Double>
+    <sys:Double x:Key="Size.Body">13</sys:Double>
+    <sys:Double x:Key="Size.Subtitle">16</sys:Double>
+    <sys:Double x:Key="Size.Title">20</sys:Double>
+    <sys:Double x:Key="Size.Hero">28</sys:Double>
+    <sys:Double x:Key="Size.Mono">12</sys:Double>
+
+    <!--
+        Metrics only, no colour. A Style value outranks property-value inheritance, so any style
+        that pins Foreground stops a control template from tinting the text it generates - which
+        is how every disabled button in the app ended up rendering at full strength and how
+        Button.Primary's label stayed near-white on amber. The implicit style at the bottom is
+        based on this one and sets no colour; the app-wide default comes from the shell window,
+        which sets TextElement.Foreground once and lets it inherit.
+    -->
+    <Style x:Key="Text.BaseMetrics" TargetType="TextBlock">
+        <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+        <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="TextTrimming" Value="None" />
+    </Style>
+
+    <!-- The same, with the default text colour, for everything that names its style. -->
+    <Style x:Key="Text.Base" TargetType="TextBlock" BasedOn="{StaticResource Text.BaseMetrics}">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+    </Style>
+
+    <Style x:Key="Text.BodyMetrics" TargetType="TextBlock" BasedOn="{StaticResource Text.BaseMetrics}">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Text}" />
+        <Setter Property="FontSize" Value="{DynamicResource Size.Body}" />
+        <Setter Property="LineHeight" Value="20" />
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
+    </Style>
+
+    <Style x:Key="Text.Caption" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Small}" />
+        <Setter Property="FontSize" Value="{DynamicResource Size.Caption}" />
+        <Setter Property="LineHeight" Value="16" />
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+    </Style>
+
+    <Style x:Key="Text.Body" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Text}" />
+        <Setter Property="FontSize" Value="{DynamicResource Size.Body}" />
+        <Setter Property="LineHeight" Value="20" />
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
+    </Style>
+
+    <Style x:Key="Text.BodySecondary" TargetType="TextBlock" BasedOn="{StaticResource Text.Body}">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+    </Style>
+
+    <Style x:Key="Text.BodyStrong" TargetType="TextBlock" BasedOn="{StaticResource Text.Body}">
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style x:Key="Text.Subtitle" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Text}" />
+        <Setter Property="FontSize" Value="{DynamicResource Size.Subtitle}" />
+        <Setter Property="LineHeight" Value="22" />
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style x:Key="Text.Title" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Display}" />
+        <Setter Property="FontSize" Value="{DynamicResource Size.Title}" />
+        <Setter Property="LineHeight" Value="28" />
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style x:Key="Text.Hero" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Display}" />
+        <Setter Property="FontSize" Value="{DynamicResource Size.Hero}" />
+        <Setter Property="LineHeight" Value="36" />
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
+        <Setter Property="FontWeight" Value="Light" />
+    </Style>
+
+    <Style x:Key="Text.Mono" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Mono}" />
+        <Setter Property="FontSize" Value="{DynamicResource Size.Mono}" />
+        <Setter Property="LineHeight" Value="18" />
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextMono}" />
+    </Style>
+
+    <!-- UPPERCASE with +8 % tracking; the tracking is applied by Controls.SectionHeader. -->
+    <Style x:Key="Text.SectionLabel" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Small}" />
+        <Setter Property="FontSize" Value="{DynamicResource Size.Caption}" />
+        <Setter Property="LineHeight" Value="16" />
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+    </Style>
+
+    <Style x:Key="Text.Danger" TargetType="TextBlock" BasedOn="{StaticResource Text.Body}">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.DangerText}" />
+    </Style>
+
+    <!--
+        The implicit style: everything that does not opt out reads as Body, and takes its colour
+        from whatever hands it down - the shell window by default, a control template when one has
+        something to say (hover, disabled, on-accent).
+    -->
+    <Style TargetType="TextBlock" BasedOn="{StaticResource Text.BodyMetrics}" />
+
+
+</ResourceDictionary>

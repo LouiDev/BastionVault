@@ -1,0 +1,38 @@
+name: Feature request
+description: Propose a change or addition
+title: "feat: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check the "Deliberately not in v1" list in README.md and the open items in
+        docs/DEVELOPING.md first; some things are excluded on purpose and the reasons are recorded.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What can you not do today, and why does it matter?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+    validations:
+      required: true
+  - type: dropdown
+    id: format
+    attributes:
+      label: Does this touch the on-disk format or the cryptography?
+      options:
+        - "No"
+        - "Yes, the format (needs a FORMAT.md change and a version discussion)"
+        - "Yes, the cryptography (needs a threat and test vectors)"
+        - "Not sure"
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

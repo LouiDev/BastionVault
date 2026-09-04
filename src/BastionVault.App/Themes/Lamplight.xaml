@@ -1,0 +1,34 @@
+<!--
+    Lamplight: the whole design language in one dictionary. Merge order matters - tokens and
+    type first, then the focus ring (every control style references it with StaticResource),
+    then the control templates.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Tokens.xaml" />
+        <ResourceDictionary Source="Typography.xaml" />
+        <ResourceDictionary Source="Icons.xaml" />
+        <ResourceDictionary Source="Blueprints.xaml" />
+        <ResourceDictionary Source="Shared.xaml" />
+        <ResourceDictionary Source="Controls/Focus.xaml" />
+        <ResourceDictionary Source="Controls/Separator.xaml" />
+        <ResourceDictionary Source="Controls/Button.xaml" />
+        <ResourceDictionary Source="Controls/ToggleButton.xaml" />
+        <ResourceDictionary Source="Controls/CheckBox.xaml" />
+        <ResourceDictionary Source="Controls/RadioButton.xaml" />
+        <ResourceDictionary Source="Controls/TextBox.xaml" />
+        <ResourceDictionary Source="Controls/PasswordBox.xaml" />
+        <ResourceDictionary Source="Controls/ScrollBar.xaml" />
+        <ResourceDictionary Source="Controls/ComboBox.xaml" />
+        <ResourceDictionary Source="Controls/Menu.xaml" />
+        <ResourceDictionary Source="Controls/ToolTip.xaml" />
+        <ResourceDictionary Source="Controls/ProgressBar.xaml" />
+        <ResourceDictionary Source="Controls/Slider.xaml" />
+        <ResourceDictionary Source="Controls/TreeView.xaml" />
+        <ResourceDictionary Source="Controls/ListView.xaml" />
+        <ResourceDictionary Source="Controls/TabControl.xaml" />
+        <ResourceDictionary Source="Controls/Expander.xaml" />
+        <ResourceDictionary Source="Controls/SectionHeader.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+</ResourceDictionary>

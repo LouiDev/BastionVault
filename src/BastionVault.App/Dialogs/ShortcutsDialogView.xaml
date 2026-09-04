@@ -1,0 +1,53 @@
+<UserControl x:Class="BastionVault.App.Dialogs.ShortcutsDialogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:BastionVault.App.Controls"
+             xmlns:dialogs="clr-namespace:BastionVault.App.ViewModels.Dialogs"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=dialogs:ShortcutsDialogViewModel}">
+
+    <DockPanel Margin="24" MinWidth="560" MaxWidth="640">
+        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Text.Title}" Text="{Binding Title}" />
+
+        <Button DockPanel.Dock="Bottom"
+                HorizontalAlignment="Right"
+                Margin="0,20,0,0"
+                MinWidth="110"
+                Style="{StaticResource Button.Primary}"
+                Content="Close"
+                Command="{Binding CancelCommand}" />
+
+        <ScrollViewer Margin="0,16,0,0" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Sections}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="0,0,0,16">
+                            <controls:SectionHeader Text="{Binding Heading}" />
+                            <ItemsControl ItemsSource="{Binding Rows}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="190" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Style="{StaticResource Text.Mono}"
+                                                       Text="{Binding Keys}" />
+                                            <TextBlock Grid.Column="1"
+                                                       Style="{StaticResource Text.Body}"
+                                                       TextWrapping="Wrap"
+                                                       Text="{Binding Action}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

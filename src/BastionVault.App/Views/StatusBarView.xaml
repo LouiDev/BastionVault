@@ -1,0 +1,110 @@
+<UserControl x:Class="BastionVault.App.Views.StatusBarView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:BastionVault.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             x:Name="Bar"
+             d:DataContext="{d:DesignInstance Type=vm:StatusBarViewModel}"
+             Height="{DynamicResource Height.StatusBar}"
+             Background="{DynamicResource Brush.Bg1}"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True">
+
+    <Grid>
+        <StackPanel VerticalAlignment="Top">
+            <Rectangle Height="1" Fill="{DynamicResource Brush.StrokeShadow}" />
+            <Rectangle Height="1" Fill="{DynamicResource Brush.StrokeDivider}" />
+        </StackPanel>
+
+        <Grid Margin="12,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Counts. The selection line replaces the folder line while something is selected. -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource Text.Caption}"
+                           Text="{Binding ItemsLine}"
+                           Visibility="{Binding HasSelection, Converter={StaticResource Converter.InverseBoolToVisibility}}" />
+                <TextBlock Style="{StaticResource Text.Caption}"
+                           Foreground="{DynamicResource Brush.TextPrimary}"
+                           Text="{Binding SelectionLine}"
+                           Visibility="{Binding HasSelection, Converter={StaticResource Converter.BoolToVisibility}}" />
+            </StackPanel>
+
+            <!-- A one-line note about the last thing that happened, or the running operation. -->
+            <Grid Grid.Column="1" Margin="16,0">
+                <TextBlock Style="{StaticResource Text.Caption}"
+                           HorizontalAlignment="Left"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           Text="{Binding Message}"
+                           Visibility="{Binding Operation.IsRunning, Converter={StaticResource Converter.InverseBoolToVisibility}}" />
+
+                <StackPanel Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Visibility="{Binding Operation.IsRunning, Converter={StaticResource Converter.BoolToVisibility}}">
+                    <TextBlock Style="{StaticResource Text.Caption}"
+                               VerticalAlignment="Center"
+                               Text="{Binding Operation.Verb}" />
+                    <ProgressBar Width="140" Height="4"
+                                 Margin="10,0"
+                                 VerticalAlignment="Center"
+                                 Style="{StaticResource ProgressBar.Default}"
+                                 IsIndeterminate="{Binding Operation.IsIndeterminate}"
+                                 Maximum="100"
+                                 Value="{Binding Operation.Percent, Mode=OneWay}" />
+                    <TextBlock Style="{StaticResource Text.Mono}"
+                               VerticalAlignment="Center"
+                               Text="{Binding Operation.Throughput}" />
+                    <TextBlock Style="{StaticResource Text.Caption}"
+                               Margin="10,0,0,0"
+                               VerticalAlignment="Center"
+                               Text="{Binding Operation.Eta}" />
+                    <Button Style="{StaticResource Explorer.StatusChip}"
+                            Margin="12,0,0,0"
+                            Content="Cancel"
+                            AutomationProperties.Name="Cancel the running operation"
+                            Command="{Binding Operation.CancelCommand}" />
+                </StackPanel>
+            </Grid>
+
+            <!-- Instruments: the vault's KDF parameters and what a save would commit. -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource Text.Mono}"
+                           VerticalAlignment="Center"
+                           ToolTip="Key derivation of this vault"
+                           Text="{Binding KdfLine}" />
+
+                <Button x:Name="PendingChip"
+                        Style="{StaticResource Explorer.PendingChip}"
+                        Margin="12,0,0,0"
+                        Content="{Binding PendingLine}"
+                        ToolTip="What the next save will commit"
+                        AutomationProperties.Name="Pending changes"
+                        Command="{Binding ShowPendingChangesCommand}"
+                        Visibility="{Binding HasPending, Converter={StaticResource Converter.BoolToVisibility}}" />
+
+                <TextBlock Style="{StaticResource Text.Caption}"
+                           Margin="12,0,0,0"
+                           VerticalAlignment="Center"
+                           Text="saved"
+                           Visibility="{Binding HasPending, Converter={StaticResource Converter.InverseBoolToVisibility}}" />
+
+                <Popup IsOpen="{Binding IsPendingPopoverOpen, Mode=TwoWay}"
+                       PlacementTarget="{Binding ElementName=PendingChip}"
+                       Placement="Top"
+                       VerticalOffset="-6"
+                       StaysOpen="False"
+                       AllowsTransparency="True"
+                       PopupAnimation="Fade">
+                    <ContentControl Content="{Binding PendingChangesPopover}" />
+                </Popup>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

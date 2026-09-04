@@ -1,0 +1,99 @@
+<!-- Check box: 18 px square, amber fill when checked (a checked box is a committed choice, not decoration). -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Style x:Key="CheckBox.Default" TargetType="CheckBox">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Text}" />
+        <Setter Property="FontSize" Value="{DynamicResource Size.Body}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Bg2}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.StrokeControl}" />
+        <Setter Property="MinHeight" Value="20" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="FocusVisualStyle" Value="{DynamicResource Focus.Ring}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <Grid Background="Transparent">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border x:Name="Box" Width="18" Height="18" VerticalAlignment="Top" Margin="0,1,0,0"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="{DynamicResource Radius.Small}"
+                                SnapsToDevicePixels="True">
+                            <TextBlock x:Name="Mark"
+                                       Text="{DynamicResource Glyph.CheckMark}"
+                                       FontFamily="{DynamicResource Font.Icons}"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource Brush.OnAccent}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="Collapsed" />
+                        </Border>
+                        <Rectangle x:Name="Dash" Grid.Column="0" Width="9" Height="2"
+                                   Fill="{DynamicResource Brush.OnAccent}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,9,0,0"
+                                   Visibility="Collapsed" />
+                        <ContentPresenter x:Name="Content" Grid.Column="1" Margin="10,0,0,0"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          RecognizesAccessKey="True"
+                                          TextElement.Foreground="{TemplateBinding Foreground}"
+                                          TextElement.FontFamily="{TemplateBinding FontFamily}"
+                                          TextElement.FontSize="{TemplateBinding FontSize}">
+                            <ContentPresenter.Resources>
+                                <!--
+                                    Labels follow the foreground this template hands down. Without
+                                    a local style the app-wide implicit TextBlock style sets
+                                    Foreground, which outranks inheritance, so the disabled colour
+                                    this template hands down never reached the label.
+                                -->
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+                                    <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+                                    <Setter Property="UseLayoutRounding" Value="True" />
+                                    <Setter Property="SnapsToDevicePixels" Value="True" />
+                                </Style>
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource Brush.StrokeControlHover}" />
+                            <Setter TargetName="Box" Property="Background" Value="{DynamicResource Brush.Bg3}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Box" Property="Background" Value="{DynamicResource Brush.Accent}" />
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                            <Setter TargetName="Mark" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsChecked" Value="True" />
+                                <Condition Property="IsMouseOver" Value="True" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Box" Property="Background" Value="{DynamicResource Brush.AccentHover}" />
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}" />
+                        </MultiTrigger>
+                        <Trigger Property="IsChecked" Value="{x:Null}">
+                            <Setter TargetName="Box" Property="Background" Value="{DynamicResource Brush.Accent}" />
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                            <Setter TargetName="Dash" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Box" Property="Opacity" Value="0.5" />
+                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.TextDisabled}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="CheckBox" BasedOn="{StaticResource CheckBox.Default}" />
+
+</ResourceDictionary>

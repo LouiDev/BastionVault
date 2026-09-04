@@ -1,0 +1,41 @@
+<UserControl x:Class="BastionVault.App.Dialogs.NameConflictDialogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:dialogs="clr-namespace:BastionVault.App.ViewModels.Dialogs"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=dialogs:NameConflictDialogViewModel}">
+
+    <StackPanel Margin="24" MinWidth="440" MaxWidth="560">
+        <TextBlock Style="{StaticResource Text.Title}" Text="{Binding Title}" />
+
+        <TextBlock Style="{StaticResource Text.Body}" Margin="0,10,0,0" TextWrapping="Wrap"
+                   Text="Something with this name is already in the destination folder." />
+
+        <Border Margin="0,12,0,0" Padding="10,8"
+                Background="{DynamicResource Brush.Bg2}"
+                BorderBrush="{DynamicResource Brush.StrokeDivider}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource Radius.Small}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource Text.Mono}" Text="{Binding Name}" />
+                <TextBlock Style="{StaticResource Text.Caption}" Text="{Binding Destination}" />
+            </StackPanel>
+        </Border>
+
+        <CheckBox Margin="0,14,0,0"
+                  IsChecked="{Binding ApplyToAll}"
+                  Content="{Binding ApplyToAllLabel}"
+                  Visibility="{Binding CanApplyToAll, Converter={StaticResource Converter.BoolToVisibility}}" />
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
+            <Button Style="{StaticResource Button.Default}" Height="36" Margin="0,0,8,0"
+                    Content="Skip" Command="{Binding SkipCommand}" />
+            <Button Style="{StaticResource Button.Danger}" Height="36" Margin="0,0,8,0"
+                    Content="Replace" Command="{Binding ReplaceCommand}" />
+            <Button Style="{StaticResource Button.Primary}"
+                    Content="Keep both" Command="{Binding KeepBothCommand}" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

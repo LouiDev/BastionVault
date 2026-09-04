@@ -1,0 +1,104 @@
+<!--
+    Text inputs. Focus is drawn inside the template (a text box keeps focus while it is
+    being typed into, so the adorner-based ring would sit on top of the caret line):
+    1 px Brush.FocusOuter outside, 1 px Brush.FocusInner inside - the same two tones as
+    the shared focus ring, without moving the content.
+    The placeholder text comes from Tag.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Style x:Key="TextBox.Default" TargetType="TextBox">
+        <Setter Property="Height" Value="{DynamicResource Height.Input}" />
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Text}" />
+        <Setter Property="FontSize" Value="{DynamicResource Size.Body}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Bg2}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.StrokeControl}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CaretBrush" Value="{DynamicResource Brush.Accent}" />
+        <Setter Property="SelectionBrush" Value="{DynamicResource Brush.Accent}" />
+        <Setter Property="SelectionOpacity" Value="0.35" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="HorizontalScrollBarVisibility" Value="Hidden" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border x:Name="Root"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{DynamicResource Radius.Medium}"
+                            SnapsToDevicePixels="True">
+                        <Border x:Name="InnerRing" BorderThickness="1" BorderBrush="Transparent" CornerRadius="5">
+                            <Grid>
+                                <TextBlock x:Name="Placeholder"
+                                           Text="{TemplateBinding Tag}"
+                                           Margin="{TemplateBinding Padding}"
+                                           VerticalAlignment="Center"
+                                           IsHitTestVisible="False"
+                                           Foreground="{DynamicResource Brush.TextDisabled}"
+                                           FontFamily="{TemplateBinding FontFamily}"
+                                           FontSize="{TemplateBinding FontSize}"
+                                           Visibility="Collapsed" />
+                                <ScrollViewer x:Name="PART_ContentHost"
+                                              Margin="{TemplateBinding Padding}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              Focusable="False"
+                                              HorizontalScrollBarVisibility="{TemplateBinding HorizontalScrollBarVisibility}"
+                                              VerticalScrollBarVisibility="{TemplateBinding VerticalScrollBarVisibility}" />
+                            </Grid>
+                        </Border>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Text" Value="">
+                            <Setter TargetName="Placeholder" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.StrokeControlHover}" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.FocusOuter}" />
+                            <Setter TargetName="InnerRing" Property="BorderBrush" Value="{DynamicResource Brush.FocusInner}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg1}" />
+                        </Trigger>
+                        <Trigger Property="IsReadOnly" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg1}" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg1}" />
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.StrokeDivider}" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.TextDisabled}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="TextBox" BasedOn="{StaticResource TextBox.Default}" />
+
+    <!-- Multi-line variant for comments and detail readouts. -->
+    <Style x:Key="TextBox.Multiline" TargetType="TextBox" BasedOn="{StaticResource TextBox.Default}">
+        <Setter Property="Height" Value="Auto" />
+        <Setter Property="MinHeight" Value="72" />
+        <Setter Property="Padding" Value="8,6" />
+        <Setter Property="AcceptsReturn" Value="True" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="VerticalContentAlignment" Value="Top" />
+        <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+    </Style>
+
+    <!-- Read-only instrument readout (paths, ids, KDF parameters). -->
+    <Style x:Key="TextBox.Mono" TargetType="TextBox" BasedOn="{StaticResource TextBox.Default}">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Mono}" />
+        <Setter Property="FontSize" Value="{DynamicResource Size.Mono}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextMono}" />
+    </Style>
+
+</ResourceDictionary>

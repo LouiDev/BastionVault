@@ -1,0 +1,117 @@
+<!--
+    Icon glyphs (UI-CONTRACT.md §2 "Icons"). Code points are Segoe Fluent Icons;
+    every one used here also exists in Segoe MDL2 Assets, which is the fallback.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+    <FontFamily x:Key="Font.Icons">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+
+    <!-- ══ Vault and file commands ══ -->
+    <sys:String x:Key="Glyph.NewVault">&#xE8A6;</sys:String>
+    <sys:String x:Key="Glyph.Open">&#xE8E5;</sys:String>
+    <sys:String x:Key="Glyph.Save">&#xE74E;</sys:String>
+    <sys:String x:Key="Glyph.SaveAs">&#xE792;</sys:String>
+    <sys:String x:Key="Glyph.ImportFiles">&#xE8B5;</sys:String>
+    <sys:String x:Key="Glyph.ImportFolder">&#xE8B6;</sys:String>
+    <sys:String x:Key="Glyph.Export">&#xEDE1;</sys:String>
+    <sys:String x:Key="Glyph.NewFolder">&#xE8F4;</sys:String>
+    <sys:String x:Key="Glyph.Rename">&#xE8AC;</sys:String>
+    <sys:String x:Key="Glyph.Delete">&#xE74D;</sys:String>
+    <sys:String x:Key="Glyph.Verify">&#xEA18;</sys:String>
+    <sys:String x:Key="Glyph.VerifyTask">&#xF760;</sys:String>
+    <sys:String x:Key="Glyph.ChangePassword">&#xE8D7;</sys:String>
+    <sys:String x:Key="Glyph.Lock">&#xE72E;</sys:String>
+    <sys:String x:Key="Glyph.Unlocked">&#xE785;</sys:String>
+    <sys:String x:Key="Glyph.Settings">&#xE713;</sys:String>
+    <sys:String x:Key="Glyph.Recover">&#xE777;</sys:String>
+
+    <!-- ══ Navigation ══ -->
+    <sys:String x:Key="Glyph.Back">&#xE72B;</sys:String>
+    <sys:String x:Key="Glyph.Forward">&#xE72A;</sys:String>
+    <sys:String x:Key="Glyph.Up">&#xE74A;</sys:String>
+    <sys:String x:Key="Glyph.Search">&#xE721;</sys:String>
+    <sys:String x:Key="Glyph.Chevron">&#xE76C;</sys:String>
+    <sys:String x:Key="Glyph.ChevronOpen">&#xE970;</sys:String>
+    <sys:String x:Key="Glyph.ChevronRight">&#xE76C;</sys:String>
+    <sys:String x:Key="Glyph.ChevronLeft">&#xE76B;</sys:String>
+    <sys:String x:Key="Glyph.ChevronDown">&#xE70D;</sys:String>
+    <sys:String x:Key="Glyph.ChevronUp">&#xE70E;</sys:String>
+    <sys:String x:Key="Glyph.SortAscending">&#xE70E;</sys:String>
+    <sys:String x:Key="Glyph.SortDescending">&#xE70D;</sys:String>
+
+    <!-- ══ Entry kinds ══ -->
+    <sys:String x:Key="Glyph.Folder">&#xE8B7;</sys:String>
+    <sys:String x:Key="Glyph.FolderOpen">&#xE838;</sys:String>
+    <sys:String x:Key="Glyph.File">&#xE7C3;</sys:String>
+    <sys:String x:Key="Glyph.Document">&#xE8A5;</sys:String>
+    <sys:String x:Key="Glyph.Image">&#xE91B;</sys:String>
+    <sys:String x:Key="Glyph.Code">&#xE943;</sys:String>
+    <sys:String x:Key="Glyph.Archive">&#xE7B8;</sys:String>
+    <sys:String x:Key="Glyph.Video">&#xE714;</sys:String>
+    <sys:String x:Key="Glyph.Audio">&#xEC4F;</sys:String>
+    <sys:String x:Key="Glyph.KeyFile">&#xEB95;</sys:String>
+
+    <!-- ══ Editing ══ -->
+    <sys:String x:Key="Glyph.Cut">&#xE8C6;</sys:String>
+    <sys:String x:Key="Glyph.Copy">&#xE8C8;</sys:String>
+    <sys:String x:Key="Glyph.Paste">&#xE77F;</sys:String>
+    <sys:String x:Key="Glyph.SelectAll">&#xE8B3;</sys:String>
+    <sys:String x:Key="Glyph.Properties">&#xE946;</sys:String>
+    <sys:String x:Key="Glyph.Undo">&#xE7A7;</sys:String>
+    <sys:String x:Key="Glyph.Redo">&#xE7A6;</sys:String>
+
+    <!-- ══ Status ══ -->
+    <sys:String x:Key="Glyph.Ok">&#xF13E;</sys:String>
+    <sys:String x:Key="Glyph.CheckMark">&#xE73E;</sys:String>
+    <sys:String x:Key="Glyph.Warning">&#xE7BA;</sys:String>
+    <sys:String x:Key="Glyph.Error">&#xEA39;</sys:String>
+    <sys:String x:Key="Glyph.Info">&#xE946;</sys:String>
+
+    <!-- ══ Misc ══ -->
+    <sys:String x:Key="Glyph.Reveal">&#xE9A8;</sys:String>
+    <sys:String x:Key="Glyph.RevealOff">&#xE9A9;</sys:String>
+    <sys:String x:Key="Glyph.Preview">&#xE8FF;</sys:String>
+    <sys:String x:Key="Glyph.Keyboard">&#xEDA7;</sys:String>
+    <sys:String x:Key="Glyph.More">&#xE712;</sys:String>
+    <sys:String x:Key="Glyph.Refresh">&#xE72C;</sys:String>
+    <sys:String x:Key="Glyph.Clear">&#xE894;</sys:String>
+
+    <!-- ══ Caption buttons ══ -->
+    <sys:String x:Key="Glyph.Minimize">&#xE921;</sys:String>
+    <sys:String x:Key="Glyph.Maximize">&#xE922;</sys:String>
+    <sys:String x:Key="Glyph.Restore">&#xE923;</sys:String>
+    <sys:String x:Key="Glyph.Close">&#xE8BB;</sys:String>
+
+    <!-- ══ Glyph text blocks ══ -->
+    <Style x:Key="Style.Glyph" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Icons}" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextAlignment" Value="Center" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+        <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+    </Style>
+
+    <Style x:Key="Style.Glyph16" TargetType="TextBlock" BasedOn="{StaticResource Style.Glyph}" />
+
+    <Style x:Key="Style.Glyph20" TargetType="TextBlock" BasedOn="{StaticResource Style.Glyph}">
+        <Setter Property="FontSize" Value="20" />
+    </Style>
+
+    <Style x:Key="Style.Glyph32" TargetType="TextBlock" BasedOn="{StaticResource Style.Glyph}">
+        <Setter Property="FontSize" Value="32" />
+    </Style>
+
+    <!-- Type icons never carry the lamp and sit back at 60 % (UI-CONTRACT §1.9). -->
+    <Style x:Key="Style.TypeGlyph" TargetType="TextBlock" BasedOn="{StaticResource Style.Glyph}">
+        <Setter Property="Opacity" Value="0.6" />
+    </Style>
+
+</ResourceDictionary>
