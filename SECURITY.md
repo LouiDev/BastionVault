@@ -38,6 +38,8 @@ problem, what an attacker gains, and whether you have shared the finding elsewhe
 - An assessment and a planned fix date within 30 days for confirmed issues.
 - Target of 90 days from report to public fix. Coordinated disclosure after the fix is
   released; you will be credited unless you prefer not to be.
+- Security fixes do not wait for the next regular release: they go through a `hotfix/*`
+  branch directly into `main` and ship as a patch release (`v1.0.x`), then flow into `dev`.
 
 ## In scope
 

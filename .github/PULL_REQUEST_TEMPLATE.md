@@ -1,4 +1,5 @@
 <!-- Title as a Conventional Commit: type(scope): summary -->
+<!-- Target branch: `dev` for everything; only `hotfix/*` branches target `main` (see CONTRIBUTING.md, "Branches and releases"). -->
 
 ## What and why
 
@@ -6,6 +7,7 @@
 
 ## Checklist
 
+- [ ] This PR targets `dev` (or `main` only because it is a `hotfix/*` branch)
 - [ ] Every commit is a Conventional Commit and carries a DCO `Signed-off-by` trailer (`git commit -s`)
 - [ ] `dotnet build BastionVault.slnx -warnaserror` and `dotnet test BastionVault.slnx` pass locally
 - [ ] Tests added or updated at the layer the change lives in

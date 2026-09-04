@@ -88,6 +88,11 @@ Commits, DCO sign-off, warnings as errors, tests with every change, and no forma
 cryptography change without a spec change first. Please be kind; see
 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
+Branches: `main` holds released versions only and carries the `v*` tags; development happens
+on `dev`, so **open pull requests against `dev`**. `feature/*` branches are merged into `dev`,
+and `dev` is fast-forwarded into `main` when a release ships. Security fixes take the
+`hotfix/*` route straight to `main` and a patch release.
+
 ## Security
 
 Report vulnerabilities privately through GitHub's *Report a vulnerability* form, never in a

@@ -51,6 +51,39 @@ docs(format): pin the index padding ladder
 Anything that changes the on-disk format or the public Core API is a `BREAKING CHANGE`
 and needs a format version discussion first (see below).
 
+## Branches and releases
+
+| Branch | Purpose | Protected | Merges in from |
+|---|---|---|---|
+| `main` | Released versions only. Every commit on `main` is part of a release; the `v*` tags live here. | yes (ruleset) | `dev` by fast-forward at release time; `hotfix/*` by pull request |
+| `dev` | Integration branch. Everything that will be in the next release is collected here. | yes (ruleset) | `feature/*` (and Dependabot) by pull request |
+| `feature/<topic>` | Your work. Branch from `dev`, keep it short-lived. | no | — |
+| `hotfix/<topic>` | Urgent fixes, especially security fixes. Branch from `main`. | no | — |
+
+Rules that follow from this:
+
+- **Pull requests target `dev`.** GitHub pre-selects the default branch (`main`); change it.
+  Only `hotfix/*` branches open pull requests against `main`.
+- Nobody commits directly to `main` or `dev`; both require a pull request and a green CI run.
+- `dev` merges use *squash* or *rebase* so history stays linear and every commit on `dev` is a
+  Conventional Commit.
+- **Releases are fast-forwards.** `main` never gets a squash or merge commit from `dev`;
+  otherwise the two branches diverge and the next release conflicts. The maintainer runs:
+
+  ```
+  git checkout main
+  git merge --ff-only dev
+  git tag -a v1.1.0 -m "release: 1.1.0"
+  git push origin main --follow-tags
+  ```
+
+  The `v*` tag triggers the release workflow, which builds the zips and opens a draft
+  release. `CHANGELOG.md`'s *Unreleased* section is exactly the delta `main..dev` and is
+  turned into the new version's section as part of the release commit on `dev` beforehand.
+- **Hotfixes** branch from `main`, are merged into `main` by pull request, get a patch tag
+  (`v1.0.1`), and are then brought into `dev` with `git merge main` on `dev` (a merge commit is
+  acceptable there; it is the one place linear history is not required).
+
 ## Before you start
 
 - Read `docs/FORMAT.md` (normative format), `docs/API.md` (frozen Core surface),
