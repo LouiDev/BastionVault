@@ -2,7 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [main, dev]
+    # main is not listed on purpose: every push to main is a release or hotfix and carries a
+    # v* tag in the same push, so the tag run already builds and tests that exact commit.
+    # Pull requests against main (hotfixes) still get the required status check below.
+    branches: [dev]
     tags: ['v*']
   pull_request:
     branches: [main, dev]

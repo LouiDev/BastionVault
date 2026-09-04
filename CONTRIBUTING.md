@@ -78,7 +78,9 @@ Rules that follow from this:
   ```
 
   The `v*` tag triggers the release workflow, which builds the zips and opens a draft
-  release. `CHANGELOG.md`'s *Unreleased* section is exactly the delta `main..dev` and is
+  release. That tag run is the CI run for `main`: pushes to `main` on their own do not start
+  a workflow, because every one of them carries a tag (release or hotfix) in the same push.
+  `CHANGELOG.md`'s *Unreleased* section is exactly the delta `main..dev` and is
   turned into the new version's section as part of the release commit on `dev` beforehand.
 - **Hotfixes** branch from `main`, are merged into `main` by pull request, get a patch tag
   (`v1.0.1`), and are then brought into `dev` with `git merge main` on `dev` (a merge commit is

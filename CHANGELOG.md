@@ -7,7 +7,9 @@ separately in `docs/FORMAT.md` and only changes with a major release.
 
 ## [Unreleased]
 
-Nothing yet.
+### Changed
+- CI no longer runs a separate build for pushes to `main`; the `v*` tag pushed alongside
+  already builds, tests and packages that commit. Pull requests against `main` are unchanged.
 
 ## [1.0.1] - 2026-09-04
 
