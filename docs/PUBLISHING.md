@@ -25,9 +25,14 @@ the reasoning behind the licensing and legal choices. Written for the maintainer
 2. **Settings → Code security**: enable *Private vulnerability reporting*, *Dependabot
    alerts* and *Dependabot security updates*. `SECURITY.md` and the issue chooser link to
    the private advisory form.
-3. **Settings → Branches**: protect `main`: require a pull request, require the CI status
-   check `Build and test (windows, .NET 10)`, require conversation resolution, block force
-   pushes. Optionally require signed commits.
+3. **Settings → Rules → Rulesets**: import the three templates from `.github/rulesets/`
+   (*New ruleset → Import a ruleset*): `main.json` (pull request required, CI check
+   `Build and test (windows, .NET 10)`, linear history, merge-only so releases stay
+   fast-forwards, no force pushes or deletions, admin bypass), `dev.json` (the same, with
+   squash and rebase merges), `release-tags.json` (tags `v*` cannot be moved or deleted).
+   Rulesets are not applied automatically from the repository; the import is a one-time
+   manual step, and the templates are the record of what was configured. GitHub Actions'
+   `integration_id` is 15368 and the *Repository admin* role is `actor_id` 5.
 4. **Settings → Actions**: allow GitHub Actions; the release job needs `contents: write`,
    which the workflow requests explicitly.
 5. **First CI run**: watch it. The App tests include STA tests that render with WPF; they
@@ -43,9 +48,11 @@ the reasoning behind the licensing and legal choices. Written for the maintainer
    - Single-instance identity keys on the path; a mapped drive or junction alias counts as another instance
    - One unreproduced silent exit during UI automation (all exit paths now log first)
    - A signed release: unsigned executables trigger SmartScreen
-7. **Release**: tag `v1.0.0` after the first green CI run on `main`
-   (`git tag -a v1.0.0 -m "release: 1.0.0" && git push origin v1.0.0`). The workflow
-   creates a draft release with two zips and `SHA256SUMS.txt`; review and publish it.
+7. **Release**: on `dev`, turn the *Unreleased* section of `CHANGELOG.md` into the new
+   version and bump `<Version>` in `Directory.Build.props` by pull request; then
+   `git checkout main && git merge --ff-only dev && git tag -a v1.0.0 -m "release: 1.0.0" && git push origin main --follow-tags`.
+   The workflow creates a draft release with two zips and `SHA256SUMS.txt`; review and
+   publish it. The branch model itself is described in `CONTRIBUTING.md`.
 8. **Flip visibility to public** last, once the above is in place.
 
 ## 3. Why this license, and what it means

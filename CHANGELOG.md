@@ -7,7 +7,10 @@ separately in `docs/FORMAT.md` and only changes with a major release.
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+- Branch model: `main` holds releases only, `dev` is the integration branch, work happens on
+  `feature/*`, urgent fixes on `hotfix/*`. Documented in `CONTRIBUTING.md`; CI and Dependabot
+  target `dev`; ruleset templates for `main`, `dev` and `v*` tags in `.github/rulesets/`.
 
 ## [1.0.0] - 2026-09-04
 
