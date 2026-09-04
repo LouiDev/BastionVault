@@ -13,8 +13,8 @@ public interface IVaultSession : IAsyncDisposable
 
     /// <summary>
     /// The derived <c>vaultId</c> (FORMAT.md section 2.4) as 32 lowercase hex characters: the key of
-    /// local per-machine records. It is not key material — it is an HKDF label expansion the file never
-    /// stores — so a locked session still returns the value captured while it was unlocked. It changes
+    /// local per-machine records. It is not key material - it is an HKDF label expansion the file never
+    /// stores - so a locked session still returns the value captured while it was unlocked. It changes
     /// when the vault key does: after a <see cref="CredentialChangeMode.Rekey"/> change has been saved.
     /// </summary>
     string VaultIdHex { get; }

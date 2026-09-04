@@ -6,7 +6,7 @@ namespace BastionVault.Core.Tests.Vault;
 /// A key-derivation seam that never derives anything. It records what it was asked for and returns a
 /// fixed tag, so a test can prove where in FORMAT.md section 3.1 a header was rejected: before step 9
 /// the KDF is never reached, and a header that survives the pre-flight reaches it with exactly the
-/// parameters the file declares — without spending a single byte of Argon2 memory.
+/// parameters the file declares - without spending a single byte of Argon2 memory.
 /// </summary>
 internal sealed class RecordingKeyDerivation : IKeyDerivation
 {

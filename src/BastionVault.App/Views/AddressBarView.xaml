@@ -101,7 +101,17 @@
                                                                 <TextBlock Style="{StaticResource Style.TypeGlyph}"
                                                                            FontSize="13"
                                                                            Text="{DynamicResource Glyph.Folder}" />
+                                                                <!--
+                                                                    The label sets its own line
+                                                                    box: the app-wide 20 px Body
+                                                                    box carries the baseline near
+                                                                    the bottom, so a centred name
+                                                                    sat three pixels below the
+                                                                    folder icon beside it.
+                                                                -->
                                                                 <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"
+                                                                           LineHeight="{DynamicResource Size.Body}"
+                                                                           LineStackingStrategy="BlockLineHeight"
                                                                            Text="{Binding Name}" />
                                                             </StackPanel>
                                                         </Button>
