@@ -53,10 +53,13 @@ that are tracked as issues are listed in [docs/DEVELOPING.md](docs/DEVELOPING.md
 
 ## Install
 
-Download the latest release from the Releases page. Two variants are published:
-`framework-dependent` (needs the .NET 10 Desktop Runtime) and `selfcontained` (nothing to
-install). The executables are not code-signed, so Windows SmartScreen warns on first start;
-verify the download against `SHA256SUMS.txt`.
+Download the latest release from the Releases page and unpack the zip into a folder of your
+choice; there is no installer. Two variants are published: `framework-dependent` (needs the
+.NET 10 Desktop Runtime) and `selfcontained` (nothing else to install). The executables are
+not code-signed, so Windows SmartScreen warns on first start; verify the download against
+`SHA256SUMS.txt`. [docs/INSTALL.md](docs/INSTALL.md) walks through choosing a variant,
+verifying, the SmartScreen prompt, the optional `.bastion` file type, what the program writes
+to your profile, updating and complete removal.
 
 ## Build from source
 
