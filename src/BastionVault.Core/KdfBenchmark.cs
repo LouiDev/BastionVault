@@ -27,7 +27,7 @@ public static class KdfBenchmark
     /// <param name="ct">Cancellation token.</param>
     /// <returns>The estimated wall-clock duration of one derivation with those parameters.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="parameters"/> is <see langword="null"/>.</exception>
-    /// <exception cref="VaultFormatException"><see cref="VaultErrorCode.UnsupportedParameters"/> — the parameters violate FORMAT.md §7.</exception>
+    /// <exception cref="VaultFormatException"><see cref="VaultErrorCode.UnsupportedParameters"/> - the parameters violate FORMAT.md §7.</exception>
     public static Task<TimeSpan> EstimateAsync(KdfParameters parameters, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(parameters);

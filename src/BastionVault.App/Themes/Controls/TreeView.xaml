@@ -17,10 +17,17 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
                     <Border Background="Transparent">
+                        <!--
+                            LineHeight = FontSize with BlockLineHeight: without it the app-wide
+                            20 px Body line box applies, and because the icon face has no
+                            descent the baseline lands at the bottom of that box - the chevron
+                            then sat five pixels below the middle of a 16 px expander.
+                        -->
                         <TextBlock x:Name="Chevron"
                                    Text="{DynamicResource Glyph.ChevronRight}"
                                    FontFamily="{DynamicResource Font.Icons}"
-                                   FontSize="10"
+                                   FontSize="10" LineHeight="10"
+                                   LineStackingStrategy="BlockLineHeight"
                                    Foreground="{DynamicResource Brush.TextSecondary}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>

@@ -121,7 +121,7 @@ public sealed partial class ChangeCredentialsDialogViewModel : DialogViewModelBa
     /// <summary>The honest caveat attached to the selected mode.</summary>
     public string ModeCaveat => Mode == CredentialChangeMode.Rekey
         ? "Every blob is re-encrypted under a fresh key at the next save. Old copies of the file stay readable with the old password, but nothing new leaks from them."
-        : "Only the header is rewritten. This is instant, but every byte on disk stays encrypted under the same vault key — a copy someone already took stays readable with the old password.";
+        : "Only the header is rewritten. This is instant, but every byte on disk stays encrypted under the same vault key - a copy someone already took stays readable with the old password.";
 
     /// <summary>What the change will cost at the next save.</summary>
     public string CostLine

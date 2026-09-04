@@ -37,12 +37,19 @@
             <ContentPresenter x:Name="Icon" Grid.Column="0"
                               Content="{TemplateBinding Icon}"
                               HorizontalAlignment="Center" VerticalAlignment="Center" />
-            <TextBlock x:Name="Check" Grid.Column="0"
-                       Text="{DynamicResource Glyph.CheckMark}"
-                       FontFamily="{DynamicResource Font.Icons}" FontSize="12"
-                       Foreground="{DynamicResource Brush.Accent}"
-                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                       Visibility="Collapsed" />
+            <!--
+                Geometry, not the E73E glyph: the icon face puts its baseline at the bottom of
+                the em box, so inside the app-wide 20 px Body line box the mark landed four and
+                a half pixels below the middle of the row. A Path has no such metrics.
+            -->
+            <Path x:Name="Check" Grid.Column="0"
+                  Data="{DynamicResource Geometry.CheckMark}"
+                  Stretch="Uniform" Width="11" Height="9"
+                  Stroke="{DynamicResource Brush.Accent}" StrokeThickness="1.5"
+                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                  UseLayoutRounding="True" SnapsToDevicePixels="True"
+                  Visibility="Collapsed" />
 
             <ContentPresenter x:Name="Header" Grid.Column="1"
                               Margin="4,0,12,0"
@@ -54,10 +61,17 @@
                               TextElement.FontSize="{TemplateBinding FontSize}">
                 <ContentPresenter.Resources>
                     <!-- A string header renders through the app-wide implicit TextBlock style,
-                         whose Foreground would outrank the disabled colour this template sets. -->
+                         whose Foreground would outrank the disabled colour this template sets.
+                         The line box is pulled tight to the font size as well: the Body 20 px
+                         box carries its baseline near the bottom, so a centred header sat two
+                         pixels below the icon and the shortcut. At LineHeight = FontSize the
+                         x-height straddles the middle of the box, which is where the icon's
+                         ink already is, and all three columns share one centre line. -->
                     <Style TargetType="TextBlock">
                         <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
                         <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+                        <Setter Property="LineHeight" Value="{Binding FontSize, RelativeSource={RelativeSource Self}}" />
+                        <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
                     </Style>
                 </ContentPresenter.Resources>
             </ContentPresenter>
@@ -68,14 +82,19 @@
                        VerticalAlignment="Center"
                        FontFamily="{DynamicResource Font.Small}"
                        FontSize="{DynamicResource Size.Caption}"
+                       LineHeight="{DynamicResource Size.Caption}"
+                       LineStackingStrategy="BlockLineHeight"
                        Foreground="{DynamicResource Brush.TextSecondary}" />
 
-            <TextBlock x:Name="Chevron" Grid.Column="3"
-                       Text="{DynamicResource Glyph.ChevronRight}"
-                       FontFamily="{DynamicResource Font.Icons}" FontSize="10"
-                       Foreground="{DynamicResource Brush.TextSecondary}"
-                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                       Visibility="Collapsed" />
+            <!-- Geometry for the same reason as the check: see the comment above. -->
+            <Path x:Name="Chevron" Grid.Column="3"
+                  Data="{DynamicResource Geometry.ChevronRight}"
+                  Stretch="Uniform" Width="9" Height="9"
+                  Stroke="{DynamicResource Brush.TextSecondary}" StrokeThickness="1.5"
+                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                  UseLayoutRounding="True" SnapsToDevicePixels="True"
+                  Visibility="Collapsed" />
 
             <Popup x:Name="PART_Popup"
                    AllowsTransparency="True"

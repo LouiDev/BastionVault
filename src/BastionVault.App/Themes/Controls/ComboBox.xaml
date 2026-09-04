@@ -109,9 +109,11 @@
                                                   TextElement.Foreground="{TemplateBinding Foreground}"
                                                   TextElement.FontFamily="{TemplateBinding FontFamily}"
                                                   TextElement.FontSize="{TemplateBinding FontSize}" />
+                                <!-- LineHeight = FontSize: see the note in TreeView.xaml. -->
                                 <TextBlock x:Name="Chevron" Grid.Column="1"
                                            Text="{DynamicResource Glyph.ChevronDown}"
                                            FontFamily="{DynamicResource Font.Icons}" FontSize="11"
+                                           LineHeight="11" LineStackingStrategy="BlockLineHeight"
                                            Foreground="{DynamicResource Brush.TextSecondary}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"
                                            IsHitTestVisible="False" />

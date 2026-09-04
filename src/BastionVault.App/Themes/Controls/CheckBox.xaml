@@ -27,13 +27,23 @@
                                 BorderThickness="1"
                                 CornerRadius="{DynamicResource Radius.Small}"
                                 SnapsToDevicePixels="True">
-                            <TextBlock x:Name="Mark"
-                                       Text="{DynamicResource Glyph.CheckMark}"
-                                       FontFamily="{DynamicResource Font.Icons}"
-                                       FontSize="12"
-                                       Foreground="{DynamicResource Brush.OnAccent}"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       Visibility="Collapsed" />
+                            <!--
+                                The mark is geometry, not the E73E glyph. A glyph is placed by
+                                the font's line box - the icon face carries its baseline at the
+                                bottom of the em box, and the app-wide 20 px Body line box then
+                                pushed the tick four pixels down, onto the bottom edge of an
+                                18 px well. A Path with Stretch="Uniform" is centred by layout
+                                alone: 3 px of margin inside the 16 px content area leaves a
+                                10 px square, and the tick is centred in it in both axes.
+                            -->
+                            <Path x:Name="Mark"
+                                  Data="{DynamicResource Geometry.CheckMark}"
+                                  Stretch="Uniform" Margin="3"
+                                  Stroke="{DynamicResource Brush.OnAccent}" StrokeThickness="1.75"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                  HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                  UseLayoutRounding="True" SnapsToDevicePixels="True"
+                                  Visibility="Collapsed" />
                         </Border>
                         <Rectangle x:Name="Dash" Grid.Column="0" Width="9" Height="2"
                                    Fill="{DynamicResource Brush.OnAccent}"

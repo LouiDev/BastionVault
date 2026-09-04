@@ -230,7 +230,7 @@ public sealed partial class UnlockViewModel : ObservableObject
     private static string MessageFor(UnlockOutcome outcome) => outcome switch
     {
         UnlockOutcome.WrongCredentials =>
-            "That did not unlock the vault. The password, the keyfile, or the header itself is wrong — Bastion Vault cannot tell which, and saying which would help an attacker.",
+            "That did not unlock the vault. The password, the keyfile, or the header itself is wrong - Bastion Vault cannot tell which, and saying which would help an attacker.",
         UnlockOutcome.Damaged =>
             "The password is correct, but this vault has been altered or damaged since it was written. Do not save over it: export what you can with Recover first.",
         UnlockOutcome.NotAVault =>

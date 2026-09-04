@@ -146,8 +146,9 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Style="{StaticResource Text.Body}" Text="Register the .bastion file type" />
+                    <!-- Right margin keeps the wrapping caption clear of the button in the next column. -->
+                    <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                        <TextBlock Style="{StaticResource Text.Body}" TextWrapping="Wrap" Text="Register the .bastion file type" />
                         <TextBlock Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
                                    Text="Written under your own user only. Bastion Vault never registers itself behind your back." />
                     </StackPanel>

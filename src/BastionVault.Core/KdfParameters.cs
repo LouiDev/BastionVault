@@ -53,7 +53,7 @@ public sealed record KdfParameters(uint MemoryKiB, uint Iterations, uint Paralle
 
     /// <summary>Throws when the parameters violate the limits table of FORMAT.md §7.</summary>
     /// <exception cref="VaultFormatException">
-    /// <see cref="VaultErrorCode.UnsupportedParameters"/> — a value is out of range or the memory cost
+    /// <see cref="VaultErrorCode.UnsupportedParameters"/> - a value is out of range or the memory cost
     /// is not compatible with the requested parallelism.
     /// </exception>
     public void Validate()

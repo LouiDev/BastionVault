@@ -129,17 +129,17 @@ public sealed partial class SettingsDialogViewModel : DialogViewModelBase<AppSet
     /// <summary>The three KDF presets.</summary>
     public IReadOnlyList<Choice<KdfPreset>> KdfPresets { get; } =
     [
-        new(KdfPreset.Fast, "Fast — 64 MiB, 3 passes"),
-        new(KdfPreset.Standard, "Standard — 512 MiB, 3 passes"),
-        new(KdfPreset.Strong, "Strong — 1 GiB, 4 passes"),
+        new(KdfPreset.Fast, "Fast - 64 MiB, 3 passes"),
+        new(KdfPreset.Standard, "Standard - 512 MiB, 3 passes"),
+        new(KdfPreset.Strong, "Strong - 1 GiB, 4 passes"),
     ];
 
     /// <summary>The three row densities.</summary>
     public IReadOnlyList<Choice<RowDensity>> RowDensities { get; } =
     [
-        new(RowDensity.Compact, "Compact — 24 px rows"),
-        new(RowDensity.Comfortable, "Comfortable — 28 px rows"),
-        new(RowDensity.Spacious, "Spacious — 32 px rows"),
+        new(RowDensity.Compact, "Compact - 24 px rows"),
+        new(RowDensity.Comfortable, "Comfortable - 28 px rows"),
+        new(RowDensity.Spacious, "Spacious - 32 px rows"),
     ];
 
     /// <summary>

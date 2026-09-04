@@ -58,10 +58,17 @@
                                     whose Foreground outranks the amber the chip hands down. With
                                     no style of their own the metrics come from the caption font
                                     the template binds, and the colour is inherited.
+                                    The line box is pulled tight to the font size too. A font's
+                                    line box carries its baseline near the bottom, so a centred
+                                    single line rides about two pixels low; at
+                                    LineHeight = FontSize the x-height straddles the middle of
+                                    the box, which is where the chevron between the crumbs is.
                                 -->
                                 <Style TargetType="TextBlock">
                                     <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
                                     <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+                                    <Setter Property="LineHeight" Value="{Binding FontSize, RelativeSource={RelativeSource Self}}" />
+                                    <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
                                 </Style>
                             </ContentPresenter.Resources>
                         </ContentPresenter>
@@ -97,20 +104,30 @@
                 <ControlTemplate TargetType="ToggleButton">
                     <Border x:Name="Root" Background="{TemplateBinding Background}"
                             CornerRadius="{DynamicResource Radius.Small}">
-                        <TextBlock x:Name="Glyph"
-                                   Text="{DynamicResource Glyph.ChevronRight}"
-                                   FontFamily="{DynamicResource Font.Icons}" FontSize="9"
-                                   Foreground="{DynamicResource Brush.TextDisabled}"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <!--
+                            Geometry, not the E76C glyph. An icon glyph is placed by the font's
+                            line box, whose baseline sits at the bottom of the em box, so inside
+                            the inherited 20 px Body box a 9 px chevron landed five and a half
+                            pixels below the middle of the row - the chevrons visibly sagged
+                            under the crumbs. A Path is centred by layout, and the square box
+                            takes the down chevron at the same size when the drop-down is open.
+                        -->
+                        <Path x:Name="Glyph"
+                              Data="{DynamicResource Geometry.ChevronRight}"
+                              Stretch="Uniform" Width="8" Height="8"
+                              Stroke="{DynamicResource Brush.TextDisabled}" StrokeThickness="1.5"
+                              StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              HorizontalAlignment="Center" VerticalAlignment="Center"
+                              UseLayoutRounding="True" SnapsToDevicePixels="True" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg2}" />
-                            <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                            <Setter TargetName="Glyph" Property="Stroke" Value="{DynamicResource Brush.TextPrimary}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Glyph" Property="Text" Value="{DynamicResource Glyph.ChevronDown}" />
-                            <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                            <Setter TargetName="Glyph" Property="Data" Value="{DynamicResource Geometry.ChevronDown}" />
+                            <Setter TargetName="Glyph" Property="Stroke" Value="{DynamicResource Brush.TextPrimary}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

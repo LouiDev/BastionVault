@@ -333,7 +333,7 @@ public sealed class CredentialTests
     }
 
     /// <summary>
-    /// The identity is per key space, so a re-key rotates it — but only once the save has committed
+    /// The identity is per key space, so a re-key rotates it - but only once the save has committed
     /// it, because until then the file on disk is still wrapped with the old key.
     /// </summary>
     [Fact]

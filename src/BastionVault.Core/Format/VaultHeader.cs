@@ -105,7 +105,7 @@ public sealed class VaultHeader
     /// </exception>
     public static VaultHeader Parse(ReadOnlySpan<byte> bytes, long fileLength)
     {
-        // Step 1 — the file must be long enough to hold a header at all.
+        // Step 1 - the file must be long enough to hold a header at all.
         if (fileLength < Size)
         {
             throw Fail(
@@ -122,13 +122,13 @@ public sealed class VaultHeader
 
         ReadOnlySpan<byte> header = bytes[..Size];
 
-        // Step 2 — magic.
+        // Step 2 - magic.
         if (!header[OffsetMagic..(OffsetMagic + Magic.Length)].SequenceEqual(Magic))
         {
             throw Fail(VaultErrorCode.NotAVault, "The file does not start with the Bastion Vault signature.");
         }
 
-        // Step 3 — format version.
+        // Step 3 - format version.
         ushort formatVersion = BinaryPrimitives.ReadUInt16LittleEndian(header[OffsetFormatVersion..]);
         if (formatVersion == 0)
         {
@@ -142,7 +142,7 @@ public sealed class VaultHeader
                 $"The vault uses format version {formatVersion}; this build understands version {SupportedFormatVersion}.");
         }
 
-        // Step 4 — structural constants.
+        // Step 4 - structural constants.
         ushort headerLength = BinaryPrimitives.ReadUInt16LittleEndian(header[OffsetHeaderLength..]);
         if (headerLength != Size)
         {
@@ -163,7 +163,7 @@ public sealed class VaultHeader
             throw Fail(VaultErrorCode.HeaderCorrupt, "A reserved header field at offset 156 is not zero.");
         }
 
-        // Step 5 — critical flags and algorithm ids.
+        // Step 5 - critical flags and algorithm ids.
         uint flags = BinaryPrimitives.ReadUInt32LittleEndian(header[OffsetFlags..]);
         uint criticalFlags = flags & CriticalFlagMask;
         if (criticalFlags != 0)
@@ -192,14 +192,14 @@ public sealed class VaultHeader
                 $"The vault uses an unsupported cipher: {detail}. Only AES-256-GCM ({CipherIdAesGcm}) is supported.");
         }
 
-        // Step 6 — KDF cost parameters against the limits table.
+        // Step 6 - KDF cost parameters against the limits table.
         var kdf = new KdfParameters(
             BinaryPrimitives.ReadUInt32LittleEndian(header[OffsetKdfMemoryKiB..]),
             BinaryPrimitives.ReadUInt32LittleEndian(header[OffsetKdfIterations..]),
             BinaryPrimitives.ReadUInt32LittleEndian(header[OffsetKdfParallelism..]));
         kdf.Validate();
 
-        // Step 7 — index length and the cheap half of the length equation.
+        // Step 7 - index length and the cheap half of the length equation.
         ulong indexLength = BinaryPrimitives.ReadUInt64LittleEndian(header[OffsetIndexLength..]);
         if (indexLength < (ulong)VaultLimits.MinIndexLength || indexLength > (ulong)VaultLimits.MaxIndexLength)
         {
@@ -218,7 +218,7 @@ public sealed class VaultHeader
                 "for the header and both index copies.");
         }
 
-        // Step 8 — the two index nonces must differ (they encrypt the same plaintext).
+        // Step 8 - the two index nonces must differ (they encrypt the same plaintext).
         ReadOnlySpan<byte> indexNonce = header.Slice(OffsetIndexNonce, NonceSize);
         ReadOnlySpan<byte> indexCopyNonce = header.Slice(OffsetIndexCopyNonce, NonceSize);
         if (indexNonce.SequenceEqual(indexCopyNonce))
