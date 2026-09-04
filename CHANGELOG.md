@@ -7,17 +7,9 @@ separately in `docs/FORMAT.md` and only changes with a major release.
 
 ## [Unreleased]
 
-### Fixed
-- Icon glyphs in context menus, the check mark in checked checkboxes and menu items, the
-  breadcrumb chevrons in the address bar, and the tree, expander and combo-box chevrons sat
-  several pixels too low against their text. Check marks and chevrons are now vector paths;
-  glyph text boxes are tight to their font size.
-- User-visible text uses plain hyphens instead of em dashes.
+Nothing yet.
 
-### Added
-- Branch model: `main` holds releases only, `dev` is the integration branch, work happens on
-  `feature/*`, urgent fixes on `hotfix/*`. Documented in `CONTRIBUTING.md`; CI and Dependabot
-  target `dev`; ruleset templates for `main`, `dev` and `v*` tags in `.github/rulesets/`.
+## [1.0.1] - 2026-09-04
 
 ### Fixed
 - Glyph alignment: the check mark of a checked check box and of a checked menu item, and the
@@ -27,7 +19,15 @@ separately in `docs/FORMAT.md` and only changes with a major release.
   have to line up are drawn as `Path` geometry, and the remaining glyph and text boxes carry
   a line box tight to their font size.
 - Menu items: icon, header and shortcut share one vertical centre line.
+- Settings dialog: the caption of the file-type row keeps clear of the button beside it.
 - Every em dash in user-visible strings, XAML and code comments is a plain hyphen.
+
+### Changed
+- Branch model: `main` holds releases only, `dev` is the integration branch, work happens on
+  `feature/*`, urgent fixes on `hotfix/*`. Documented in `CONTRIBUTING.md`; CI and Dependabot
+  target `dev`; ruleset templates for `main`, `dev` and `v*` tags in `.github/rulesets/`.
+- `AGENTS.md` briefs AI-assisted contributors on the project's rules and pitfalls;
+  `CLAUDE.md` imports it.
 
 ## [1.0.0] - 2026-09-04
 
@@ -56,5 +56,6 @@ Format version 1.
   releases, Dependabot, issue and pull request templates. Test hooks are compiled into
   Debug builds only.
 
-[Unreleased]: https://github.com/LouiDev/BastionVault/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/LouiDev/BastionVault/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/LouiDev/BastionVault/releases/tag/v1.0.1
 [1.0.0]: https://github.com/LouiDev/BastionVault/releases/tag/v1.0.0
