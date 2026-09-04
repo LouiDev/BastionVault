@@ -10,6 +10,11 @@ namespace Bastion.App.Services;
 /// weak password. Rank matters: the estimator charges log2(rank) bits for a hit, so
 /// <c>123456</c> costs a bit and <c>trustno1</c> costs eleven.
 /// </summary>
+/// <remarks>
+/// Provenance: the list was written for this project from general knowledge of the passwords
+/// that top publicly analysed breach corpora (RockYou and its successors). No third-party list
+/// was copied, and no entry carries any attribution requirement.
+/// </remarks>
 public static class CommonPasswords
 {
     private const string Core = """

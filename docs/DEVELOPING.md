@@ -92,7 +92,11 @@ ETA and the non-cancellable tail are all visible. Pass a path as well to land on
 card instead of the start screen. Demo mode holds no key material, which is why the
 view-model boundary accepts a nullable `Passphrase`; the real path never passes null.
 
-### Test hooks (present in every build, inert unless used)
+### Test hooks (Debug builds only)
+
+Both hooks below are compiled out of Release builds (`#if DEBUG` in `App.xaml.cs`), so a
+shipped executable ignores the flags entirely. Use a Debug build for the UI-automation
+recipe in section 4.
 
 | Argument | Effect |
 |----------|--------|

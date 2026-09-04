@@ -1,0 +1,61 @@
+name: Bug report
+description: Something does not work as documented
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Security problems do not belong here.** Use private vulnerability reporting (see SECURITY.md).
+        Never attach a real vault, a password, a keyfile or a log with personal data.
+  - type: input
+    id: version
+    attributes:
+      label: Bastion version
+      description: Shown in About (Ctrl+Shift+P menu → About), or the release tag.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version and display scaling
+      placeholder: "Windows 11 24H2, 150 %"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Create a vault with the Fast preset
+        2. Import a folder with ...
+        3. Press ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead
+      description: Error text, screenshot, or the relevant lines from %LOCALAPPDATA%\Bastion\logs (they contain no vault contents).
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Vault format / saving / opening
+        - Import / export
+        - Explorer UI (tree, list, preview)
+        - Dialogs (new vault, unlock, credentials, settings)
+        - Locking / auto-lock
+        - Other
+    validations:
+      required: true

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/LouiDev/Bastion/security/advisories/new
+    about: Report privately. Never put vulnerability details in a public issue (see SECURITY.md).
+  - name: Format and threat-model documentation
+    url: https://github.com/LouiDev/Bastion/tree/main/docs
+    about: FORMAT.md is normative; THREAT-MODEL.md says what is and is not protected.

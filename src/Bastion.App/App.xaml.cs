@@ -20,10 +20,10 @@ namespace Bastion.App;
 /// <remarks>
 /// Command line: a single <c>.bastion</c> path is opened at start-up; <c>--demo</c> swaps
 /// Bastion.Core's factory for an in-memory fake so the whole UI can be driven and screenshotted
-/// without a real vault. Two test hooks exist and are inert unless used:
-/// <c>--test-pick-&lt;picker&gt;=&lt;path&gt;</c> answers a file picker from the command line
-/// instead of opening an OS dialog (see <see cref="ScriptedFileDialogService"/>), and
-/// <c>--trace-bindings=&lt;file&gt;</c> writes WPF's binding warnings to a file. Both are
+/// without a real vault. Two test hooks exist in DEBUG builds only and are compiled out of
+/// Release builds: <c>--test-pick-&lt;picker&gt;=&lt;path&gt;</c> answers a file picker from the
+/// command line instead of opening an OS dialog (see <see cref="ScriptedFileDialogService"/>),
+/// and <c>--trace-bindings=&lt;file&gt;</c> writes WPF's binding warnings to a file. Both are
 /// documented in docs/DEVELOPING.md. The <c>.bastion</c> file association is only ever
 /// registered from the Settings dialog, never here.
 /// </remarks>
@@ -54,8 +54,7 @@ public partial class App : Application
 
         InstallCrashHandlers();
 
-        IReadOnlyDictionary<string, string> scriptedPickers =
-            ScriptedFileDialogService.ParseAnswers(e?.Args ?? []);
+        IReadOnlyDictionary<string, string> scriptedPickers = ScriptedPickersFromCommandLine(e?.Args ?? []);
         if (scriptedPickers.Count > 0)
         {
             _log.Warn($"{scriptedPickers.Count} file picker(s) are answered from the command line (test mode).");
@@ -116,17 +115,34 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// The interface is English, so every number in it is English too. Without this the same status
-    /// bar mixed "2,3 s" and "42,2 MB/s" from the OS culture into English sentences.
+    /// Test hook (DEBUG builds only): <c>--test-pick-&lt;picker&gt;=&lt;path&gt;</c> answers a file
+    /// picker from the command line. Release builds always return an empty map, so the flag has no
+    /// effect in a shipped executable.
     /// </summary>
+    /// <param name="args">The process arguments.</param>
+    private static IReadOnlyDictionary<string, string> ScriptedPickersFromCommandLine(string[] args)
+    {
+#if DEBUG
+        return ScriptedFileDialogService.ParseAnswers(args);
+#else
+        _ = args;
+        return new Dictionary<string, string>();
+#endif
+    }
+
     /// <summary>
-    /// Test hook: <c>--trace-bindings=&lt;file&gt;</c> routes WPF's data-binding trace at Warning level
-    /// into a text file, so an automated run can assert that the shell produced no binding errors.
-    /// Off unless the argument is given - the listener costs a string format per binding failure.
+    /// Test hook (DEBUG builds only): <c>--trace-bindings=&lt;file&gt;</c> routes WPF's data-binding
+    /// trace at Warning level into a text file, so an automated run can assert that the shell produced
+    /// no binding errors. Off unless the argument is given - the listener costs a string format per
+    /// binding failure. Compiled out of Release builds.
     /// </summary>
     /// <param name="args">The process arguments.</param>
     private static void TraceBindings(string[] args)
     {
+#if !DEBUG
+        _ = args;
+        return;
+#else
         const string Prefix = "--trace-bindings=";
 
         string? path = args
@@ -161,8 +177,13 @@ public partial class App : Application
         listener.WriteLine(
             $"Bastion binding trace, {DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz}. Warnings, if any, follow.");
         listener.Flush();
+#endif
     }
 
+    /// <summary>
+    /// The interface is English, so every number in it is English too. Without this the same status
+    /// bar mixed "2,3 s" and "42,2 MB/s" from the OS culture into English sentences.
+    /// </summary>
     private static void PinCulture()
     {
         CultureInfo culture = CultureInfo.GetCultureInfo("en-US");

@@ -1,0 +1,6 @@
+# Every change is reviewed by the maintainer. Format and crypto changes doubly so.
+*                         @LouiDev
+/docs/FORMAT.md           @LouiDev
+/src/Bastion.Core/Crypto/ @LouiDev
+/src/Bastion.Core/Format/ @LouiDev
+/LICENSE                  @LouiDev
