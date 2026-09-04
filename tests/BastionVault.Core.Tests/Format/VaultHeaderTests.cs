@@ -189,7 +189,7 @@ public sealed class VaultHeaderTests
 
     /// <summary>
     /// Flips every single bit of the header and asserts the exact outcome demanded by FORMAT.md
-    /// section 3.1 — including the bits that must not change the verdict at all.
+    /// section 3.1 - including the bits that must not change the verdict at all.
     /// </summary>
     [Fact]
     public void Parse_ReactsToEverySingleBitFlipExactlyAsSpecified()

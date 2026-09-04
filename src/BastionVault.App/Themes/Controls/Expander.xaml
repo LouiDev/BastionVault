@@ -17,9 +17,11 @@
                             CornerRadius="{DynamicResource Radius.Small}"
                             Padding="4,4" SnapsToDevicePixels="True">
                         <StackPanel Orientation="Horizontal">
+                            <!-- LineHeight = FontSize: see the note in TreeView.xaml. -->
                             <TextBlock x:Name="Chevron"
                                        Text="{DynamicResource Glyph.ChevronRight}"
                                        FontFamily="{DynamicResource Font.Icons}" FontSize="10"
+                                       LineHeight="10" LineStackingStrategy="BlockLineHeight"
                                        Foreground="{TemplateBinding Foreground}"
                                        VerticalAlignment="Center"
                                        Width="16" TextAlignment="Center" />

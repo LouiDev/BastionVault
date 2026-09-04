@@ -31,7 +31,7 @@ public static class ChunkCipher
     /// <param name="length">Plaintext length in bytes.</param>
     /// <param name="chunkSize">Chunk size in bytes (a power of two in 64 KiB .. 64 MiB).</param>
     /// <exception cref="VaultFormatException">
-    /// <see cref="VaultErrorCode.IndexInvalid"/> — the chunk size is not a power of two in range, the length is
+    /// <see cref="VaultErrorCode.IndexInvalid"/> - the chunk size is not a power of two in range, the length is
     /// negative, or the blob would need more than <c>2^32 - 1</c> chunks.
     /// </exception>
     public static uint ChunkCount(long length, uint chunkSize)
@@ -65,7 +65,7 @@ public static class ChunkCipher
     /// <summary>Ciphertext length of a blob: <c>length + 16 * ChunkCount(length, chunkSize)</c>.</summary>
     /// <param name="length">Plaintext length in bytes.</param>
     /// <param name="chunkSize">Chunk size in bytes.</param>
-    /// <exception cref="VaultFormatException"><see cref="VaultErrorCode.IndexInvalid"/> — see <see cref="ChunkCount"/>.</exception>
+    /// <exception cref="VaultFormatException"><see cref="VaultErrorCode.IndexInvalid"/> - see <see cref="ChunkCount"/>.</exception>
     public static long BlobLength(long length, uint chunkSize)
     {
         uint chunks = ChunkCount(length, chunkSize);

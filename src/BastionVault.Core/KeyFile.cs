@@ -22,8 +22,8 @@ public sealed class KeyFile : IDisposable
     /// <summary>Reads a keyfile from disk.</summary>
     /// <param name="path">Path of the keyfile. Its length must be 1 byte .. 1 MiB.</param>
     /// <exception cref="ArgumentException"><paramref name="path"/> is <see langword="null"/> or blank.</exception>
-    /// <exception cref="VaultFormatException"><see cref="VaultErrorCode.UnsupportedParameters"/> — the file is empty or larger than 1 MiB.</exception>
-    /// <exception cref="VaultIoException"><see cref="VaultErrorCode.IoError"/> — the file could not be read.</exception>
+    /// <exception cref="VaultFormatException"><see cref="VaultErrorCode.UnsupportedParameters"/> - the file is empty or larger than 1 MiB.</exception>
+    /// <exception cref="VaultIoException"><see cref="VaultErrorCode.IoError"/> - the file could not be read.</exception>
     public static KeyFile Load(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
@@ -64,7 +64,7 @@ public sealed class KeyFile : IDisposable
 
     /// <summary>Creates a keyfile from bytes already in memory (1 byte .. 1 MiB).</summary>
     /// <param name="content">The keyfile content.</param>
-    /// <exception cref="VaultFormatException"><see cref="VaultErrorCode.UnsupportedParameters"/> — the content is empty or larger than 1 MiB.</exception>
+    /// <exception cref="VaultFormatException"><see cref="VaultErrorCode.UnsupportedParameters"/> - the content is empty or larger than 1 MiB.</exception>
     public static KeyFile FromBytes(ReadOnlySpan<byte> content)
     {
         RequireLength(content.Length);

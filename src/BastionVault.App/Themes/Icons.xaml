@@ -84,6 +84,21 @@
     <sys:String x:Key="Glyph.Restore">&#xE923;</sys:String>
     <sys:String x:Key="Glyph.Close">&#xE8BB;</sys:String>
 
+    <!--
+        ══ Vector marks ══
+        A glyph in a TextBlock is positioned by the font's line box, not by its ink: the icon
+        faces put the baseline at the very bottom of a one-em box, so the app-wide 13/20 Body
+        line box (LineHeight 20, BlockLineHeight) drops the ink to 20 - FontSize/2 below the top
+        of the box - four to five pixels below centre for a 9 to 12 px mark. The marks that have
+        to line up with text are therefore drawn as geometry: no font metrics, no em box, and
+        Stretch="Uniform" centres them in both axes at 100 % and at 150 % scaling alike.
+        Bounds are 4x8 for the chevrons and 10x7 for the check, so a square Path box centres
+        either orientation. Stroke width is set at the use site and is not scaled by Stretch.
+    -->
+    <Geometry x:Key="Geometry.ChevronRight">M 1,1 L 5,5 L 1,9</Geometry>
+    <Geometry x:Key="Geometry.ChevronDown">M 1,1 L 5,5 L 9,1</Geometry>
+    <Geometry x:Key="Geometry.CheckMark">M 0,4 L 3.5,7.5 L 10,0.5</Geometry>
+
     <!-- ══ Glyph text blocks ══ -->
     <Style x:Key="Style.Glyph" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{DynamicResource Font.Icons}" />

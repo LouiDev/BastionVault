@@ -6,7 +6,7 @@ namespace BastionVault.App.ViewModels.Dialogs;
 /// The modal progress card. It is a view over <see cref="OperationViewModel"/>: the verb, the item
 /// with a middle ellipsis, "n of N", bytes, throughput, an ETA that appears only after two
 /// seconds, and one sentence saying exactly what a cancel would leave behind. Cancel disables
-/// itself and relabels to "Finishing — can't cancel" the moment Core reports a non-cancellable
+/// itself and relabels to "Finishing - can't cancel" the moment Core reports a non-cancellable
 /// phase (UI-CONTRACT.md section 7).
 /// </summary>
 public sealed partial class ProgressDialogViewModel : DialogViewModelBase<bool>
