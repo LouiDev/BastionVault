@@ -1,8 +1,8 @@
-﻿# Bastion.Core public API (frozen contract)
+﻿# BastionVault.Core public API (frozen contract)
 
-`Bastion.Core` (net10.0, no UI dependencies) exposes the surface below. The App and
+`BastionVault.Core` (net10.0, no UI dependencies) exposes the surface below. The App and
 the tests compile against it. Changes to this file go through the orchestrator only.
-The skeleton in `src/Bastion.Core` mirrors this file one-to-one.
+The skeleton in `src/BastionVault.Core` mirrors this file one-to-one.
 
 ## Rules
 
@@ -19,7 +19,7 @@ The skeleton in `src/Bastion.Core` mirrors this file one-to-one.
    zeroed with `CryptographicOperations.ZeroMemory` when released.
 5. **Errors are exceptions**, always a `VaultException` subclass carrying a
    `VaultErrorCode`, or `OperationCanceledException`. No raw `IOException`,
-   `CryptographicException` or `ArgumentOutOfRangeException` leaves `Bastion.Core`
+   `CryptographicException` or `ArgumentOutOfRangeException` leaves `BastionVault.Core`
    (they are wrapped as `IoError` / `IndexInvalid` etc.). Argument misuse by the caller
    (null, wrong id) still throws the usual `ArgumentException` family.
 6. **Progress is rate-limited at the source:** at most one report per
@@ -31,7 +31,7 @@ The skeleton in `src/Bastion.Core` mirrors this file one-to-one.
 7. **EntryId is stable for the lifetime of the vault.** A save never renumbers; ids are
    never reused. The App may cache ids across saves.
 8. **Determinism seams**: `IRandomSource`, `IClock`, `IVaultPaths` are the only places
-   Core touches randomness, time and file naming. `InternalsVisibleTo("Bastion.Core.Tests")`.
+   Core touches randomness, time and file naming. `InternalsVisibleTo("BastionVault.Core.Tests")`.
 9. **`VaultIdHex` is the identity of a key space, not of a file.** It is the derived `vaultId` of
    FORMAT.md §2.4 (`HKDF-Expand(VaultKey, "bastion/v1/vaultid", 16)`) as 32 lowercase hex characters,
    and it is what local per-machine records — the rollback counter, anything else the host keeps — are
@@ -57,7 +57,7 @@ The skeleton in `src/Bastion.Core` mirrors this file one-to-one.
 ## C# surface
 
 ```csharp
-namespace Bastion.Core;
+namespace BastionVault.Core;
 
 // ───────────── identities & enums ─────────────
 public readonly record struct EntryId(uint Value)
@@ -284,7 +284,7 @@ public interface IVaultFactory
 public sealed class VaultFactory : IVaultFactory
 {
     public VaultFactory(IRandomSource? random = null, IClock? clock = null, IVaultPaths? paths = null,
-                        Bastion.Core.Crypto.IKeyDerivation? kdf = null);
+                        BastionVault.Core.Crypto.IKeyDerivation? kdf = null);
 }
 
 // ───────────── seams ─────────────
@@ -295,7 +295,7 @@ public interface IVaultPaths
     string TempFileFor(string vaultPath);                       // "<dir>\<name>.bastion.tmp-<8 hex>"
     string BackupFileFor(string vaultPath);                     // "<dir>\<name>.bastion.bak-<8 hex>"
     string StagingContainerFor(string vaultPath, Guid session); // "<dir>\<name>.bastion~stage-<guid>"
-    string FallbackStagingDirectory { get; }                    // %LOCALAPPDATA%\Bastion\staging
+    string FallbackStagingDirectory { get; }                    // %LOCALAPPDATA%\BastionVault\staging
     bool IsUnderCloudSyncRoot(string path);
 }
 public sealed class SystemRandomSource : IRandomSource { public static readonly SystemRandomSource Instance; }
@@ -340,7 +340,7 @@ public sealed class VaultOperationException : VaultException { }         // Name
 ### Internal contracts (public, "advanced" namespaces; used by tests)
 
 ```csharp
-namespace Bastion.Core.Crypto;
+namespace BastionVault.Core.Crypto;
 
 public interface IKeyDerivation
 {
@@ -400,7 +400,7 @@ public static class HeaderCipher
     public static byte[] DecryptIndex(ReadOnlySpan<byte> indexKey, ReadOnlySpan<byte> nonce, ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> indexAad);  // throws VaultFormatException(IndexCorrupt)
 }
 
-namespace Bastion.Core.Format;
+namespace BastionVault.Core.Format;
 
 public static class VaultLimits { /* every constant of FORMAT.md §7, plus DefaultChunkSize = 1 MiB */ }
 public sealed class VaultHeader
@@ -464,4 +464,4 @@ public static class VaultPath
 
 ### Session internals (not part of the contract, listed for the implementers)
 
-`Bastion.Core.Session`: `VaultSession : IVaultSession`, `TreeModel` (id → node, children lists, rollups, canonical ordering, undo journal), `StagingStore` (memory buffers + container), `IBlobSource` (Stored@offset / Staged@offset / Memory) with a `BlobReader`, `SaveWriter` (state machine §8.3, modes §8.4), `Importer`, `Exporter`, `Verifier`, `UndoStack`, `KdfPreflight` (memory check).
+`BastionVault.Core.Session`: `VaultSession : IVaultSession`, `TreeModel` (id → node, children lists, rollups, canonical ordering, undo journal), `StagingStore` (memory buffers + container), `IBlobSource` (Stored@offset / Staged@offset / Memory) with a `BlobReader`, `SaveWriter` (state machine §8.3, modes §8.4), `Importer`, `Exporter`, `Verifier`, `UndoStack`, `KdfPreflight` (memory check).

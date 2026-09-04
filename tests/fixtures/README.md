@@ -11,7 +11,7 @@ Never regenerate a fixture to make a red test green. Find out which of the two i
 
 ## What is in them
 
-Both are produced by `Bastion.Core.Tests.Vault.GoldenVault` with every source of variation pinned:
+Both are produced by `BastionVault.Core.Tests.Vault.GoldenVault` with every source of variation pinned:
 
 | Knob        | Value                                                        |
 |-------------|--------------------------------------------------------------|
@@ -45,12 +45,12 @@ tests then overwrite the files instead of comparing them:
 
 ```powershell
 $env:BASTION_REGEN_GOLDEN = "1"
-dotnet test tests/Bastion.Core.Tests --filter "FullyQualifiedName~GoldenFixtureTests"
+dotnet test tests/BastionVault.Core.Tests --filter "FullyQualifiedName~GoldenFixtureTests"
 Remove-Item Env:\BASTION_REGEN_GOLDEN
 ```
 
 ```bash
-BASTION_REGEN_GOLDEN=1 dotnet test tests/Bastion.Core.Tests --filter "FullyQualifiedName~GoldenFixtureTests"
+BASTION_REGEN_GOLDEN=1 dotnet test tests/BastionVault.Core.Tests --filter "FullyQualifiedName~GoldenFixtureTests"
 ```
 
 Run the whole suite again afterwards **without** the variable: the fixtures are also opened, verified,

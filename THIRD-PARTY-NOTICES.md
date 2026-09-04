@@ -1,7 +1,7 @@
 # Third-party notices
 
-Bastion is licensed under the PolyForm Noncommercial License 1.0.0 (see `LICENSE`).
-The components below are distributed with Bastion's release builds under their own
+Bastion Vault is licensed under the PolyForm Noncommercial License 1.0.0 (see `LICENSE`).
+The components below are distributed with Bastion Vault's release builds under their own
 licenses, reproduced here as those licenses require.
 
 ## Redistributed in release builds
@@ -54,7 +54,7 @@ DEALINGS IN THE SOFTWARE.
 
 ### .NET runtime and Windows Desktop runtime
 
-Bastion targets .NET 10 (MIT, © .NET Foundation and Contributors). Framework-dependent
+Bastion Vault targets .NET 10 (MIT, © .NET Foundation and Contributors). Framework-dependent
 builds do not redistribute the runtime; self-contained builds include it under the MIT
 license above.
 
@@ -70,10 +70,10 @@ license above.
 
 ## Original implementations and assets
 
-- Argon2 (RFC 9106) and BLAKE2b (RFC 7693) are implemented in `src/Bastion.Core/Crypto`
+- Argon2 (RFC 9106) and BLAKE2b (RFC 7693) are implemented in `src/BastionVault.Core/Crypto`
   from the RFCs; no third-party code is included. Test vectors are taken from the RFCs.
 - The application icon, the Lamplight theme and all line-art assets are original work.
-- The embedded common-password list (`src/Bastion.App/Services/CommonPasswords.cs`) was
+- The embedded common-password list (`src/BastionVault.App/Services/CommonPasswords.cs`) was
   written for this project; no third-party list was copied.
 - Fonts (Segoe UI Variable, Segoe Fluent Icons, Segoe MDL2 Assets, Cascadia Mono) are
   referenced from the user's Windows installation and are not redistributed.

@@ -57,7 +57,7 @@ the reasoning behind the licensing and legal choices. Written for the maintainer
   commercial use. It is a professionally drafted software license and has an SPDX
   identifier (`PolyForm-Noncommercial-1.0.0`).
 - It is **not an open-source license** under the OSI or FSF definitions, because it
-  discriminates by field of use. Describe Bastion as *source-available, free for
+  discriminates by field of use. Describe Bastion Vault as *source-available, free for
   non-commercial use*. Consequences: GitHub does not auto-detect it (it shows "View
   license"), Linux distributions and most package registries will not carry it, and
   some companies forbid their staff from contributing to non-OSI projects.
@@ -80,7 +80,7 @@ definition adds that **copyright restrictions do not remove software from the pu
 domain**. Publishing the complete source code in a public repository, where anyone can read,
 copy and redistribute it, makes it "in the public domain" in this technical sense even
 though it stays copyrighted and even though the license forbids commercial use (a copyright
-restriction). Result: no export licence is needed to publish Bastion's source or to let
+restriction). Result: no export licence is needed to publish Bastion Vault's source or to let
 people anywhere download it. Two caveats: the exemption covers what is actually published
 (publish the source, not only binaries, and keep the release builds reproducible from it),
 and it does not cover knowingly providing the software to a sanctioned party or for a
@@ -92,6 +92,6 @@ encryption source code must send a one-time notification email to the Bureau of 
 and Security and the NSA. That obligation is not yours as a German publisher. GitHub's own
 terms already cover their hosting of encryption source.
 
-This is a summary of published regulations for a hobby project, not legal advice. If Bastion
+This is a summary of published regulations for a hobby project, not legal advice. If Bastion Vault
 is ever sold commercially, the "public domain" exemption still covers the published source,
 but the sold product is assessed on its own.

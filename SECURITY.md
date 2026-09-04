@@ -1,14 +1,14 @@
 # Security policy
 
-Bastion is a cryptographic tool. Reports about its security are welcome and taken
+Bastion Vault is a cryptographic tool. Reports about its security are welcome and taken
 seriously. Please read this page before reporting.
 
 ## Status of the cryptography
 
-Bastion's format and implementation were designed and reviewed carefully, and are tested
+Bastion Vault's format and implementation were designed and reviewed carefully, and are tested
 against the RFC vectors, a tamper matrix and fuzzing (see `docs/FORMAT.md` and
 `docs/THREAT-MODEL.md`). **They have not been independently audited by a third party.**
-Argon2id and BLAKE2b are own implementations. Treat Bastion accordingly: suitable for
+Argon2id and BLAKE2b are own implementations. Treat Bastion Vault accordingly: suitable for
 personal use, not a substitute for an audited product where lives or livelihoods depend
 on it.
 
@@ -29,7 +29,7 @@ Vault files written by any 1.x release open in every later 1.x release.
 3. If private reporting is not available to you, open a public issue that says only
    "security contact requested" with no details; the maintainer will reply with a channel.
 
-Please include: the Bastion version, the exact steps or a crafted file that shows the
+Please include: the Bastion Vault version, the exact steps or a crafted file that shows the
 problem, what an attacker gains, and whether you have shared the finding elsewhere.
 
 ## What to expect
@@ -43,7 +43,7 @@ problem, what an attacker gains, and whether you have shared the finding elsewhe
 
 - The vault format (`docs/FORMAT.md`): any way to read plaintext, learn metadata beyond
   what `docs/THREAT-MODEL.md` concedes, or alter a vault without detection.
-- The cryptographic implementation (`src/Bastion.Core/Crypto`), key handling and zeroing.
+- The cryptographic implementation (`src/BastionVault.Core/Crypto`), key handling and zeroing.
 - The reader's robustness against crafted vaults (crashes, hangs, unbounded allocation,
   path traversal on export).
 - Plaintext or metadata left on disk by the application.

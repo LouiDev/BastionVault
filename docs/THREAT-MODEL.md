@@ -1,6 +1,6 @@
-# Bastion threat model (honest version)
+# Bastion Vault threat model (honest version)
 
-Bastion protects the *contents* of a vault file against someone who obtains the file.
+Bastion Vault protects the *contents* of a vault file against someone who obtains the file.
 It does not protect against someone who controls the machine while the vault is open.
 
 ## Adversaries and what they get
@@ -47,9 +47,9 @@ limits, recurse, or follow reserved/relative names on export (see FORMAT.md §6 
 A damaged primary index falls back to the authenticated index copy.
 
 ### A5 — Traces on the local machine
-Bastion never writes plaintext except on explicit export. Imported content is
+Bastion Vault never writes plaintext except on explicit export. Imported content is
 encrypted before it is staged (in memory up to 64 MiB, otherwise in a single
-delete-on-close container). Bastion does not add vaults to Windows Recent Items or
+delete-on-close container). Bastion Vault does not add vaults to Windows Recent Items or
 jump lists; its own recent-vault list is opt-out and stored under DPAPI (current user).
 Logs contain no entry names, paths inside the vault, keys or ids. **Residual:** the
 vault's own file name and modification time; the `.bastion` extension; the OS file
@@ -63,7 +63,7 @@ derivation (own implementation); passwords are read from `PasswordBox.SecurePass
 into pinned UTF-8 buffers, never into `string` (NFC normalisation of a non-ASCII
 password creates one transient managed string, which cannot be zeroed). Not zeroable:
 WPF `PasswordBox` internals, decoded preview bitmaps (unmanaged WIC buffers), text shown
-on screen, entry names in the in-memory tree while the vault is open or soft-locked. Bastion
+on screen, entry names in the in-memory tree while the vault is open or soft-locked. Bastion Vault
 does not disable the pagefile or Windows Error Reporting for you.
 
 ## Explicitly out of scope

@@ -1,6 +1,6 @@
-# Bastion.App — UI contract and design language "Lamplight"
+# BastionVault.App — UI contract and design language "Lamplight"
 
-`Bastion.App` is a WPF application (net10.0-windows, x64, CommunityToolkit.Mvvm 8.4,
+`BastionVault.App` is a WPF application (net10.0-windows, x64, CommunityToolkit.Mvvm 8.4,
 Microsoft.Extensions.DependencyInjection). This document fixes the rules, tokens,
 resource keys, service interfaces and the shell/explorer split so that two people can
 build the App in parallel without merging each other's files.
@@ -10,7 +10,7 @@ build the App in parallel without merging each other's files.
 
 1. **No ViewModel references WPF types** (`Window`, `Dispatcher`, `MessageBox`, `Clipboard`,
    `Application.Current`, anything in `System.Windows.*`). Every OS touchpoint is behind an
-   interface in `Services/`. ViewModels are tested in `tests/Bastion.App.Tests` without STA.
+   interface in `Services/`. ViewModels are tested in `tests/BastionVault.App.Tests` without STA.
 2. **Core is never called on the UI thread for long work.** Long operations go through
    `OperationViewModel.RunAsync(...)`, which wraps `Task.Run`, a `ThrottledProgress<VaultProgress>`
    (80 ms `DispatcherTimer`, `Background` priority) and the cancel command. Core's `Changed`
@@ -60,7 +60,7 @@ build the App in parallel without merging each other's files.
    or type icons.
 10. **Lock clears state:** on lock the tree/list/preview are removed from the visual tree,
     search text, navigation history, internal clipboard and preview buffers are cleared, the
-    title resets to "Bastion", `SetWindowDisplayAffinity` is dropped (lock screen may be captured).
+    title resets to "Bastion Vault", `SetWindowDisplayAffinity` is dropped (lock screen may be captured).
 11. **No OS clipboard for vault content.** Ctrl+X/C/V use the internal clipboard
     (`IInternalClipboard`). The OS clipboard receives only "Copy path" and "Copy details" text,
     tagged with `ExcludeClipboardContentFromMonitorProcessing` and `CanIncludeInClipboardHistory=0`.
@@ -68,7 +68,7 @@ build the App in parallel without merging each other's files.
     `UseLayoutRounding=True`, `SnapsToDevicePixels=True` on the shell root; every panel has an
     opaque `Background`.
 13. **Logging** (`Serilog`-free, own tiny `ILog`): rolling text file under
-    `%LOCALAPPDATA%\Bastion\logs`, never an entry name, in-vault path, key, salt or id.
+    `%LOCALAPPDATA%\BastionVault\logs`, never an entry name, in-vault path, key, salt or id.
 14. **All brushes are `DynamicResource`** so a High Contrast dictionary can be swapped in when
     `SystemParameters.HighContrast` is true (`Themes/HighContrast.xaml` maps tokens to `SystemColors`).
 
@@ -193,7 +193,7 @@ Closing the window with unsaved changes prompts Save / Discard N changes / Cance
 Unhandled exceptions: `ZeroKeys()` first, then report.
 
 ---------------------------------------------------------------------------
-## 5. Service interfaces (`Services/`, all in namespace `Bastion.App.Services`)
+## 5. Service interfaces (`Services/`, all in namespace `BastionVault.App.Services`)
 
 ```csharp
 public interface IDialogService
@@ -208,7 +208,7 @@ public interface IFileDialogService
     string? PickVaultToOpen(); string? PickVaultToCreate(string suggestedName); string? PickKeyFile(); string? PickKeyFileToCreate();
     IReadOnlyList<string> PickFilesToImport(); string? PickFolderToImport(); string? PickExportFolder();
 }
-public interface ISettingsService { AppSettings Current { get; } void Save(); event EventHandler? Changed; }   // JSON under %LOCALAPPDATA%\Bastion\settings.json, atomic write
+public interface ISettingsService { AppSettings Current { get; } void Save(); event EventHandler? Changed; }   // JSON under %LOCALAPPDATA%\BastionVault\settings.json, atomic write
 public interface IRecentVaults { IReadOnlyList<RecentVault> Items { get; } void Touch(string path); void Forget(string path); void Clear(); }  // DPAPI-protected file
 public interface IRollbackGuard { ulong? LastSeenCounter(string vaultIdHex); void Record(string vaultIdHex, ulong counter); }             // DPAPI-protected file
 public interface IInternalClipboard { ClipboardOp? Content { get; } void Set(IReadOnlyList<EntryId> ids, bool isCut); void Clear(); event EventHandler? Changed; }
@@ -218,7 +218,7 @@ public interface ISystemEvents { event EventHandler? SessionLocked; event EventH
 public interface IShellIntegration { void RegisterFileAssociation(); void UnregisterFileAssociation(); bool IsRegistered { get; } void ApplyProcessHygiene(); }  // AppUserModelID, jump list off
 public interface ISingleInstance { IDisposable? TryAcquireVault(string path); void FocusExistingInstance(string path); }
 public interface IScreenPrivacy { void SetExcludeFromCapture(bool exclude); }
-public interface IClock { DateTimeOffset UtcNow { get; } }       // reuse Bastion.Core.IClock
+public interface IClock { DateTimeOffset UtcNow { get; } }       // reuse BastionVault.Core.IClock
 public interface IUiDispatcher { void Post(Action action); bool CheckAccess(); }
 public interface ILog { void Info(string message); void Warn(string message, Exception? ex = null); void Error(string message, Exception? ex = null); }
 public interface IKdfEstimator { Task<TimeSpan> EstimateAsync(KdfParameters p, CancellationToken ct); }     // wraps KdfBenchmark, caches per parameters
@@ -236,10 +236,10 @@ public interface IKdfEstimator { Task<TimeSpan> EstimateAsync(KdfParameters p, C
 ## 6. Project layout and ownership
 
 ```
-src/Bastion.App/
+src/BastionVault.App/
   App.xaml / App.xaml.cs         composition root (DI), exception handlers, single instance, CLI arg   [shell]
   app.manifest                   PerMonitorV2, longPathAware, asInvoker, Win10/11 supportedOS         [shell]
-  Bastion.App.csproj             (orchestrator owns)
+  BastionVault.App.csproj             (orchestrator owns)
   Assets/bastion.ico             (exists)
   Themes/  Tokens.xaml, Typography.xaml, Icons.xaml, HighContrast.xaml,
            Controls/*.xaml (Button, ToggleButton, TextBox, PasswordBox, ComboBox, CheckBox, RadioButton,
@@ -264,7 +264,7 @@ src/Bastion.App/
   Behaviors/ FileDropBehavior, ListDragBehavior, TreeDropBehavior, ColumnSortBehavior,
              InlineRenameBehavior, MarqueeSelectionBehavior (optional), FocusRingBehavior            [explorer]
   Converters/ ByteSize, RelativeDate, EntryKindToGlyph, FileTypeToGlyph, BoolToVisibility, StateToPip [explorer]
-tests/Bastion.App.Tests/         FakeVaultSession, ViewModel tests, converter tests                   [tests]
+tests/BastionVault.App.Tests/         FakeVaultSession, ViewModel tests, converter tests                   [tests]
 ```
 
 Contract between the two App owners: `ShellViewModel` exposes `IVaultSession? Session`,

@@ -1,0 +1,134 @@
+<UserControl x:Class="BastionVault.App.Views.FolderTreeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:behaviors="clr-namespace:BastionVault.App.Behaviors"
+             xmlns:controls="clr-namespace:BastionVault.App.Controls"
+             xmlns:conv="clr-namespace:BastionVault.App.Converters"
+             xmlns:vm="clr-namespace:BastionVault.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:ExplorerViewModel}"
+             Background="{DynamicResource Brush.Bg1}"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <controls:SectionHeader Grid.Row="0" Text="Folders" Margin="12,10,12,6" />
+
+        <TreeView x:Name="Tree"
+                  Grid.Row="1"
+                  ItemsSource="{Binding Tree}"
+                  AutomationProperties.Name="Folder tree"
+                  behaviors:TreeDropBehavior.Explorer="{Binding}"
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling">
+
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="TreeViewItem" BasedOn="{StaticResource TreeViewItem.Default}">
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+                    <Setter Property="controls:ItemAdornments.Pip" Value="{Binding Pip}" />
+                    <Setter Property="AutomationProperties.Name" Value="{Binding DisplayName}" />
+                </Style>
+            </TreeView.ItemContainerStyle>
+
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate DataType="{x:Type vm:FolderNodeViewModel}" ItemsSource="{Binding Children}">
+                    <Border x:Name="NodeRow" Background="Transparent" Padding="2,0" CornerRadius="3">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Style.TypeGlyph}"
+                                       FontSize="14"
+                                       Text="{Binding IsExpanded, Converter={StaticResource Converter.KindGlyph}}" />
+                            <TextBlock Margin="8,0,0,0"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
+                                       behaviors:TrimmedToolTipBehavior.ShowWhenTrimmed="True"
+                                       Text="{Binding DisplayName}" />
+                        </StackPanel>
+                    </Border>
+                    <HierarchicalDataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding IsDropTarget}" Value="True">
+                            <Setter TargetName="NodeRow" Property="Background" Value="{DynamicResource Brush.Bg3}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsRoot}" Value="True">
+                            <Setter TargetName="NodeRow" Property="TextElement.FontWeight" Value="SemiBold" />
+                        </DataTrigger>
+                    </HierarchicalDataTemplate.Triggers>
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+
+            <!--
+                Tree node context menu. A right click selects the node first, so every command
+                here acts on the folder that was clicked. Its data context is the explorer,
+                inherited from the tree.
+            -->
+            <TreeView.ContextMenu>
+                <ContextMenu x:Name="NodeMenu">
+                    <MenuItem Header="Open" FontWeight="SemiBold" Command="{Binding OpenTreeFolderCommand}">
+                        <MenuItem.Icon>
+                            <TextBlock Style="{StaticResource Style.Glyph16}" FontSize="14" Text="{DynamicResource Glyph.FolderOpen}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator />
+                    <MenuItem Header="New folder"
+                              InputGestureText="{conv:ShortcutText Id=NewFolder}"
+                              Command="{Binding NewFolderCommand}">
+                        <MenuItem.Icon>
+                            <TextBlock Style="{StaticResource Style.Glyph16}" FontSize="14" Text="{DynamicResource Glyph.NewFolder}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Import files here"
+                              InputGestureText="{conv:ShortcutText Id=ImportFiles}"
+                              Command="{Binding ImportFilesCommand}">
+                        <MenuItem.Icon>
+                            <TextBlock Style="{StaticResource Style.Glyph16}" FontSize="14" Text="{DynamicResource Glyph.ImportFiles}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Import folder here"
+                              InputGestureText="{conv:ShortcutText Id=ImportFolder}"
+                              Command="{Binding ImportFolderCommand}">
+                        <MenuItem.Icon>
+                            <TextBlock Style="{StaticResource Style.Glyph16}" FontSize="14" Text="{DynamicResource Glyph.ImportFolder}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Paste"
+                              InputGestureText="{conv:ShortcutText Id=Paste}"
+                              Command="{Binding PasteCommand}">
+                        <MenuItem.Icon>
+                            <TextBlock Style="{StaticResource Style.Glyph16}" FontSize="14" Text="{DynamicResource Glyph.Paste}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator />
+                    <MenuItem Header="Export this folder"
+                              InputGestureText="{conv:ShortcutText Id=Export}"
+                              Command="{Binding ExportCommand}">
+                        <MenuItem.Icon>
+                            <TextBlock Style="{StaticResource Style.Glyph16}" FontSize="14" Text="{DynamicResource Glyph.Export}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Copy path"
+                              InputGestureText="{conv:ShortcutText Id=CopyPath}"
+                              Command="{Binding CopyTreePathCommand}">
+                        <MenuItem.Icon>
+                            <TextBlock Style="{StaticResource Style.Glyph16}" FontSize="14" Text="{DynamicResource Glyph.Copy}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator />
+                    <MenuItem Header="Properties"
+                              InputGestureText="{conv:ShortcutText Id=Properties}"
+                              Command="{Binding PropertiesCommand}">
+                        <MenuItem.Icon>
+                            <TextBlock Style="{StaticResource Style.Glyph16}" FontSize="14" Text="{DynamicResource Glyph.Properties}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </ContextMenu>
+            </TreeView.ContextMenu>
+        </TreeView>
+    </Grid>
+</UserControl>

@@ -62,7 +62,7 @@
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
 
-# Bastion vault fixtures are binary
+# Bastion Vault fixtures are binary
 *.bastion binary
 *.ico binary
 *.png binary

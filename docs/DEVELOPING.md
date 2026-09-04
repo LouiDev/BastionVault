@@ -1,7 +1,7 @@
-# Developing Bastion
+# Developing Bastion Vault
 
 How to build it, test it, run it, and where everything lives. The normative documents are
-`API.md` (the frozen `Bastion.Core` surface), `UI-CONTRACT.md` (the App's rules and the
+`API.md` (the frozen `BastionVault.Core` surface), `UI-CONTRACT.md` (the App's rules and the
 "Lamplight" design language), `FORMAT.md` (the on-disk format) and `THREAT-MODEL.md`.
 This file is the working manual; it decides nothing.
 
@@ -9,8 +9,8 @@ This file is the working manual; it decides nothing.
 ## 1. Prerequisites
 
 - **.NET SDK 10.0** (the repo builds with 10.0.400).
-- **Windows 10 1809 or later**, x64. `Bastion.App` is `net10.0-windows` with `UseWPF`;
-  only `Bastion.Core` (`net10.0`) is portable, and only it has tests that would run
+- **Windows 10 1809 or later**, x64. `BastionVault.App` is `net10.0-windows` with `UseWPF`;
+  only `BastionVault.Core` (`net10.0`) is portable, and only it has tests that would run
   anywhere.
 - No other tooling. `Directory.Packages.props` pins every package version centrally;
   there are exactly three: CommunityToolkit.Mvvm, Microsoft.Extensions.DependencyInjection
@@ -20,8 +20,8 @@ This file is the working manual; it decides nothing.
 ## 2. Build and test
 
 ```
-dotnet build Bastion.slnx
-dotnet test  Bastion.slnx
+dotnet build BastionVault.slnx
+dotnet test  BastionVault.slnx
 ```
 
 The tree is expected to build with **zero warnings**; treat a new one as a build break.
@@ -29,19 +29,19 @@ A full run is about 15 seconds:
 
 | Project              | Tests | Covers                                                    |
 |----------------------|-------|-----------------------------------------------------------|
-| `Bastion.Core.Tests` |  724  | crypto vectors, the format, the session, the tamper matrix, golden fixtures |
-| `Bastion.App.Tests`  |  232  | view models, converters, the keymap, and one real end-to-end run |
+| `BastionVault.Core.Tests` |  724  | crypto vectors, the format, the session, the tamper matrix, golden fixtures |
+| `BastionVault.App.Tests`  |  232  | view models, converters, the keymap, and one real end-to-end run |
 
 Useful filters:
 
 ```
-dotnet test tests/Bastion.Core.Tests --filter "FullyQualifiedName~Vault.BlobTamper"
-dotnet test tests/Bastion.App.Tests  --filter "FullyQualifiedName~EndToEnd"
+dotnet test tests/BastionVault.Core.Tests --filter "FullyQualifiedName~Vault.BlobTamper"
+dotnet test tests/BastionVault.App.Tests  --filter "FullyQualifiedName~EndToEnd"
 ```
 
 ### The end-to-end test
 
-`tests/Bastion.App.Tests/EndToEnd/RealVaultEndToEndTests.cs` is the one test that proves the
+`tests/BastionVault.App.Tests/EndToEnd/RealVaultEndToEndTests.cs` is the one test that proves the
 parts fit together: the real `VaultFactory`, the real `ShellViewModel` and
 `ExplorerViewModel`, a real file in the temp directory, and only the dialogs and OS pickers
 substituted with NSubstitute. It creates a vault, imports a folder of three files, saves,
@@ -57,8 +57,8 @@ the product is broken.
 scratch on every run and compared **byte for byte**. To rewrite them on purpose:
 
 ```
-BASTION_REGEN_GOLDEN=1 dotnet test tests/Bastion.Core.Tests          # bash
-$env:BASTION_REGEN_GOLDEN='1'; dotnet test tests/Bastion.Core.Tests  # PowerShell
+BASTION_REGEN_GOLDEN=1 dotnet test tests/BastionVault.Core.Tests          # bash
+$env:BASTION_REGEN_GOLDEN='1'; dotnet test tests/BastionVault.Core.Tests  # PowerShell
 ```
 
 `dotnet test -- --regenerate-golden` does **not** work: VSTest does not forward arguments
@@ -71,21 +71,21 @@ what is pinned in each fixture.
 ## 3. Running the app
 
 ```
-dotnet run --project src/Bastion.App                          # start screen
-dotnet run --project src/Bastion.App -- C:\path\to\my.bastion  # open a vault at start-up
+dotnet run --project src/BastionVault.App                          # start screen
+dotnet run --project src/BastionVault.App -- C:\path\to\my.bastion  # open a vault at start-up
 ```
 
-The built executable is `src/Bastion.App/bin/Debug/net10.0-windows/Bastion.exe`
-(the assembly is named `Bastion`, not `Bastion.App`).
+The built executable is `src/BastionVault.App/bin/Debug/net10.0-windows/BastionVault.exe`
+(the assembly is named `BastionVault`, not `BastionVault.App`).
 
 ### Demo mode
 
 ```
-dotnet run --project src/Bastion.App -- --demo
-dotnet run --project src/Bastion.App -- --demo C:\vaults\demo.bastion
+dotnet run --project src/BastionVault.App -- --demo
+dotnet run --project src/BastionVault.App -- --demo C:\vaults\demo.bastion
 ```
 
-`--demo` swaps `Bastion.Core`'s factory for an in-memory `FakeVaultSession`
+`--demo` swaps `BastionVault.Core`'s factory for an in-memory `FakeVaultSession`
 (`Services/Demo/`), so every screen can be reached without a real vault: any password
 unlocks, and the fake save takes about three seconds on purpose so the progress card, its
 ETA and the non-cancellable tail are all visible. Pass a path as well to land on the unlock
@@ -126,10 +126,10 @@ recipe is worth keeping:
 1. **Turn off capture exclusion.** `ExcludeFromScreenCapture` defaults to `true` and calls
    `SetWindowDisplayAffinity(WDA_EXCLUDEFROMCAPTURE)`, so a screen capture records whatever
    is *behind* the window. Set `"excludeFromScreenCapture": false` in
-   `%LOCALAPPDATA%\Bastion\settings.json` before capturing, and **restore it afterwards** —
+   `%LOCALAPPDATA%\BastionVault\settings.json` before capturing, and **restore it afterwards** —
    after the process has fully exited, because the app rewrites the file during shutdown and
    will otherwise put the flag it was started with straight back.
-2. Start `Bastion.exe` with the `--test-pick-*` flags for whatever pickers the run needs,
+2. Start `BastionVault.exe` with the `--test-pick-*` flags for whatever pickers the run needs,
    plus `--trace-bindings=<file>`.
 3. Drive it from PowerShell with `UIAutomationClient` / `UIAutomationTypes`. Most controls
    carry an `AutomationProperties.Name` or `AutomationId` (`PasswordField`, `ConfirmField`,
@@ -160,13 +160,13 @@ application ever sees. On the machine this was integrated on, `Ctrl+Shift+E`,
 `Ctrl+Shift+I` and `Ctrl+Shift+C` were already taken, so Export, Import folder and Copy path
 appeared dead from the keyboard while working perfectly from the command bar. Before
 reporting a shortcut as broken, check it with `RegisterHotKey`: a failure with error 1409
-(`ERROR_HOTKEY_ALREADY_REGISTERED`) means the key never reaches Bastion.
+(`ERROR_HOTKEY_ALREADY_REGISTERED`) means the key never reaches Bastion Vault.
 
 ---------------------------------------------------------------------------
 ## 5. Ownership map
 
 ```
-src/Bastion.Core/                 net10.0, no UI dependency. API.md is its contract.
+src/BastionVault.Core/                 net10.0, no UI dependency. API.md is its contract.
   Crypto/       Argon2, Blake2b, ChunkCipher, HeaderCipher, KeyMaterial, VaultKeys
   Format/       VaultHeader, VaultIndex, IndexSerializer, PadLadder, EntryNames, VaultPath, VaultLimits
   Session/      VaultSession (+ .Persistence), TreeModel, StagingStore, SaveWriter,
@@ -174,7 +174,7 @@ src/Bastion.Core/                 net10.0, no UI dependency. API.md is its contr
   seams         IRandomSource, IClock, IVaultPaths — the only places Core touches
                 randomness, time and file naming. Swap them in tests, never in the App.
 
-src/Bastion.App/                  net10.0-windows, WPF, x64, PerMonitorV2.
+src/BastionVault.App/                  net10.0-windows, WPF, x64, PerMonitorV2.
   App.xaml.cs   composition root: DI graph, crash handlers, culture, single instance, CLI
   Themes/       Lamplight: Tokens, Typography, Icons, HighContrast, Controls/*.xaml
   Shell/        ShellWindow, WindowChromeBehavior, TitleBar, StateStripe, DialogHost,
@@ -206,11 +206,11 @@ same table, so it cannot drift from the real bindings.
 
 | Path | What |
 |------|------|
-| `%LOCALAPPDATA%\Bastion\settings.json` | `AppSettings`, atomic write |
-| `%LOCALAPPDATA%\Bastion\recent.dat` | recent vaults, DPAPI-protected |
-| `%LOCALAPPDATA%\Bastion\rollback.dat` | last-seen save counters, DPAPI-protected |
-| `%LOCALAPPDATA%\Bastion\logs\` | rolling text log — never an entry name, in-vault path, key, salt or id |
-| `%LOCALAPPDATA%\Bastion\staging\` | fallback staging, only when `StagingLocation` is not `BesideVault` |
+| `%LOCALAPPDATA%\BastionVault\settings.json` | `AppSettings`, atomic write |
+| `%LOCALAPPDATA%\BastionVault\recent.dat` | recent vaults, DPAPI-protected |
+| `%LOCALAPPDATA%\BastionVault\rollback.dat` | last-seen save counters, DPAPI-protected |
+| `%LOCALAPPDATA%\BastionVault\logs\` | rolling text log — never an entry name, in-vault path, key, salt or id |
+| `%LOCALAPPDATA%\BastionVault\staging\` | fallback staging, only when `StagingLocation` is not `BesideVault` |
 | beside the vault | `<name>.bastion.tmp-<hex>` while saving, `<name>.bastion~stage-<guid>` while staging |
 
 The temporary files are the vault's own directory by default and are removed on a
@@ -232,7 +232,7 @@ to `SaveWriter`, `StagingStore` or `Exporter`.
   - Column *order* is not persisted and reordering is off; widths and sort are persisted.
   - The crash handler is a native `MessageBox`, so its buttons follow the OS language even
     though the rest of the UI is pinned to en-US.
-  - The window title resets to "Bastion" while the vault is locked, but the vault-name chip
+  - The window title resets to "Bastion Vault" while the vault is locked, but the vault-name chip
     stays in the custom title bar. The unlock card shows the full path anyway, so this leaks
     nothing new.
 - **Not exercised end to end**

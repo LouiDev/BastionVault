@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BastionVault.App/BastionVault.App.csproj" />
+    <Project Path="src/BastionVault.Core/BastionVault.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BastionVault.App.Tests/BastionVault.App.Tests.csproj" />
+    <Project Path="tests/BastionVault.Core.Tests/BastionVault.Core.Tests.csproj" />
+  </Folder>
+</Solution>

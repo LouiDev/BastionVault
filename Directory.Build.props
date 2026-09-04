@@ -8,12 +8,12 @@
     <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
     <Company>HMD Software</Company>
     <Authors>LouiDev</Authors>
-    <Product>Bastion</Product>
+    <Product>Bastion Vault</Product>
     <Copyright>Copyright (c) 2026 LouiDev</Copyright>
     <Version>1.0.0</Version>
     <NeutralLanguage>en</NeutralLanguage>
     <PackageLicenseExpression>PolyForm-Noncommercial-1.0.0</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/LouiDev/Bastion</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/LouiDev/Bastion</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/LouiDev/BastionVault</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/LouiDev/BastionVault</PackageProjectUrl>
   </PropertyGroup>
 </Project>

@@ -1,11 +1,11 @@
-# Contributing to Bastion
+# Contributing to Bastion Vault
 
-Thank you for considering a contribution. Bastion is a security tool, so the bar for
+Thank you for considering a contribution. Bastion Vault is a security tool, so the bar for
 changes is deliberately high; this page explains how to clear it.
 
 ## License of contributions
 
-Bastion is licensed under the **PolyForm Noncommercial License 1.0.0** (see `LICENSE`).
+Bastion Vault is licensed under the **PolyForm Noncommercial License 1.0.0** (see `LICENSE`).
 By submitting a contribution you agree that:
 
 - your contribution is licensed to the project under the same PolyForm Noncommercial 1.0.0
@@ -70,7 +70,7 @@ and needs a format version discussion first (see below).
    buffers described in `docs/API.md`.
 4. **No plaintext on disk** except through explicit export.
 5. **View models never reference WPF types**; every OS touchpoint sits behind an interface
-   in `src/Bastion.App/Services`.
+   in `src/BastionVault.App/Services`.
 6. **Warnings are errors.** CI builds with `-warnaserror`.
 7. **Tests accompany changes.** A bug fix adds the regression test that would have caught
    it; a feature adds tests at the layer it lives in.
@@ -78,8 +78,8 @@ and needs a format version discussion first (see below).
 ## Building and testing
 
 ```
-dotnet build Bastion.slnx -warnaserror
-dotnet test  Bastion.slnx
+dotnet build BastionVault.slnx -warnaserror
+dotnet test  BastionVault.slnx
 ```
 
 Requires the .NET 10 SDK on Windows 10/11 (x64). The App test project runs headless.

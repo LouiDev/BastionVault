@@ -1,6 +1,6 @@
 # Code of conduct
 
-Bastion is a small project maintained in spare time. Everyone who takes part in it, in
+Bastion Vault is a small project maintained in spare time. Everyone who takes part in it, in
 issues, pull requests, discussions or reviews, is expected to keep it a place where
 people want to be.
 

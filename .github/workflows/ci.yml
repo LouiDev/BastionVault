@@ -28,14 +28,14 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore
-        run: dotnet restore Bastion.slnx
+        run: dotnet restore BastionVault.slnx
 
       - name: Build (warnings are errors)
-        run: dotnet build Bastion.slnx --configuration Release --no-restore -warnaserror
+        run: dotnet build BastionVault.slnx --configuration Release --no-restore -warnaserror
 
       - name: Test
         run: >
-          dotnet test Bastion.slnx --configuration Release --no-build
+          dotnet test BastionVault.slnx --configuration Release --no-build
           --logger "trx;LogFileName=results.trx"
           --results-directory TestResults
 
@@ -66,13 +66,13 @@ jobs:
       # WPF does not support trimming or NativeAOT; both variants are untrimmed.
       - name: Publish framework-dependent
         run: >
-          dotnet publish src/Bastion.App/Bastion.App.csproj -c Release -r win-x64
+          dotnet publish src/BastionVault.App/BastionVault.App.csproj -c Release -r win-x64
           --self-contained false -p:PublishSingleFile=true
           -o publish/framework-dependent
 
       - name: Publish self-contained
         run: >
-          dotnet publish src/Bastion.App/Bastion.App.csproj -c Release -r win-x64
+          dotnet publish src/BastionVault.App/BastionVault.App.csproj -c Release -r win-x64
           --self-contained true -p:PublishSingleFile=true
           -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishReadyToRun=true
           -o publish/self-contained
@@ -83,16 +83,16 @@ jobs:
           $v = "${{ github.ref_name }}"
           Copy-Item LICENSE, NOTICE, THIRD-PARTY-NOTICES.md, README.md publish/framework-dependent
           Copy-Item LICENSE, NOTICE, THIRD-PARTY-NOTICES.md, README.md publish/self-contained
-          Compress-Archive -Path publish/framework-dependent/* -DestinationPath "Bastion-$v-win-x64.zip"
-          Compress-Archive -Path publish/self-contained/* -DestinationPath "Bastion-$v-win-x64-selfcontained.zip"
-          Get-FileHash Bastion-*.zip -Algorithm SHA256 | ForEach-Object { "$($_.Hash)  $(Split-Path $_.Path -Leaf)" } | Set-Content SHA256SUMS.txt
+          Compress-Archive -Path publish/framework-dependent/* -DestinationPath "BastionVault-$v-win-x64.zip"
+          Compress-Archive -Path publish/self-contained/* -DestinationPath "BastionVault-$v-win-x64-selfcontained.zip"
+          Get-FileHash BastionVault-*.zip -Algorithm SHA256 | ForEach-Object { "$($_.Hash)  $(Split-Path $_.Path -Leaf)" } | Set-Content SHA256SUMS.txt
 
       - name: Create GitHub release (draft)
         uses: softprops/action-gh-release@v2
         with:
           draft: true
           files: |
-            Bastion-*.zip
+            BastionVault-*.zip
             SHA256SUMS.txt
           body: |
             Unsigned binaries: Windows SmartScreen will warn on first start. Verify the

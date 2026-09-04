@@ -1,8 +1,8 @@
 # Bastion Vault Format — version 1 (normative)
 
 This document is the single source of truth for the `.bastion` file format and for
-the on-disk behaviour of a conforming writer. `Bastion.Core` implements exactly
-this; `Bastion.Core.Tests` asserts against it. Where this document and code
+the on-disk behaviour of a conforming writer. `BastionVault.Core` implements exactly
+this; `BastionVault.Core.Tests` asserts against it. Where this document and code
 disagree, the code is wrong.
 
 Conventions: all integers are little-endian. `u8/u16/u32/u64/i64` are unsigned /
@@ -459,7 +459,7 @@ locked.
 - Above that, all staged ciphertext goes into ONE append-only container
   `<name>.bastion~stage-<guid>` in the vault's directory (`FileShare.None`,
   `FileOptions.DeleteOnClose`, `FileAttributes.Temporary`), with an in-memory
-  (blobId → offset, length) map. Fallback location `%LOCALAPPDATA%\Bastion\staging`
+  (blobId → offset, length) map. Fallback location `%LOCALAPPDATA%\BastionVault\staging`
   is used when the vault directory is not writable, its volume lacks room, or the
   vault sits under a cloud-sync root (OneDrive, Dropbox, iCloudDrive, Google Drive,
   or a reparse-tagged cloud folder). Users can override the location in settings.

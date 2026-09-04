@@ -1,12 +1,12 @@
-# Bastion
+# Bastion Vault
 
-Bastion is a Windows desktop program (C# / .NET 10 / WPF) that creates and edits
+Bastion Vault is a Windows desktop program (C# / .NET 10 / WPF) that creates and edits
 **encrypted archive files** — *vaults*, extension `.bastion` — with its own binary
 format. A vault holds a folder tree you browse like Windows Explorer; files and folders
 are imported from disk and exported back. Everything inside the vault — content, names,
 folder structure, sizes, entry count — is encrypted and authenticated.
 
-> One lamp in a stone room. Bastion's dark "Lamplight" theme uses a single amber accent
+> One lamp in a stone room. Bastion Vault's dark "Lamplight" theme uses a single amber accent
 > only where something is live, focused or unsaved.
 
 **Status:** version 1.0, format version 1. Source-available, free for non-commercial use
@@ -61,18 +61,18 @@ verify the download against `SHA256SUMS.txt`.
 ## Build from source
 
 ```
-dotnet build Bastion.slnx
-dotnet test  Bastion.slnx
-dotnet run --project src/Bastion.App
+dotnet build BastionVault.slnx
+dotnet test  BastionVault.slnx
+dotnet run --project src/BastionVault.App
 ```
 
 Requires the .NET 10 SDK on Windows 10/11 (x64). Solution layout:
 
 ```
-src/Bastion.Core          format, crypto, session (no UI)
-src/Bastion.App           WPF application ("Lamplight" theme)
-tests/Bastion.Core.Tests  vectors, golden files, tamper matrix, fuzzing
-tests/Bastion.App.Tests   ViewModel tests with a fake session, real-Core end-to-end test
+src/BastionVault.Core          format, crypto, session (no UI)
+src/BastionVault.App           WPF application ("Lamplight" theme)
+tests/BastionVault.Core.Tests  vectors, golden files, tamper matrix, fuzzing
+tests/BastionVault.App.Tests   ViewModel tests with a fake session, real-Core end-to-end test
 docs/                     FORMAT.md (normative), API.md, THREAT-MODEL.md, UI-CONTRACT.md,
                           DEVELOPING.md, PUBLISHING.md
 ```
@@ -95,20 +95,20 @@ public issue. Process and scope: [SECURITY.md](SECURITY.md).
 
 ## License
 
-Bastion is licensed under the **PolyForm Noncommercial License 1.0.0** — see
-[LICENSE](LICENSE). In short: you may use, study, modify and share Bastion for any
+Bastion Vault is licensed under the **PolyForm Noncommercial License 1.0.0** — see
+[LICENSE](LICENSE). In short: you may use, study, modify and share Bastion Vault for any
 non-commercial purpose (personal, educational, research, nonprofit, evaluation); commercial
 use is not permitted under this license. This is a *source-available* license, not an
 open-source license in the OSI sense. For a commercial license, open an issue titled
 "commercial license" and the maintainer will get in touch.
 
-Required Notice: Copyright (c) 2026 LouiDev (https://github.com/LouiDev/Bastion)
+Required Notice: Copyright (c) 2026 LouiDev (https://github.com/LouiDev/BastionVault)
 
 Redistributed third-party components and their licenses are listed in
 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 ## Notes
 
-- Bastion is not a backup tool. A vault is one file; back it up like any other file.
+- Bastion Vault is not a backup tool. A vault is one file; back it up like any other file.
 - A save rewrites the whole vault. Vaults in the low-gigabyte range are the design target.
 - There is no password recovery. None.
