@@ -1,161 +1,176 @@
 # Installing Bastion Vault
 
-Bastion Vault is distributed as a zip archive, not as an installer. The program is a single
-executable that runs from any folder, needs no administrator rights, and writes only to your
-own user profile. This page explains which download to pick, how to verify it, what to expect
-on first start, what the program leaves on your machine, and how to remove it completely.
+Bastion Vault has no setup program. You download a zip file, unpack it into a folder, and
+start the program from there. It does not need administrator rights and it does not change
+anything on your computer that you did not ask for. This guide takes you through it step by
+step. The technical details are collected at the very end, for those who want them.
 
-For building from source see the *Build from source* section of [README.md](../README.md).
+## What you need
 
-## 1. Requirements
+- A PC with **Windows 10 or Windows 11**, 64-bit. Almost every PC sold in the last ten years
+  qualifies. (Windows on ARM tablets and laptops are not supported.)
+- About five minutes.
 
-- Windows 10 or Windows 11, 64-bit (x64). There is no ARM64 or 32-bit build.
-- For the `framework-dependent` variant: the **.NET 10 Desktop Runtime (x64)**. The
-  `selfcontained` variant needs nothing else.
-- Enough free memory for the vault's key derivation. The default preset uses 512 MiB while a
-  vault is being unlocked; the unlock screen shows the exact figure for each vault.
+## Step 1: Download
 
-## 2. Choosing a variant
+1. Open the [Releases page](https://github.com/LouiDev/BastionVault/releases).
+2. The newest version is at the top. Under **Assets** you see several files. You need
+   **one** of the two zip files:
 
-Every release on the [Releases page](https://github.com/LouiDev/BastionVault/releases)
-carries two zips and a checksum file:
+   | Download this | If |
+   |---|---|
+   | `BastionVault-...-win-x64-selfcontained.zip` | You are not sure. This is the safe choice: everything the program needs is inside. The download is larger. |
+   | `BastionVault-...-win-x64.zip` | You know that the ".NET 10 Desktop Runtime" is already on your PC, or you do not mind installing it. The download is much smaller. |
 
-| File | What it is | Pick it when |
-|---|---|---|
-| `BastionVault-vX.Y.Z-win-x64.zip` | Framework-dependent. Small download; uses the .NET 10 Desktop Runtime installed on the machine. | You already have the runtime, or you keep several .NET programs and want Windows Update / winget to service the runtime centrally. |
-| `BastionVault-vX.Y.Z-win-x64-selfcontained.zip` | Self-contained. Larger download; the runtime is inside the executable. | You want one file that works on a machine you do not control, or you do not want to install a runtime. |
-| `SHA256SUMS.txt` | SHA-256 of both zips. | Always, to verify the download (section 3). |
+   If you pick the smaller one and the runtime is missing, the program tells you so when you
+   start it and offers a link to download it from Microsoft. Choose ".NET Desktop Runtime",
+   64-bit (x64), install it, and start Bastion Vault again.
 
-If you pick the framework-dependent variant and the runtime is missing, the first start shows a
-Windows dialog with a download link. You can also install it ahead of time:
+3. Click the file name. Your browser saves it to your *Downloads* folder.
 
-```
-winget install Microsoft.DotNet.DesktopRuntime.10
-```
+## Step 2: Unpack
 
-or download ".NET Desktop Runtime 10.0, Windows x64" from
-<https://dotnet.microsoft.com/download/dotnet/10.0>. Only the *Desktop* runtime works; the
-plain ".NET Runtime" and the "ASP.NET Core Runtime" do not include WPF.
+1. Decide where the program should live. A good place is a new folder called
+   `Bastion Vault` inside your *Documents* folder, or anywhere else you keep programs. Pick a
+   place you will not move or rename later (Step 5 explains why).
+2. Open your *Downloads* folder, right-click the zip file and choose **Extract All...**.
+3. In the window that opens, click **Browse...**, choose the folder from point 1, and click
+   **Extract**.
 
-## 3. Download and verify
+The folder now contains `BastionVault.exe` (the program), a few text files with the license,
+and two files ending in `.pdb`. You can ignore or delete the `.pdb` files; they only help
+developers.
 
-The executables are **not code-signed** (see section 9), so the checksum is the only thing
-that ties the file you downloaded to the file the CI built. Download the zip and
-`SHA256SUMS.txt` into the same folder, then in PowerShell:
+## Step 3: Start it for the first time
+
+Double-click `BastionVault.exe`.
+
+**Windows will show a blue box saying "Windows protected your PC".** This is expected and not
+a sign that something is wrong. Windows shows this box for every program that is not signed
+with a paid publisher certificate, and Bastion Vault is not. To continue:
+
+1. Click **More info** (small text under the message).
+2. Click **Run anyway**.
+
+Windows asks this only once per downloaded file. The next start is silent.
+
+You now see the start screen with **Create vault** and **Open vault**. A *vault* is a single
+file, ending in `.bastion`, that holds your encrypted files and folders. Create one, choose a
+password you will remember, and you are ready.
+
+## Step 4: Make it easy to find (optional)
+
+The zip cannot add a Start menu entry for you. If you want one:
+
+- Right-click `BastionVault.exe` and choose **Pin to Start**, or **Pin to taskbar**.
+
+## Step 5: Open vaults by double-click (optional)
+
+Out of the box, double-clicking a `.bastion` file does nothing, because Bastion Vault never
+registers itself on your PC without asking. If you want double-click to work:
+
+1. In Bastion Vault, open **Settings** (press `Ctrl` and `,` together, or use the
+   *Settings* entry in the menu).
+2. Find **Register the .bastion file type** and click **Register**.
+
+From now on, double-clicking a vault opens it in Bastion Vault. The same button, now
+labelled **Unregister**, switches it off again. This affects only your own Windows user
+account.
+
+**Important: after registering, do not move or rename the program folder.** Windows
+remembers where the program was when you clicked *Register*. If you move it, double-click
+stops working with no message. If you need to move it anyway: click *Unregister*, move the
+folder, start the program from the new place, click *Register*.
+
+## Updating to a new version
+
+1. Close Bastion Vault.
+2. Download the new zip (Step 1) and extract it **into the same folder** as before, replacing
+   the old files when Windows asks.
+3. Start it. The blue "Windows protected your PC" box appears once more because the file is
+   new; click *More info*, then *Run anyway*.
+
+Your settings and your list of recent vaults are kept. Every version 1.x opens every vault
+that an earlier 1.x version created.
+
+## Removing Bastion Vault
+
+1. If you used Step 5, open *Settings* and click **Unregister** first, while the program is
+   still there.
+2. Close Bastion Vault and delete the program folder.
+3. Delete the folder where the program keeps its settings: press `Windows` + `R`, type
+   `%LOCALAPPDATA%\BastionVault`, press Enter, and delete everything in the folder that opens
+   (or the folder itself).
+
+**Your vaults are not touched by any of this.** They are ordinary files where you saved them.
+Keep them, or delete them yourself if you no longer want them.
+
+## Four things to know before you rely on it
+
+- **There is no "forgot password".** Nobody, not even the author, can open a vault without
+  its password (and its keyfile, if you added one). Write the password down and keep it
+  somewhere safe.
+- **A vault is one file. Back it up like any other file.** Copy it to an external drive or a
+  second place now and then. Bastion Vault is not a backup tool.
+- **Download only from the Releases page linked above.** The program is not signed, so a
+  copy from anywhere else could have been altered. If you want to double-check a download,
+  see *Verifying a download* below.
+- **The encryption has not been independently audited.** It was designed carefully and is
+  tested extensively, but no outside expert has reviewed it yet. What it does and does not
+  protect against is spelled out in [THREAT-MODEL.md](THREAT-MODEL.md).
+
+---
+
+## For the technically minded
+
+**Verifying a download.** Each release ships `SHA256SUMS.txt`. Download it next to the zip,
+open a terminal in that folder (right-click the folder background, *Open in Terminal*) and
+run:
 
 ```powershell
-Get-FileHash .\BastionVault-vX.Y.Z-win-x64-selfcontained.zip -Algorithm SHA256
+Get-FileHash .\BastionVault-v1.0.1-win-x64-selfcontained.zip -Algorithm SHA256
 Get-Content .\SHA256SUMS.txt
 ```
 
-The hash printed by `Get-FileHash` must match the line for that file name in `SHA256SUMS.txt`
-exactly. If it does not, delete the download and get it again from the Releases page; do not
-run it.
+The hash printed by the first command must match the line for that file name in the second.
+If it does not, delete the download and get it again.
 
-## 4. Unpack and first start
-
-1. Pick a permanent folder, for example `C:\Program Files\BastionVault` (needs one
-   administrator confirmation when copying) or `%LOCALAPPDATA%\Programs\BastionVault` (no
-   confirmation). Choose the place you will keep it: if you register the `.bastion` file type
-   later (section 5), that registration stores this path.
-2. Right-click the zip, *Extract All...*, and point it at that folder. The zip contains
-   `BastionVault.exe`, two debug-symbol files (`*.pdb`, safe to delete), and `LICENSE`,
-   `NOTICE`, `THIRD-PARTY-NOTICES.md`, `README.md`.
-3. Start `BastionVault.exe`. Because the file is not signed, **Windows SmartScreen shows
-   "Windows protected your PC"** the first time. Click *More info*, then *Run anyway*. This
-   happens once per downloaded file; after that Windows remembers the decision.
-4. The start screen offers *Create vault* and *Open vault*. To look around without a real
-   vault, start the program with `--demo` (section 8).
-
-Optional: create a Start menu or taskbar shortcut by right-clicking `BastionVault.exe` and
-choosing *Pin to Start* or *Pin to taskbar*. The zip does not do this for you.
-
-## 5. Registering the `.bastion` file type (optional)
-
-By default double-clicking a `.bastion` file does nothing; Bastion Vault never registers
-itself behind your back. To make Explorer open vaults with Bastion Vault:
-
-1. In the program, open *Settings* (`Ctrl+,` or the *Settings* menu entry).
-2. Under *Register the .bastion file type*, click **Register**.
-
-The registration is written under your own user only
-(`HKEY_CURRENT_USER\Software\Classes\.bastion` and
-`HKEY_CURRENT_USER\Software\Classes\BastionVault.Vault.1`); other accounts on the machine are
-not affected and no administrator rights are needed. The same button, now labelled
-**Unregister**, removes it again.
-
-**Do not move or rename the program folder after registering.** The registration points at
-the executable's full path; if the file is no longer there, double-clicking a vault fails
-silently. If you must move it: *Unregister*, move, start the program from the new place,
-*Register*.
-
-## 6. What Bastion Vault writes to your machine
-
-Everything below lives in your user profile. **No vault content, no passwords and no keys are
-ever written to any of these places.** The vault is only ever the `.bastion` file you created,
-wherever you chose to put it.
+**What the program writes.** Everything is per user; nothing here ever contains vault
+content, passwords or keys.
 
 | Location | Contents |
 |---|---|
-| `%LOCALAPPDATA%\BastionVault\settings.json` | Program settings: theme, auto-lock timer, default KDF preset, list columns, window placement. Plain JSON. |
-| `%LOCALAPPDATA%\BastionVault\recent.dat` | The recent-vaults list (file paths only), encrypted with Windows DPAPI for your account. |
-| `%LOCALAPPDATA%\BastionVault\rollback.dat` | The highest save counter seen per vault, so a vault file that was silently replaced by an older copy is detected. DPAPI-encrypted. |
-| `%LOCALAPPDATA%\BastionVault\logs\` | Rolling text log. Never contains entry names, in-vault paths, keys or salts. |
-| `HKCU\Software\Classes\.bastion`, `HKCU\Software\Classes\BastionVault.Vault.1` | Only if you registered the file type (section 5). |
-| `%TEMP%\.net\BastionVault\` | `selfcontained` variant only: the .NET runtime's native libraries, unpacked from the single executable on first start. No user data. |
+| `%LOCALAPPDATA%\BastionVault\settings.json` | Settings (theme, auto-lock, default KDF preset, list columns, window placement). Plain JSON. |
+| `%LOCALAPPDATA%\BastionVault\recent.dat` | Recent-vaults list (paths only), DPAPI-encrypted for your account. |
+| `%LOCALAPPDATA%\BastionVault\rollback.dat` | Highest save counter seen per vault, so a vault file replaced by an older copy is detected. DPAPI-encrypted. |
+| `%LOCALAPPDATA%\BastionVault\logs\` | Rolling text log; never contains entry names, in-vault paths, keys or salts. |
+| `HKCU\Software\Classes\.bastion`, `HKCU\Software\Classes\BastionVault.Vault.1` | The file type from Step 5, only if you registered it. |
+| `%TEMP%\.net\BastionVault\` | Self-contained variant only: the .NET runtime's native libraries, unpacked on first start. No user data. |
 
-Bastion Vault never connects to the network. There is no update check, no telemetry and no
-crash reporting.
+The program never connects to the network: no update check, no telemetry, no crash reports.
 
-## 7. Updating
-
-1. Download and verify the new zip (section 3).
-2. Close Bastion Vault.
-3. Extract the new zip over the existing folder, replacing `BastionVault.exe` and the other
-   files in place. Keeping the same folder keeps a registered file type (section 5) working.
-4. Start it; SmartScreen will ask once more because the file changed.
-
-Settings, the recent list and the rollback record are kept. Every 1.x release reads and writes
-format version 1, so an updated program opens every vault the previous one created. Read the
-[CHANGELOG](../CHANGELOG.md) before updating; anything that affects existing vaults is listed
-there.
-
-## 8. Command line
-
-```
-BastionVault.exe                       start screen
-BastionVault.exe C:\path\to\my.bastion open (unlock) that vault
-BastionVault.exe --demo                in-memory demo vault; any password unlocks it
-```
-
-Bastion Vault runs one process per vault. Opening a vault that is already open in another
-window brings that window to the front instead of opening the file a second time.
-
-## 9. Before you trust it with data
-
-- The executables are **not code-signed**. Verify the checksum (section 3) and download only
-  from the project's Releases page.
-- The cryptography has **not been independently audited**. Read
-  [THREAT-MODEL.md](THREAT-MODEL.md) for what is and is not protected, and
-  [SECURITY.md](../SECURITY.md) for how to report a problem.
-- **There is no password recovery.** If you lose the password (or the keyfile, if you use one),
-  the vault's content is gone.
-- **A vault is one file. Back it up like any other file.** Bastion Vault is not a backup tool.
-
-## 10. Uninstalling completely
-
-1. If you registered the file type, open *Settings* and click **Unregister** first (the
-   button needs the executable to still exist).
-2. Close Bastion Vault and delete the program folder.
-3. Delete `%LOCALAPPDATA%\BastionVault` (settings, recent list, rollback record, logs).
-4. `selfcontained` variant only: delete `%TEMP%\.net\BastionVault` if it exists.
-5. Your `.bastion` files are untouched by all of the above. Delete them yourself if you want
-   them gone; there is nothing else to clean up.
-
-If you deleted the program folder before unregistering, remove the two registry keys by hand
-(current user only, no administrator rights needed):
+**If you deleted the program before unregistering the file type**, remove the two registry
+keys by hand (current user only, no administrator rights needed):
 
 ```
 reg delete HKCU\Software\Classes\.bastion /f
 reg delete HKCU\Software\Classes\BastionVault.Vault.1 /f
 ```
+
+**Command line.**
+
+```
+BastionVault.exe                        start screen
+BastionVault.exe C:\path\to\my.bastion  open that vault
+BastionVault.exe --demo                 in-memory demo vault; any password unlocks it
+```
+
+One process per vault: opening a vault that is already open brings its window to the front
+instead of opening the file twice.
+
+**Runtime.** The framework-dependent zip needs the .NET 10 Desktop Runtime, x64:
+`winget install Microsoft.DotNet.DesktopRuntime.10`, or download it from
+<https://dotnet.microsoft.com/download/dotnet/10.0>. The plain ".NET Runtime" and the
+"ASP.NET Core Runtime" do not include WPF and are not enough.
+
+**Building from source** is described in [README.md](../README.md).
