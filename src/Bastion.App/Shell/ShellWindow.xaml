@@ -1,0 +1,109 @@
+<Window x:Class="Bastion.App.Shell.ShellWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        xmlns:local="clr-namespace:Bastion.App.Shell"
+        xmlns:views="clr-namespace:Bastion.App.Views"
+        xmlns:vm="clr-namespace:Bastion.App.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:ShellViewModel}"
+        Title="{Binding Title}"
+        Width="1180" Height="760"
+        MinWidth="880" MinHeight="560"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource Brush.Bg0}"
+        Foreground="{DynamicResource Brush.TextPrimary}"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="ClearType"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        AllowsTransparency="False"
+        WindowStyle="SingleBorderWindow">
+
+    <!-- UI-CONTRACT.md section 1.4: no transparency, DWM keeps the corners and the shadow. -->
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="40"
+                            ResizeBorderThickness="6"
+                            GlassFrameThickness="0,1,0,0"
+                            CornerRadius="0"
+                            UseAeroCaptionButtons="False"
+                            NonClientFrameEdges="None" />
+    </shell:WindowChrome.WindowChrome>
+
+    <Grid x:Name="WindowRoot" Background="{DynamicResource Brush.Bg0}">
+        <Grid x:Name="ContentRoot">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <local:TitleBarView x:Name="TitleBar" Grid.Row="0" DataContext="{Binding}" />
+
+            <local:StateStripe x:Name="Stripe" Grid.Row="1" State="{Binding Stripe}" />
+
+            <Grid Grid.Row="2" Background="{DynamicResource Brush.Bg0}">
+                <local:StartView DataContext="{Binding Start}"
+                                 Visibility="{Binding DataContext.IsStartVisible,
+                                     RelativeSource={RelativeSource AncestorType=Window},
+                                     Converter={StaticResource Converter.BoolToVisibility}}" />
+
+                <local:UnlockView DataContext="{Binding Unlock}"
+                                  Visibility="{Binding DataContext.IsUnlockVisible,
+                                      RelativeSource={RelativeSource AncestorType=Window},
+                                      Converter={StaticResource Converter.BoolToVisibility}}" />
+
+                <ContentControl Content="{Binding Explorer}"
+                                Focusable="False"
+                                Visibility="{Binding IsExplorerVisible, Converter={StaticResource Converter.BoolToVisibility}}">
+                    <ContentControl.ContentTemplate>
+                        <DataTemplate DataType="{x:Type vm:ExplorerViewModel}">
+                            <views:ExplorerView />
+                        </DataTemplate>
+                    </ContentControl.ContentTemplate>
+                </ContentControl>
+            </Grid>
+
+            <!-- Status strip. The explorer replaces the middle of it with its own status bar. -->
+            <Border Grid.Row="3" Height="{DynamicResource Height.StatusBar}"
+                    Background="{DynamicResource Brush.Bg1}"
+                    Visibility="{Binding IsShellStatusBarVisible, Converter={StaticResource Converter.BoolToVisibility}}">
+                <Grid>
+                    <StackPanel VerticalAlignment="Top">
+                        <Rectangle Height="1" Fill="{DynamicResource Brush.StrokeShadow}" />
+                        <Rectangle Height="1" Fill="{DynamicResource Brush.StrokeDivider}" />
+                    </StackPanel>
+
+                    <Grid Margin="12,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   VerticalAlignment="Center"
+                                   Style="{StaticResource Text.Caption}"
+                                   TextTrimming="CharacterEllipsis"
+                                   Text="{Binding StatusMessage}" />
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource Text.Caption}"
+                                       Visibility="{Binding Operation.IsRunning, Converter={StaticResource Converter.BoolToVisibility}}"
+                                       Text="{Binding Operation.Verb}" />
+                            <TextBlock Style="{StaticResource Text.Mono}" Margin="12,0,0,0"
+                                       Visibility="{Binding Operation.Throughput, Converter={StaticResource Converter.NotEmptyToVisibility}}"
+                                       Text="{Binding Operation.Throughput}" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+            <!-- First run covers the content area; the title bar stays operable. -->
+            <local:FirstRunView x:Name="FirstRun" Grid.Row="2" Visibility="Collapsed" />
+        </Grid>
+
+        <local:DialogHost x:Name="Dialogs" ContentRoot="{Binding ElementName=ContentRoot}" />
+    </Grid>
+</Window>

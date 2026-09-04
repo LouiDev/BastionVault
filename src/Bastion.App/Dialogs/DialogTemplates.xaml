@@ -1,0 +1,58 @@
+<!--
+    Dialog view models are matched to their views here, so IDialogService never needs to know a
+    view type and the shell never news up a control.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:dialogs="clr-namespace:Bastion.App.Dialogs"
+                    xmlns:vm="clr-namespace:Bastion.App.ViewModels.Dialogs">
+
+    <DataTemplate DataType="{x:Type vm:ConfirmDialogViewModel}">
+        <dialogs:ConfirmDialogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:ProgressDialogViewModel}">
+        <dialogs:ProgressDialogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:NewVaultDialogViewModel}">
+        <dialogs:NewVaultDialogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:ChangeCredentialsDialogViewModel}">
+        <dialogs:ChangeCredentialsDialogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:PropertiesDialogViewModel}">
+        <dialogs:PropertiesDialogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:SettingsDialogViewModel}">
+        <dialogs:SettingsDialogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:VerifyReportDialogViewModel}">
+        <dialogs:VerifyReportDialogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:ImportReportDialogViewModel}">
+        <dialogs:ImportReportDialogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:NameConflictDialogViewModel}">
+        <dialogs:NameConflictDialogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:AboutDialogViewModel}">
+        <dialogs:AboutDialogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:ShortcutsDialogViewModel}">
+        <dialogs:ShortcutsDialogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:PendingChangesViewModel}">
+        <dialogs:PendingChangesPopover />
+    </DataTemplate>
+
+</ResourceDictionary>

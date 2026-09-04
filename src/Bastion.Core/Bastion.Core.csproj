@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Bastion.Core</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Description>Bastion vault format, cryptography and session logic (no UI dependencies).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Bastion.Core.Tests" />
+    <InternalsVisibleTo Include="Bastion.App.Tests" />
+  </ItemGroup>
+
+</Project>

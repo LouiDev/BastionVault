@@ -1,0 +1,15 @@
+<!--
+    Converters the shell and the dialogs share. The explorer owns its own Converters/ folder; the
+    keys here are the handful that the theme itself and the shell views need.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="clr-namespace:Bastion.App.Controls">
+
+    <BooleanToVisibilityConverter x:Key="Converter.BoolToVisibility" />
+    <controls:InverseBoolToVisibilityConverter x:Key="Converter.InverseBoolToVisibility" />
+    <controls:NotEmptyToVisibilityConverter x:Key="Converter.NotEmptyToVisibility" />
+    <controls:NotNullToVisibilityConverter x:Key="Converter.NotNullToVisibility" />
+    <controls:FractionOfWidthConverter x:Key="Converter.FractionOfWidth" />
+
+</ResourceDictionary>

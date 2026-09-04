@@ -1,0 +1,51 @@
+<UserControl x:Class="Bastion.App.Dialogs.ImportReportDialogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:Bastion.App.Controls"
+             xmlns:dialogs="clr-namespace:Bastion.App.ViewModels.Dialogs"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=dialogs:ImportReportDialogViewModel}">
+
+    <DockPanel Margin="24" MinWidth="520" MaxWidth="640">
+        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Text.Title}" Text="{Binding Title}" />
+        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Text.Mono}" Margin="0,10,0,0" Text="{Binding Summary}" />
+
+        <Button DockPanel.Dock="Bottom"
+                HorizontalAlignment="Right"
+                Margin="0,20,0,0"
+                MinWidth="110"
+                Style="{StaticResource Button.Primary}"
+                Content="Close"
+                Command="{Binding CancelCommand}" />
+
+        <StackPanel Margin="0,16,0,0"
+                    Visibility="{Binding IsClean, Converter={StaticResource Converter.InverseBoolToVisibility}}">
+            <controls:SectionHeader Text="Notes" />
+            <ScrollViewer MaxHeight="320" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Rows}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Style="{StaticResource Style.Glyph16}"
+                                           Margin="0,0,10,0"
+                                           VerticalAlignment="Top"
+                                           Text="{DynamicResource Glyph.Warning}" />
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Style="{StaticResource Text.Mono}" TextWrapping="Wrap" Text="{Binding Path}" />
+                                    <TextBlock Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Text="{Binding Detail}" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </StackPanel>
+    </DockPanel>
+</UserControl>

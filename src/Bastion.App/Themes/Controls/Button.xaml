@@ -1,0 +1,429 @@
+<!--
+    Buttons. Only Button.Primary carries the lamp, and only one of them may be visible
+    at a time (UI-CONTRACT.md section 1.9).
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework">
+
+    <!-- ============ Secondary (the default look) ============ -->
+    <Style x:Key="Button.Default" TargetType="ButtonBase">
+        <Setter Property="Height" Value="{DynamicResource Height.CommandButton}" />
+        <Setter Property="MinWidth" Value="88" />
+        <Setter Property="Padding" Value="14,0" />
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Text}" />
+        <Setter Property="FontSize" Value="{DynamicResource Size.Body}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Bg2}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.StrokeControl}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="FocusVisualStyle" Value="{DynamicResource Focus.Ring}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ButtonBase">
+                    <Border x:Name="Root"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{DynamicResource Radius.Small}"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter x:Name="Content"
+                                          Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          RecognizesAccessKey="True"
+                                          TextElement.Foreground="{TemplateBinding Foreground}"
+                                          TextElement.FontFamily="{TemplateBinding FontFamily}"
+                                          TextElement.FontSize="{TemplateBinding FontSize}"
+                                          SnapsToDevicePixels="True">
+                            <ContentPresenter.Resources>
+                                <!--
+                                    Labels follow the foreground this template hands down. Without
+                                    a local style the app-wide implicit TextBlock style sets
+                                    Foreground, and a Style value outranks property-value
+                                    inheritance, so the TextElement.Foreground this template hands
+                                    down - the disabled colour below, and Button.Primary's
+                                    OnAccent - never reached the label. This style deliberately
+                                    sets no Foreground: colour, family and size are all inherited
+                                    from the ContentPresenter.
+                                -->
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+                                    <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+                                    <Setter Property="UseLayoutRounding" Value="True" />
+                                    <Setter Property="SnapsToDevicePixels" Value="True" />
+                                </Style>
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg3}" />
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.StrokeControlHover}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg1}" />
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.StrokeControl}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg1}" />
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.StrokeDivider}" />
+                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.TextDisabled}" />
+                            <Setter TargetName="Content" Property="Opacity" Value="0.5" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="Button" BasedOn="{StaticResource Button.Default}" />
+
+    <!-- ============ Primary (the lamp) ============ -->
+    <Style x:Key="Button.Primary" TargetType="ButtonBase" BasedOn="{StaticResource Button.Default}">
+        <Setter Property="Height" Value="{DynamicResource Height.DialogButton}" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnAccent}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ButtonBase">
+                    <Border x:Name="Root"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{DynamicResource Radius.Small}"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter x:Name="Content"
+                                          Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          RecognizesAccessKey="True"
+                                          TextElement.Foreground="{TemplateBinding Foreground}"
+                                          TextElement.FontFamily="{TemplateBinding FontFamily}"
+                                          TextElement.FontSize="{TemplateBinding FontSize}"
+                                          TextElement.FontWeight="{TemplateBinding FontWeight}">
+                            <ContentPresenter.Resources>
+                                <!--
+                                    Labels follow the foreground this template hands down. Without
+                                    a local style the app-wide implicit TextBlock style sets
+                                    Foreground, and a Style value outranks property-value
+                                    inheritance, so the TextElement.Foreground this template hands
+                                    down - the disabled colour below, and Button.Primary's
+                                    OnAccent - never reached the label. This style deliberately
+                                    sets no Foreground: colour, family and size are all inherited
+                                    from the ContentPresenter.
+                                -->
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+                                    <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+                                    <Setter Property="UseLayoutRounding" Value="True" />
+                                    <Setter Property="SnapsToDevicePixels" Value="True" />
+                                </Style>
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.AccentHover}" />
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.AccentPressed}" />
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.AccentPressed}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg2}" />
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.StrokeDivider}" />
+                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.TextDisabled}" />
+                            <Setter TargetName="Content" Property="Opacity" Value="0.5" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ Ghost ============ -->
+    <Style x:Key="Button.Ghost" TargetType="ButtonBase" BasedOn="{StaticResource Button.Default}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="Padding" Value="10,0" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ButtonBase">
+                    <Border x:Name="Root"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{DynamicResource Radius.Small}"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter x:Name="Content"
+                                          Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="Center"
+                                          RecognizesAccessKey="True"
+                                          TextElement.Foreground="{TemplateBinding Foreground}"
+                                          TextElement.FontFamily="{TemplateBinding FontFamily}"
+                                          TextElement.FontSize="{TemplateBinding FontSize}">
+                            <ContentPresenter.Resources>
+                                <!--
+                                    Labels follow the foreground this template hands down. Without
+                                    a local style the app-wide implicit TextBlock style sets
+                                    Foreground, and a Style value outranks property-value
+                                    inheritance, so the TextElement.Foreground this template hands
+                                    down - the disabled colour below, and Button.Primary's
+                                    OnAccent - never reached the label. This style deliberately
+                                    sets no Foreground: colour, family and size are all inherited
+                                    from the ContentPresenter.
+                                -->
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+                                    <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+                                    <Setter Property="UseLayoutRounding" Value="True" />
+                                    <Setter Property="SnapsToDevicePixels" Value="True" />
+                                </Style>
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg2}" />
+                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg3}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.TextDisabled}" />
+                            <Setter TargetName="Content" Property="Opacity" Value="0.5" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- A ghost button that reads as an inline, caption-sized action. -->
+    <Style x:Key="Button.Link" TargetType="ButtonBase" BasedOn="{StaticResource Button.Ghost}">
+        <Setter Property="Height" Value="22" />
+        <Setter Property="Padding" Value="6,0" />
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Small}" />
+        <Setter Property="FontSize" Value="{DynamicResource Size.Caption}" />
+    </Style>
+
+    <!-- ============ Destructive ============ -->
+    <Style x:Key="Button.Danger" TargetType="ButtonBase" BasedOn="{StaticResource Button.Default}">
+        <Setter Property="Height" Value="{DynamicResource Height.DialogButton}" />
+        <Setter Property="Background" Value="{DynamicResource Brush.DangerFill}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.DangerFill}" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ButtonBase">
+                    <Border x:Name="Root"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{DynamicResource Radius.Small}"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter x:Name="Content"
+                                          Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          RecognizesAccessKey="True"
+                                          TextElement.Foreground="{TemplateBinding Foreground}"
+                                          TextElement.FontFamily="{TemplateBinding FontFamily}"
+                                          TextElement.FontSize="{TemplateBinding FontSize}">
+                            <ContentPresenter.Resources>
+                                <!--
+                                    Labels follow the foreground this template hands down. Without
+                                    a local style the app-wide implicit TextBlock style sets
+                                    Foreground, and a Style value outranks property-value
+                                    inheritance, so the TextElement.Foreground this template hands
+                                    down - the disabled colour below, and Button.Primary's
+                                    OnAccent - never reached the label. This style deliberately
+                                    sets no Foreground: colour, family and size are all inherited
+                                    from the ContentPresenter.
+                                -->
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+                                    <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+                                    <Setter Property="UseLayoutRounding" Value="True" />
+                                    <Setter Property="SnapsToDevicePixels" Value="True" />
+                                </Style>
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="#FFC93039" />
+                            <Setter TargetName="Root" Property="BorderBrush" Value="#FFC93039" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="#FF972027" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg2}" />
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.StrokeDivider}" />
+                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.TextDisabled}" />
+                            <Setter TargetName="Content" Property="Opacity" Value="0.5" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ Icon-only command-bar button ============ -->
+    <Style x:Key="Button.Icon" TargetType="ButtonBase" BasedOn="{StaticResource Button.Default}">
+        <Setter Property="Width" Value="32" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="MinWidth" Value="32" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ButtonBase">
+                    <Border x:Name="Root"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{DynamicResource Radius.Small}"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter x:Name="Content"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          TextElement.Foreground="{TemplateBinding Foreground}">
+                            <ContentPresenter.Resources>
+                                <!--
+                                    Labels follow the foreground this template hands down. Without
+                                    a local style the app-wide implicit TextBlock style sets
+                                    Foreground, and a Style value outranks property-value
+                                    inheritance, so the TextElement.Foreground this template hands
+                                    down - the disabled colour below, and Button.Primary's
+                                    OnAccent - never reached the label. This style deliberately
+                                    sets no Foreground: colour, family and size are all inherited
+                                    from the ContentPresenter.
+                                -->
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+                                    <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+                                    <Setter Property="UseLayoutRounding" Value="True" />
+                                    <Setter Property="SnapsToDevicePixels" Value="True" />
+                                </Style>
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg2}" />
+                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg3}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.TextDisabled}" />
+                            <Setter TargetName="Content" Property="Opacity" Value="0.5" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Command-bar button: 20 px glyph plus label. -->
+    <Style x:Key="Button.Command" TargetType="ButtonBase" BasedOn="{StaticResource Button.Ghost}">
+        <Setter Property="Height" Value="{DynamicResource Height.CommandButton}" />
+        <Setter Property="Padding" Value="10,0" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+    </Style>
+
+    <!-- ============ Title-bar caption buttons ============ -->
+    <Style x:Key="Button.Caption" TargetType="Button">
+        <Setter Property="Width" Value="46" />
+        <Setter Property="Height" Value="{DynamicResource Height.TitleBar}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Icons}" />
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="FocusVisualStyle" Value="{DynamicResource Focus.RingTight}" />
+        <Setter Property="shell:WindowChrome.IsHitTestVisibleInChrome" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Root" Background="{TemplateBinding Background}">
+                        <TextBlock x:Name="Glyph"
+                                   Text="{TemplateBinding Content}"
+                                   FontFamily="{TemplateBinding FontFamily}"
+                                   FontSize="{TemplateBinding FontSize}"
+                                   Foreground="{TemplateBinding Foreground}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   TextOptions.TextRenderingMode="ClearType" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg2}" />
+                            <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg3}" />
+                        </Trigger>
+                        <!--
+                            While Windows owns the maximise button for Snap Layouts the pointer never
+                            enters our client area, so the chrome behaviour reports the state through Tag.
+                        -->
+                        <Trigger Property="Tag" Value="Hover">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg2}" />
+                            <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                        </Trigger>
+                        <Trigger Property="Tag" Value="Pressed">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg3}" />
+                            <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource Brush.TextDisabled}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Button.CaptionClose" TargetType="Button" BasedOn="{StaticResource Button.Caption}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Root" Background="{TemplateBinding Background}">
+                        <TextBlock x:Name="Glyph"
+                                   Text="{TemplateBinding Content}"
+                                   FontFamily="{TemplateBinding FontFamily}"
+                                   FontSize="{TemplateBinding FontSize}"
+                                   Foreground="{TemplateBinding Foreground}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   TextOptions.TextRenderingMode="ClearType" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.DangerFill}" />
+                            <Setter TargetName="Glyph" Property="Foreground" Value="White" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="#FF972027" />
+                            <Setter TargetName="Glyph" Property="Foreground" Value="White" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

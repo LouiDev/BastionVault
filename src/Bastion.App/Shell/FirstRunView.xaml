@@ -1,0 +1,45 @@
+<UserControl x:Class="Bastion.App.Shell.FirstRunView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:Bastion.App.Controls"
+             Background="{DynamicResource Brush.Bg0}"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True">
+
+    <Grid>
+        <Rectangle Fill="{DynamicResource Brush.Scrim}" />
+
+        <Border Width="620"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                Background="{DynamicResource Brush.Bg1}"
+                BorderBrush="{DynamicResource Brush.StrokeDivider}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource Radius.Dialog}"
+                Padding="24">
+            <StackPanel>
+                <TextBlock Style="{StaticResource Text.Hero}" Text="Three things to know" />
+
+                <controls:SectionHeader Text="How saving works" Margin="0,24,0,8" />
+                <TextBlock Style="{StaticResource Text.Body}" TextWrapping="Wrap"
+                           Text="Everything you do stays in memory until you press Save. A save rewrites the whole vault file in one go, so it either happens completely or not at all. Locking never saves; it only throws the keys away and keeps your unsaved work for when you unlock again." />
+
+                <controls:SectionHeader Text="There is no recovery" Margin="0,20,0,8" />
+                <TextBlock Style="{StaticResource Text.Body}" TextWrapping="Wrap"
+                           Foreground="{DynamicResource Brush.DangerText}"
+                           Text="If you lose the password, nobody can open the vault - not you, not us. There is no reset link, no backdoor and no support ticket that helps. Write the password down and put it somewhere safe." />
+
+                <controls:SectionHeader Text="Where the file lives" Margin="0,20,0,8" />
+                <TextBlock Style="{StaticResource Text.Body}" TextWrapping="Wrap"
+                           Text="A vault is a single .bastion file that you choose the location of. Back it up like any other important file: copying the file copies the whole vault, and the copy stays encrypted." />
+
+                <Button x:Name="ContinueButton"
+                        Margin="0,28,0,0"
+                        HorizontalAlignment="Right"
+                        MinWidth="140"
+                        Style="{StaticResource Button.Primary}"
+                        Content="I understand"
+                        Click="OnContinue" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

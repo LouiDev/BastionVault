@@ -1,0 +1,40 @@
+<!-- Two-tone focus ring (UI-CONTRACT.md section 2): 2 px Brush.FocusOuter outside, 1 px Brush.FocusInner inside. -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Style x:Key="Focus.Ring">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Grid Margin="-3" SnapsToDevicePixels="True" UseLayoutRounding="True">
+                        <Rectangle RadiusX="6" RadiusY="6"
+                                   Stroke="{DynamicResource Brush.FocusOuter}" StrokeThickness="2"
+                                   Margin="1" />
+                        <Rectangle RadiusX="5" RadiusY="5"
+                                   Stroke="{DynamicResource Brush.FocusInner}" StrokeThickness="1"
+                                   Margin="2.5" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Tight variant for controls that sit flush against a neighbour (list rows, tree items). -->
+    <Style x:Key="Focus.RingTight">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+                        <Rectangle RadiusX="3" RadiusY="3"
+                                   Stroke="{DynamicResource Brush.FocusOuter}" StrokeThickness="2"
+                                   Margin="1" />
+                        <Rectangle RadiusX="2" RadiusY="2"
+                                   Stroke="{DynamicResource Brush.FocusInner}" StrokeThickness="1"
+                                   Margin="2.5" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

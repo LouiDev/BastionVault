@@ -1,0 +1,250 @@
+<UserControl x:Class="Bastion.App.Views.CommandBarView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:Bastion.App.Converters"
+             xmlns:local="clr-namespace:Bastion.App.Views"
+             xmlns:vm="clr-namespace:Bastion.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:CommandBarViewModel}"
+             Height="{DynamicResource Height.CommandBar}"
+             Background="{DynamicResource Brush.Bg1}"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True">
+
+    <UserControl.Resources>
+        <!-- One command-bar button: 20 px glyph, optional label, tooltip carrying the shortcut. -->
+        <DataTemplate x:Key="Explorer.CommandButton">
+            <Button Style="{StaticResource Button.Command}"
+                    Command="{Binding Command}"
+                    ToolTip="{Binding ToolTip}"
+                    AutomationProperties.Name="{Binding Label}"
+                    AutomationProperties.AutomationId="{Binding Id}"
+                    Margin="0,0,2,0">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource Style.Glyph20}"
+                               FontSize="16"
+                               Text="{Binding GlyphKey, Converter={StaticResource Converter.GlyphKey}}" />
+                    <!--
+                        A label shows when the button carries one and the bar is wide enough for
+                        the whole set. Below the label breakpoint the four labelled buttons drop
+                        to glyphs, which is what keeps the search box and the right-hand group on
+                        screen down to the window's declared minimum width.
+                    -->
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"
+                               Text="{Binding Label}">
+                        <TextBlock.Visibility>
+                            <MultiBinding Converter="{StaticResource Converter.AllTrue}">
+                                <Binding Path="ShowLabel" />
+                                <Binding Path="ShowLabels" RelativeSource="{RelativeSource AncestorType=local:CommandBarView}" />
+                            </MultiBinding>
+                        </TextBlock.Visibility>
+                    </TextBlock>
+                </StackPanel>
+            </Button>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Margin="8,0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Explorer content commands, in groups separated by a vertical seam. -->
+        <ItemsControl Grid.Column="0" ItemsSource="{Binding Groups}" VerticalAlignment="Center"
+                      KeyboardNavigation.TabNavigation="Continue">
+            <!--
+                The item containers of both these lists are pure grouping. Left alone they are
+                announced as the record's ToString ("CommandBarButton { Id = Export, ... }"); the
+                buttons inside already carry the right names, so the wrappers are made silent.
+            -->
+            <ItemsControl.ItemContainerStyle>
+                <Style TargetType="ContentPresenter">
+                    <Setter Property="AutomationProperties.Name" Value="" />
+                </Style>
+            </ItemsControl.ItemContainerStyle>
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <ItemsControl ItemsSource="{Binding Buttons}"
+                                      ItemTemplate="{StaticResource Explorer.CommandButton}">
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="AutomationProperties.Name" Value="{Binding Label}" />
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                        <Separator Style="{StaticResource Style.SeamVertical}" Height="20" Margin="6,0,8,0" />
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!--
+            Search. Ctrl+F and Ctrl+E land here. MaxWidth rather than Width: column 0 is Auto and
+            takes what the labelled buttons need, so on a narrower window there is less than 260
+            left. A fixed width was clipped on its left edge, which silently ate the magnifier and
+            the "Search" watermark. MinWidth inside a star column that can measure less than that
+            used to clip the whole field away while leaving it focusable, so the field is
+            collapsed outright below the breakpoint the code-behind computes; Ctrl+F then reports
+            that search needs a wider window instead of putting the caret in an unpainted box.
+        -->
+        <Grid x:Name="SearchArea" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center"
+              MinWidth="140" MaxWidth="260" Margin="12,0"
+              Visibility="{Binding ShowSearch, RelativeSource={RelativeSource AncestorType=local:CommandBarView}, Converter={StaticResource Converter.BoolToVisibility}}">
+            <TextBox x:Name="SearchBox"
+                     Height="28"
+                     Padding="28,0,54,0"
+                     IsUndoEnabled="False"
+                     Tag="Search"
+                     ToolTip="{Binding SearchToolTip}"
+                     AutomationProperties.Name="Search"
+                     Text="{Binding Explorer.SearchText, UpdateSourceTrigger=PropertyChanged, Delay=0}" />
+
+            <TextBlock Style="{StaticResource Style.Glyph16}"
+                       FontSize="13"
+                       Margin="8,0,0,0"
+                       HorizontalAlignment="Left"
+                       IsHitTestVisible="False"
+                       Text="{DynamicResource Glyph.Search}" />
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,4,0">
+                <ToggleButton Style="{StaticResource ToggleButton.Default}"
+                              Height="20" Padding="6,0" MinWidth="0"
+                              ToolTip="Search the whole vault instead of this folder"
+                              AutomationProperties.Name="Search the whole vault"
+                              IsChecked="{Binding Explorer.SearchWholeVault, Mode=TwoWay}">
+                    <TextBlock Style="{StaticResource Text.Caption}" Text="All" />
+                </ToggleButton>
+                <Button Style="{StaticResource Button.Icon}"
+                        Width="20" Height="20"
+                        Margin="2,0,0,0"
+                        ToolTip="Clear the search"
+                        AutomationProperties.Name="Clear the search"
+                        Command="{Binding Explorer.ClearSearchCommand}"
+                        Visibility="{Binding Explorer.SearchText, Converter={StaticResource Converter.NotEmptyToVisibility}}">
+                    <TextBlock Style="{StaticResource Style.Glyph16}" FontSize="11" Text="{DynamicResource Glyph.Clear}" />
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- View and vault commands. -->
+        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+            <ToggleButton Style="{StaticResource ToggleButton.Default}"
+                          Width="32" Height="32" MinWidth="32" Padding="0"
+                          ToolTip="{Binding PreviewToolTip}"
+                          AutomationProperties.Name="Preview pane"
+                          IsChecked="{Binding Explorer.IsPreviewVisible, Mode=OneWay}"
+                          Command="{Binding Explorer.TogglePreviewCommand}">
+                <TextBlock Style="{StaticResource Style.Glyph20}" FontSize="16" Text="{DynamicResource Glyph.Preview}" />
+            </ToggleButton>
+
+            <Button x:Name="DensityButton"
+                    Style="{StaticResource Button.Icon}"
+                    ToolTip="Row height"
+                    AutomationProperties.Name="Row height"
+                    Click="OnDensityClick">
+                <TextBlock Style="{StaticResource Style.Glyph20}" FontSize="16" Text="{DynamicResource Glyph.More}" />
+                <Button.ContextMenu>
+                    <ContextMenu x:Name="DensityMenu">
+                        <MenuItem Header="Compact"
+                                  IsCheckable="True"
+                                  IsChecked="{Binding Explorer.Density, Converter={StaticResource Converter.EnumMatch}, ConverterParameter=Compact, Mode=OneWay}"
+                                  Command="{Binding Explorer.SetDensityCommand}" CommandParameter="Compact" />
+                        <MenuItem Header="Comfortable"
+                                  IsCheckable="True"
+                                  IsChecked="{Binding Explorer.Density, Converter={StaticResource Converter.EnumMatch}, ConverterParameter=Comfortable, Mode=OneWay}"
+                                  Command="{Binding Explorer.SetDensityCommand}" CommandParameter="Comfortable" />
+                        <MenuItem Header="Spacious"
+                                  IsCheckable="True"
+                                  IsChecked="{Binding Explorer.Density, Converter={StaticResource Converter.EnumMatch}, ConverterParameter=Spacious, Mode=OneWay}"
+                                  Command="{Binding Explorer.SetDensityCommand}" CommandParameter="Spacious" />
+                    </ContextMenu>
+                </Button.ContextMenu>
+            </Button>
+
+            <Button Style="{StaticResource Button.Icon}"
+                    ToolTip="{Binding PropertiesToolTip}"
+                    AutomationProperties.Name="Properties"
+                    Command="{Binding Explorer.PropertiesCommand}">
+                <TextBlock Style="{StaticResource Style.Glyph20}" FontSize="16" Text="{DynamicResource Glyph.Properties}" />
+            </Button>
+
+            <Separator Style="{StaticResource Style.SeamVertical}" Height="20" Margin="8,0" />
+
+            <!-- Shell commands. They live on the shell view model, one ancestor up. -->
+            <Button Style="{StaticResource Button.Icon}"
+                    ToolTip="{conv:ShortcutText Id=Save, Name=Save}"
+                    AutomationProperties.Name="Save"
+                    Command="{Binding DataContext.SaveCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                <TextBlock Style="{StaticResource Style.Glyph20}" FontSize="16" Text="{DynamicResource Glyph.Save}" />
+            </Button>
+            <Button Style="{StaticResource Button.Icon}"
+                    ToolTip="{conv:ShortcutText Id=Verify, Name=Verify}"
+                    AutomationProperties.Name="Verify"
+                    Command="{Binding DataContext.VerifyCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                <TextBlock Style="{StaticResource Style.Glyph20}" FontSize="16" Text="{DynamicResource Glyph.Verify}" />
+            </Button>
+            <Button Style="{StaticResource Button.Icon}"
+                    ToolTip="{conv:ShortcutText Id=Lock, Name=Lock}"
+                    AutomationProperties.Name="Lock"
+                    Command="{Binding DataContext.LockCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                <TextBlock Style="{StaticResource Style.Glyph20}" FontSize="16" Text="{DynamicResource Glyph.Lock}" />
+            </Button>
+
+            <!--
+                Overflow. Everything the shell can do that has no button of its own lives here;
+                without it Change credentials and About are implemented but unreachable, and a
+                user cannot change a vault password at all.
+            -->
+            <Button x:Name="OverflowButton"
+                    Style="{StaticResource Button.Icon}"
+                    ToolTip="More commands"
+                    AutomationProperties.Name="More commands"
+                    Click="OnOverflowClick">
+                <TextBlock Style="{StaticResource Style.Glyph20}" FontSize="16" Text="{DynamicResource Glyph.ChevronDown}" />
+                <Button.ContextMenu>
+                    <!--
+                        A ContextMenu lives in its own popup, outside the window's visual tree, so
+                        RelativeSource AncestorType=Window finds nothing and logs a binding error.
+                        The DataContext is set to the shell in the click handler instead, and is
+                        pinned to null until then so no binding resolves against the wrong object.
+                    -->
+                    <ContextMenu x:Name="OverflowMenu" DataContext="{x:Null}">
+                        <MenuItem Header="Change password..."
+                                  InputGestureText="{conv:ShortcutText Id=ChangeCredentials}"
+                                  Command="{Binding ChangeCredentialsCommand}" />
+                        <MenuItem Header="Save a copy..."
+                                  InputGestureText="{conv:ShortcutText Id=SaveCopy}"
+                                  Command="{Binding SaveCopyCommand}" />
+                        <Separator />
+                        <MenuItem Header="Vault properties"
+                                  Command="{Binding ShowVaultPropertiesCommand}" />
+                        <MenuItem Header="Settings"
+                                  InputGestureText="{conv:ShortcutText Id=Settings}"
+                                  Command="{Binding ShowSettingsCommand}" />
+                        <MenuItem Header="Keyboard shortcuts"
+                                  InputGestureText="{conv:ShortcutText Id=Shortcuts}"
+                                  Command="{Binding ShowShortcutsCommand}" />
+                        <Separator />
+                        <MenuItem Header="About Bastion"
+                                  Command="{Binding ShowAboutCommand}" />
+                    </ContextMenu>
+                </Button.ContextMenu>
+            </Button>
+        </StackPanel>
+    </Grid>
+</UserControl>

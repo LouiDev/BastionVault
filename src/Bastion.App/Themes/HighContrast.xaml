@@ -1,0 +1,48 @@
+<!--
+    High contrast overlay (UI-CONTRACT.md section 1.14). Merged on top of Lamplight when
+    SystemParameters.HighContrast is true; it redefines every token in terms of SystemColors,
+    so nothing in the app needs to know which theme is live - all brushes are DynamicResource.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Only the Brush.* keys are redefined: every consumer binds brushes through
+        DynamicResource, and a SolidColorBrush over a SystemColors colour follows the
+        live system theme.
+    -->
+    <SolidColorBrush x:Key="Brush.Bg0" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="Brush.Bg1" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="Brush.Bg2" Color="{x:Static SystemColors.ControlColor}" />
+    <SolidColorBrush x:Key="Brush.Bg3" Color="{x:Static SystemColors.ControlLightColor}" />
+
+    <SolidColorBrush x:Key="Brush.StrokeDivider" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="Brush.StrokeShadow" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="Brush.StrokeControl" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="Brush.StrokeControlHover" Color="{x:Static SystemColors.HighlightColor}" />
+
+    <SolidColorBrush x:Key="Brush.TextPrimary" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="Brush.TextSecondary" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="Brush.TextDisabled" Color="{x:Static SystemColors.GrayTextColor}" />
+    <SolidColorBrush x:Key="Brush.TextMono" Color="{x:Static SystemColors.WindowTextColor}" />
+
+    <SolidColorBrush x:Key="Brush.Accent" Color="{x:Static SystemColors.HighlightColor}" />
+    <SolidColorBrush x:Key="Brush.AccentHover" Color="{x:Static SystemColors.HighlightColor}" />
+    <SolidColorBrush x:Key="Brush.AccentPressed" Color="{x:Static SystemColors.HighlightColor}" />
+    <SolidColorBrush x:Key="Brush.AccentDim" Color="{x:Static SystemColors.HighlightColor}" />
+    <SolidColorBrush x:Key="Brush.OnAccent" Color="{x:Static SystemColors.HighlightTextColor}" />
+
+    <SolidColorBrush x:Key="Brush.FocusOuter" Color="{x:Static SystemColors.HighlightColor}" />
+    <SolidColorBrush x:Key="Brush.FocusInner" Color="{x:Static SystemColors.WindowColor}" />
+
+    <SolidColorBrush x:Key="Brush.SelectRest" Color="{x:Static SystemColors.HighlightColor}" />
+    <SolidColorBrush x:Key="Brush.SelectInactive" Color="{x:Static SystemColors.ControlColor}" />
+
+    <SolidColorBrush x:Key="Brush.DangerText" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="Brush.DangerFill" Color="{x:Static SystemColors.HighlightColor}" />
+    <SolidColorBrush x:Key="Brush.Success" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="Brush.Warning" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="Brush.Info" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="Brush.Scrim" Color="#C0000000" />
+
+</ResourceDictionary>

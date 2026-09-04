@@ -1,0 +1,60 @@
+<UserControl x:Class="Bastion.App.Dialogs.ConfirmDialogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:dialogs="clr-namespace:Bastion.App.ViewModels.Dialogs"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=dialogs:ConfirmDialogViewModel}">
+
+    <StackPanel Margin="24" MinWidth="380" MaxWidth="520">
+        <StackPanel Orientation="Horizontal">
+            <TextBlock x:Name="KindGlyph"
+                       Style="{StaticResource Style.Glyph20}"
+                       VerticalAlignment="Top"
+                       Margin="0,2,12,0"
+                       Text="{DynamicResource Glyph.Info}" />
+            <TextBlock Style="{StaticResource Text.Title}"
+                       TextWrapping="Wrap"
+                       MaxWidth="420"
+                       Text="{Binding Title}" />
+        </StackPanel>
+
+        <TextBlock Style="{StaticResource Text.Body}"
+                   Margin="32,10,0,0"
+                   TextWrapping="Wrap"
+                   Text="{Binding Body}" />
+
+        <Border Margin="32,12,0,0" Padding="10,8"
+                Background="{DynamicResource Brush.Bg2}"
+                BorderBrush="{DynamicResource Brush.StrokeDivider}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource Radius.Small}"
+                Visibility="{Binding HasDetail, Converter={StaticResource Converter.BoolToVisibility}}">
+            <TextBlock Style="{StaticResource Text.Mono}"
+                       TextWrapping="Wrap"
+                       Text="{Binding Detail}" />
+        </Border>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
+            <Button Style="{StaticResource Button.Default}"
+                    Height="36"
+                    Margin="0,0,8,0"
+                    Content="{Binding CancelVerb}"
+                    Command="{Binding CancelCommand}"
+                    Visibility="{Binding HasCancel, Converter={StaticResource Converter.BoolToVisibility}}" />
+
+            <Button Style="{StaticResource Button.Default}"
+                    Height="36"
+                    Margin="0,0,8,0"
+                    Content="{Binding SecondaryVerb}"
+                    Command="{Binding SecondaryCommand}"
+                    Visibility="{Binding HasSecondary, Converter={StaticResource Converter.BoolToVisibility}}" />
+
+            <Button x:Name="PrimaryButton"
+                    Style="{StaticResource Button.Primary}"
+                    Content="{Binding PrimaryVerb}"
+                    Command="{Binding PrimaryCommand}" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>
