@@ -234,10 +234,11 @@ The project was built by parallel agents and the pattern still applies:
 - **`excludeFromScreenCapture`** defaults to true; screenshots are blank/behind-the-window
   until it is off.
 - **Culture.** The UI is pinned to en-US; do not format numbers with the current culture.
-- **Flaky test.** `ReviewRegressionTests.Blob_buffers_are_sized_from_the_blob_not_from_the_declared_chunk_size`
-  reads process-wide GC allocations and can fail when Argon2 tests run in parallel. Re-run
-  before concluding anything; the proper fix (own collection or per-thread accounting) is
-  open.
+- **Allocation assertions.** A test that bounds allocations must use
+  `GC.GetAllocatedBytesForCurrentThread()`, never the process-wide `GC.GetTotalAllocatedBytes`:
+  xUnit runs collections in parallel and the Argon2 tests alone move megabytes, which made
+  `ReviewRegressionTests.Blob_buffers_are_sized_from_the_blob_not_from_the_declared_chunk_size`
+  fail in CI until it switched to per-thread accounting.
 - **Argon2 differential tests** compare against Konscious (test-only dependency); the
   Konscious `MemorySize` semantics differ for non-multiple-of-4p values — the tests already
   encode this; do not "fix" the reference.
