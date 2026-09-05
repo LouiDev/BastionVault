@@ -19,6 +19,7 @@ public partial class ShellWindow : Window
     private readonly ILog _log;
     private WindowChromeBehavior? _chrome;
     private bool _closeConfirmed;
+    private string? _closeOrigin;
 
     /// <summary>Creates the shell window.</summary>
     /// <param name="shell">The shell view model.</param>
@@ -40,7 +41,17 @@ public partial class ShellWindow : Window
         BindGlobalShortcuts();
         RestorePlacement();
 
-        shell.CloseRequested += (_, _) => Close();
+        // Every route into a close names itself before Closing runs, so the log can say what
+        // ended the run (issue #21: one exit during UI automation left no trace at all). A close
+        // that arrives with no name came as a bare WM_CLOSE from another program (taskkill without
+        // /F, for one); UI Automation's WindowPattern.Close goes through the system command.
+        _chrome.SystemCloseRequested += (_, _) => _closeOrigin = "a system close command (Alt+F4, the system menu, the taskbar or UI Automation)";
+        TitleBar.CloseButtonClicked += (_, _) => _closeOrigin = "the title bar close button";
+        shell.CloseRequested += (_, _) =>
+        {
+            _closeOrigin = "the Exit command";
+            Close();
+        };
         shell.FirstRunRequested += (_, _) => ShowFirstRun();
         FirstRun.Acknowledged += OnFirstRunAcknowledged;
 
@@ -159,12 +170,18 @@ public partial class ShellWindow : Window
             return;
         }
 
+        string origin = _closeOrigin ?? "a close message from another program";
+        _closeOrigin = null;
+
         // A dialog that is mid-operation owns the window until it is done (UI-CONTRACT section 1.8).
         if (Dialogs.IsBusy)
         {
+            _log.Info($"Close requested by {origin}; refused, a dialog is mid-operation.");
             e.Cancel = true;
             return;
         }
+
+        _log.Info($"Close requested by {origin}.");
 
         // This close is always refused and then re-issued. Both awaits below finish synchronously
         // whenever there is nothing to ask the user about - a clean vault, the usual case - and
@@ -176,6 +193,7 @@ public partial class ShellWindow : Window
         {
             if (!await _shell.RequestCloseAsync().ConfigureAwait(true))
             {
+                _log.Info("Close cancelled at the unsaved-changes prompt.");
                 return;
             }
 

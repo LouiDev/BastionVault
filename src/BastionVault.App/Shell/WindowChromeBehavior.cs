@@ -27,6 +27,9 @@ public sealed class WindowChromeBehavior : IDisposable
     private const int WM_NCMOUSELEAVE = 0x02A2;
     private const int WM_GETMINMAXINFO = 0x0024;
     private const int WM_DPICHANGED = 0x02E0;
+    private const int WM_SYSCOMMAND = 0x0112;
+
+    private const int SC_CLOSE = 0xF060;
 
     private const int HTCLIENT = 1;
     private const int HTMAXBUTTON = 9;
@@ -52,6 +55,15 @@ public sealed class WindowChromeBehavior : IDisposable
     private bool _maximizeHover;
     private bool _maximizePressed;
     private bool _disposed;
+
+    /// <summary>
+    /// Raised when Windows asks the window to close through a system command: Alt+F4, the system
+    /// menu, the taskbar, or UI Automation's <c>WindowPattern.Close</c>. Observed only - the message
+    /// still goes to <c>DefWindowProc</c>, which turns it into the <c>WM_CLOSE</c> the window then
+    /// sees as <see cref="Window.Closing"/>. It lets the shell say in the log where a close came
+    /// from (issue #21).
+    /// </summary>
+    public event EventHandler? SystemCloseRequested;
 
     private WindowChromeBehavior(Window window, FrameworkElement contentRoot, FrameworkElement maximizeButton)
     {
@@ -224,6 +236,15 @@ public sealed class WindowChromeBehavior : IDisposable
 
             case WM_DPICHANGED:
                 ApplyMaximizeMargin();
+                return IntPtr.Zero;
+
+            case WM_SYSCOMMAND:
+                // The low four bits of wParam are used internally by Windows and must be masked.
+                if ((wParam.ToInt64() & 0xFFF0) == SC_CLOSE)
+                {
+                    SystemCloseRequested?.Invoke(this, EventArgs.Empty);
+                }
+
                 return IntPtr.Zero;
 
             default:

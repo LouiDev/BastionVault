@@ -16,6 +16,12 @@ separately in `docs/FORMAT.md` and only changes with a major release.
 ### Changed
 - CI no longer runs a separate build for pushes to `main`; the `v*` tag pushed alongside
   already builds, tests and packages that commit. Pull requests against `main` are unchanged.
+- The log now accounts for every way a run ends, not only crashes: `Starting` and `Exiting
+  with code N` lines carry the process id, each close names what triggered it (title bar,
+  Exit command, Alt+F4 or system menu, or a close message from another program), a
+  Windows log-off or shutdown is recorded, and the log and the crash handlers are installed
+  before anything else in start-up. Follow-up to the one unexplained exit during the 1.0.0
+  automation run (#21).
 
 ## [1.0.1] - 2026-09-04
 

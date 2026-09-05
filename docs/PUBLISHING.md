@@ -46,7 +46,8 @@ the reasoning behind the licensing and legal choices. Written for the maintainer
    - Unlock card states the RAM requirement but does not warn when the machine cannot meet it
    - Side panes do not shrink below about 900 px window width (horizontal scrollbar)
    - Single-instance identity keys on the path; a mapped drive or junction alias counts as another instance
-   - One unreproduced silent exit during UI automation (all exit paths now log first)
+   - One unreproduced silent exit during UI automation (#21; every exit now leaves a line
+     with its trigger and exit code, the ordinary close included)
    - A signed release: unsigned executables trigger SmartScreen
 7. **Release**: on `dev`, turn the *Unreleased* section of `CHANGELOG.md` into the new
    version and bump `<Version>` in `Directory.Build.props` by pull request; then
