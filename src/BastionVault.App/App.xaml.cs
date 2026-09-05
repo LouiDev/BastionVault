@@ -42,17 +42,24 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        // The log and the crash handlers come first, before the culture pin, the trace hook and
+        // the argument parsing: anything that throws in start-up has to reach a handler that
+        // writes a line, or the process ends with no account of why (issue #21). FileLog
+        // swallows its own failures, so this order cannot itself be the thing that throws.
+        _fileLog = new FileLog();
+        _log = _fileLog;
+        InstallCrashHandlers();
+
         PinCulture();
         TraceBindings(e?.Args ?? []);
 
         (string? vaultPath, bool demo) = ParseCommandLine(e?.Args ?? []);
         IsDemo = demo;
 
-        _fileLog = new FileLog();
-        _log = _fileLog;
-        _log.Info(demo ? "Starting in demo mode." : "Starting.");
-
-        InstallCrashHandlers();
+        // The process id pairs this line with the matching "Exiting" line when several
+        // instances write to the same day's file, as an automation run does.
+        _log.Info($"{(demo ? "Starting in demo mode" : "Starting")} (pid {Environment.ProcessId}).");
 
         IReadOnlyDictionary<string, string> scriptedPickers = ScriptedPickersFromCommandLine(e?.Args ?? []);
         if (scriptedPickers.Count > 0)
@@ -84,8 +91,22 @@ public partial class App : Application
     }
 
     /// <inheritdoc />
+    protected override void OnSessionEnding(SessionEndingCancelEventArgs e)
+    {
+        // Windows is logging the user off or shutting down; WPF closes the window on its own
+        // afterwards. The line is here so that the exit reads as what it was.
+        _log?.Info($"Windows is ending the session ({e.ReasonSessionEnding}); closing.");
+        base.OnSessionEnding(e);
+    }
+
+    /// <inheritdoc />
     protected override void OnExit(ExitEventArgs e)
     {
+        // The last line of every run that ends in an orderly way. A day's log in which a
+        // "Starting" has no "Exiting" for the same process id therefore means the process died
+        // hard - killed, a stack overflow, a native fault - and the Windows Application event
+        // log is the place to look next (DEVELOPING.md section 6).
+        _log?.Info($"Exiting with code {e.ApplicationExitCode} (pid {Environment.ProcessId}).");
         _shell?.ZeroKeys();
         _shell?.Dispose();
         _theme?.Dispose();

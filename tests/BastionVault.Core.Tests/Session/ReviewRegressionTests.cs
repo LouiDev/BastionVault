@@ -187,14 +187,17 @@ public sealed class ReviewRegressionTests
         Assert.Equal(1, reader.MaxChunkPlaintextLength);
         Assert.Equal(1 + ChunkCipher.TagSize, reader.MaxChunkCiphertextLength);
 
-        long before = GC.GetTotalAllocatedBytes(precise: true);
+        // Per-thread accounting on purpose: the process-wide counter picks up whatever the other
+        // test threads allocate meanwhile (the Argon2 tests alone move megabytes), which made
+        // this assertion flaky in CI. Everything measured here runs synchronously on this thread.
+        long before = GC.GetAllocatedBytesForCurrentThread();
         using (var stream = new DecryptingBlobStream(new BlobReader(
             new FakeBlobSource(1 + ChunkCipher.TagSize), crypto, blobId, 1, VaultLimits.MaxChunkSize, "\\tiny.bin")))
         {
             Assert.Equal(1, stream.Length);
         }
 
-        long allocated = GC.GetTotalAllocatedBytes(precise: true) - before;
+        long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
         Assert.True(allocated < 1024 * 1024, $"opening a one-byte blob allocated {allocated} bytes");
     }
 

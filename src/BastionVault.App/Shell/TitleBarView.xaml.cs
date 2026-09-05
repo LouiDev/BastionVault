@@ -25,6 +25,12 @@ public partial class TitleBarView : UserControl
     /// <summary>The maximise button, which the chrome behaviour hit-tests for Snap Layouts.</summary>
     public FrameworkElement MaximizeButton => MaximizeButtonElement;
 
+    /// <summary>
+    /// Raised just before the caption close button closes the window, so the host can record in
+    /// the log where the close came from. The bar still closes the window itself.
+    /// </summary>
+    public event EventHandler? CloseButtonClicked;
+
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
         if (_shell is not null)
@@ -102,5 +108,9 @@ public partial class TitleBarView : UserControl
         }
     }
 
-    private void OnClose(object sender, RoutedEventArgs e) => Window.GetWindow(this)?.Close();
+    private void OnClose(object sender, RoutedEventArgs e)
+    {
+        CloseButtonClicked?.Invoke(this, EventArgs.Empty);
+        Window.GetWindow(this)?.Close();
+    }
 }

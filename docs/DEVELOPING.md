@@ -213,6 +213,18 @@ same table, so it cannot drift from the real bindings.
 | `%LOCALAPPDATA%\BastionVault\staging\` | fallback staging, only when `StagingLocation` is not `BesideVault` |
 | beside the vault | `<name>.bastion.tmp-<hex>` while saving, `<name>.bastion~stage-<guid>` while staging |
 
+Every run writes `Starting (pid N)` first and `Exiting with code N (pid N)` last, and every
+close of the window names its trigger: the title bar button, the Exit command, a system close
+command (Alt+F4, the system menu, the taskbar, or UI Automation's `WindowPattern.Close`), or a
+bare close message from another program (`taskkill` without `/F`, for one). A Windows log-off
+or shutdown is recorded too. So a `Starting` with no `Exiting` for the same process id means the process died hard —
+killed, a stack overflow, a native fault, an out-of-memory abort in the runtime — and the
+Windows Application event log is the place to look next: `.NET Runtime` event 1026 carries the
+exception, `Application Error` event 1000 the faulting module and exception code, and `Windows
+Error Reporting` event 1001 the report bucket. Attach both to issue #21 if the exit was not
+yours; Windows' `RADAR_PRE_LEAK` reports under 1001 are a memory-growth heuristic, not an
+exit, and are expected around large key-derivation presets.
+
 The temporary files are the vault's own directory by default and are removed on a
 successful save. `IVaultFactory.SweepOrphansAsync` reclaims ones left by a crash. **Nothing
 plaintext is ever written outside an export directory** — worth re-checking after any change
