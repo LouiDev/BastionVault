@@ -264,6 +264,12 @@ internal sealed partial class VaultSession : IVaultSession
     /// <summary>True when the primary index failed to authenticate and the copy was used.</summary>
     internal bool OpenedFromIndexCopy { get; private set; }
 
+    /// <summary>
+    /// Test seams for the save state machine's reopen windows; <see langword="null"/> in production. Set by
+    /// a test that casts the <see cref="IVaultSession"/> it opened; there is no way to reach it from the App.
+    /// </summary>
+    internal SaveTestHooks? TestHooks { get; set; }
+
     /// <summary>Rough length the vault file will have after the next save, used by the import pre-flight.</summary>
     internal long EstimatedVaultLength
     {

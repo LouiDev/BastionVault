@@ -73,6 +73,7 @@ internal sealed partial class VaultSession
                 SavedUtc = Clock.UtcNow,
                 SizeObfuscation = options.SizeObfuscation,
                 Operation = VaultOperation.Save,
+                TestHooks = TestHooks,
             };
 
             result = await new SaveWriter(Random, _paths).RunAsync(request, progress, ct).ConfigureAwait(false);
@@ -98,7 +99,7 @@ internal sealed partial class VaultSession
         // Step 9 runs even when the file cannot be reopened: the save is committed and verified, so the
         // session's view has to match what is on disk or the next save reports ChangedOnDisk against the
         // very file it just wrote.
-        Exception? reopenFailure = AdoptSavedState(result, rekeyed);
+        Exception? reopenFailure = AdoptSavedState(result, rekeyed, TestHooks);
         TrySweepOrphans();
         ClearDirty();
         Raise(VaultChangeKind.Saved, [], EntryId.Root);
@@ -442,11 +443,12 @@ internal sealed partial class VaultSession
     /// <param name="result">What the writer wrote.</param>
     /// <param name="rekeyed">The new key set when the save re-keyed the vault.</param>
     /// <returns>The failure that stopped the file from being reopened, or <see langword="null"/>.</returns>
-    private Exception? AdoptSavedState(SaveResult result, VaultCrypto? rekeyed)
+    private Exception? AdoptSavedState(SaveResult result, VaultCrypto? rekeyed, SaveTestHooks? hooks)
     {
         Exception? reopenFailure = null;
         try
         {
+            hooks?.BeforeSessionReopen?.Invoke(Path);
             SafeFileHandle handle = OpenVaultHandle(Path);
             FileHandle.Adopt(handle);
         }

@@ -20,6 +20,16 @@ public enum Argon2Type
     Id = 2,
 }
 
+/// <summary>
+/// Test seam of <see cref="Argon2.HashWithSegmentHook"/>: called at the start of every segment fill on the
+/// lane's own thread with the live block array. Throwing from it is the failure the join tests inject.
+/// </summary>
+/// <param name="memory">The pinned block array, live for the duration of the call.</param>
+/// <param name="pass">Pass index.</param>
+/// <param name="slice">Slice (sync point) index.</param>
+/// <param name="lane">Lane index; 0 runs inline on the calling thread.</param>
+internal delegate void Argon2SegmentHook(ulong[] memory, uint pass, uint slice, uint lane);
+
 /// <summary>The built-in Argon2 implementation (RFC 9106, version 0x13).</summary>
 /// <remarks>
 /// The working memory is one pinned <see cref="ulong"/> array of <c>m' * 128</c> words and is zeroed in a
@@ -135,12 +145,27 @@ public sealed class Argon2 : IKeyDerivation
             throw new ArgumentOutOfRangeException(nameof(memoryKiB), memoryKiB, "The memory cost must be at least 8 * parallelism KiB.");
         }
 
-        return Derive(type, password, salt, secret, associatedData, memoryKiB, iterations, parallelism, tagLength, ct);
+        return Derive(type, password, salt, secret, associatedData, memoryKiB, iterations, parallelism, tagLength, ct, segmentHook: null);
+    }
+
+    /// <summary>
+    /// Test seam: <see cref="Hash"/> with a hook that runs at the start of every segment fill, on the lane's
+    /// own thread, receiving the live block array. It exists so a test can make one lane fail and prove that
+    /// the other lanes are joined and the memory is zeroed; it changes no byte of the derivation. Internal,
+    /// visible to the test assemblies only, never reached from the App.
+    /// </summary>
+    internal static byte[] HashWithSegmentHook(Argon2Type type, ReadOnlySpan<byte> password, ReadOnlySpan<byte> salt,
+                                               uint memoryKiB, uint iterations, uint parallelism, int tagLength,
+                                               Argon2SegmentHook segmentHook, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(segmentHook);
+        return Derive(type, password, salt, default, default, memoryKiB, iterations, parallelism, tagLength, ct, segmentHook);
     }
 
     private static byte[] Derive(Argon2Type type, ReadOnlySpan<byte> password, ReadOnlySpan<byte> salt,
                                  ReadOnlySpan<byte> secret, ReadOnlySpan<byte> associatedData,
-                                 uint memoryKiB, uint iterations, uint parallelism, int tagLength, CancellationToken ct)
+                                 uint memoryKiB, uint iterations, uint parallelism, int tagLength, CancellationToken ct,
+                                 Argon2SegmentHook? segmentHook)
     {
         uint lanes = parallelism;
         uint blocks = memoryKiB - (memoryKiB % (4 * lanes));   // m' = 4 * p * floor(m / (4 * p))
@@ -170,7 +195,7 @@ public sealed class Argon2 : IKeyDerivation
 
                 for (uint slice = 0; slice < SyncPoints; slice++)
                 {
-                    FillSlice(memory, type, iterations, blocks, lanes, laneLength, segmentLength, pass, slice);
+                    FillSlice(memory, type, iterations, blocks, lanes, laneLength, segmentLength, pass, slice, segmentHook);
                 }
             }
 
@@ -185,10 +210,11 @@ public sealed class Argon2 : IKeyDerivation
     }
 
     private static void FillSlice(ulong[] memory, Argon2Type type, uint passes, uint blocks, uint lanes,
-                                  uint laneLength, uint segmentLength, uint pass, uint slice)
+                                  uint laneLength, uint segmentLength, uint pass, uint slice, Argon2SegmentHook? segmentHook)
     {
         if (lanes == 1)
         {
+            segmentHook?.Invoke(memory, pass, slice, 0);
             FillSegment(memory, type, passes, blocks, lanes, laneLength, segmentLength, pass, 0, slice);
             return;
         }
@@ -198,7 +224,10 @@ public sealed class Argon2 : IKeyDerivation
         {
             uint current = lane;
             tasks[lane - 1] = Task.Run(() =>
-                FillSegment(memory, type, passes, blocks, lanes, laneLength, segmentLength, pass, current, slice));
+            {
+                segmentHook?.Invoke(memory, pass, slice, current);
+                FillSegment(memory, type, passes, blocks, lanes, laneLength, segmentLength, pass, current, slice);
+            });
         }
 
         // Lane 0 runs inline, but the background lanes must be joined even when it throws: Derive's
@@ -207,6 +236,7 @@ public sealed class Argon2 : IKeyDerivation
         Exception? failure = null;
         try
         {
+            segmentHook?.Invoke(memory, pass, slice, 0);
             FillSegment(memory, type, passes, blocks, lanes, laneLength, segmentLength, pass, 0, slice);
         }
         catch (Exception exception)
