@@ -249,9 +249,10 @@
             </ListView.ContextMenu>
 
             <ListView.View>
-                <GridView AllowsColumnReorder="False"
+                <GridView AllowsColumnReorder="True"
                           ColumnHeaderContainerStyle="{StaticResource GridViewColumnHeader.Default}">
-                    <!-- The status rail; 24 wide because the row presenter eats about 12 for cell padding. -->
+                    <!-- The status rail; 24 wide because the row presenter eats about 12 for cell padding.
+                         ColumnSortBehavior keeps it first whatever the user drags. -->
                     <GridViewColumn Width="24" CellTemplate="{StaticResource GridView.StatusRailCell}" />
                     <GridViewColumn Width="226" Header="Name"
                                     behaviors:ColumnSortBehavior.SortKey="name"
