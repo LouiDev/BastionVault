@@ -67,6 +67,7 @@ public partial class App : Application
             _log.Warn($"{scriptedPickers.Count} file picker(s) are answered from the command line (test mode).");
         }
 
+        ScheduleTestCrash(e?.Args ?? []);
         long? installedMemoryOverride = InstalledMemoryFromCommandLine(e?.Args ?? []);
         if (installedMemoryOverride is { } pretend)
         {
@@ -154,6 +155,28 @@ public partial class App : Application
 #else
         _ = args;
         return new Dictionary<string, string>();
+#endif
+    }
+
+    /// <summary>
+    /// Test hook (DEBUG builds only): <c>--test-crash</c> throws on the dispatcher a moment after the
+    /// window is up, so the crash window can be seen and screenshotted. Compiled out of Release builds.
+    /// </summary>
+    /// <param name="args">The process arguments.</param>
+    private void ScheduleTestCrash(string[] args)
+    {
+#if !DEBUG
+        _ = args;
+#else
+        if (!args.Any(a => string.Equals(a, "--test-crash", StringComparison.OrdinalIgnoreCase)))
+        {
+            return;
+        }
+
+        _log?.Warn("A crash was requested from the command line (test mode).");
+        Dispatcher.BeginInvoke(
+            DispatcherPriority.ApplicationIdle,
+            new Action(() => throw new InvalidOperationException("Test crash requested from the command line.")));
 #endif
     }
 
@@ -340,26 +363,37 @@ public partial class App : Application
         _log?.Error("Unhandled exception on the UI thread.", e.Exception);
         _shell?.ZeroKeys();
 
-        MessageBoxResult answer;
+        bool keepRunning;
+        string detail = e.Exception.GetType().Name + ": " + e.Exception.Message;
         try
         {
-            answer = MessageBox.Show(
-                "Bastion Vault hit an unexpected error and has zeroed the vault keys.\n\n"
-                + "Continue only to save your work somewhere safe; then restart.\n\n"
-                + e.Exception.GetType().Name + ": " + e.Exception.Message,
-                "Bastion Vault",
-                MessageBoxButton.OKCancel,
-                MessageBoxImage.Error);
+            // Our own window, so the buttons read "Continue / Exit" whatever language Windows speaks;
+            // the native MessageBox followed the OS language while the rest of the UI is en-US (#24).
+            keepRunning = CrashWindow.AskToContinue(detail, MainWindow);
         }
-        catch (Exception ex) when (ex is not OutOfMemoryException)
+        catch (Exception windowFailure) when (windowFailure is not OutOfMemoryException)
         {
-            // No window station, a message pump already tearing down, a second failure inside the
-            // dialog: whatever it was, the crash is already on disk and the process now leaves.
-            _log?.Error("The crash message could not be shown.", ex);
-            answer = MessageBoxResult.Cancel;
+            _log?.Warn("The crash window could not be shown; falling back to the native message box.", windowFailure);
+            try
+            {
+                keepRunning = MessageBox.Show(
+                    "Bastion Vault hit an unexpected error and has zeroed the vault keys.\n\n"
+                    + "Continue only to save your work somewhere safe; then restart.\n\n"
+                    + detail,
+                    "Bastion Vault",
+                    MessageBoxButton.OKCancel,
+                    MessageBoxImage.Error) == MessageBoxResult.OK;
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                // No window station, a message pump already tearing down, a second failure inside the
+                // dialog: whatever it was, the crash is already on disk and the process now leaves.
+                _log?.Error("The crash message could not be shown.", ex);
+                keepRunning = false;
+            }
         }
 
-        e.Handled = answer == MessageBoxResult.OK;
+        e.Handled = keepRunning;
         if (!e.Handled)
         {
             _log?.Error("Exiting after an unhandled exception on the UI thread.");
