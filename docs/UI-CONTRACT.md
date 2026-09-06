@@ -57,10 +57,16 @@ build the App in parallel without merging each other's files.
    checked/selected state of a control (checkbox fill, radio dot, toggle knob, menu check,
    active sort chevron, active tab rail, text caret and text selection). Everything else is
    greyscale: no amber on icons at rest, headers, links, hovers of unselected rows, dividers,
-   or type icons.
+   or type icons. *Review criterion (#28):* a new control may use `Brush.Accent` only for a
+   state in that list or for one of the named affordances above; an amber that marks
+   "this is a control" rather than "this is the live/selected one" is a defect.
 10. **Lock clears state:** on lock the tree/list/preview are removed from the visual tree,
-    search text, navigation history, internal clipboard and preview buffers are cleared, the
-    title resets to "Bastion Vault", `SetWindowDisplayAffinity` is dropped (lock screen may be captured).
+    search text, navigation history, internal clipboard and preview buffers are cleared, and
+    `SetWindowDisplayAffinity` is dropped (lock screen may be captured). The window title keeps
+    the vault name and appends "(locked)" (#25): title and vault chip agree that this window's
+    vault is still there, the taskbar keeps identifying it, and the unlock card shows the full
+    path anyway. Before the first unlock of a vault opened from disk there is no session, so
+    neither title nor chip names it.
 11. **No OS clipboard for vault content.** Ctrl+X/C/V use the internal clipboard
     (`IInternalClipboard`). The OS clipboard receives only "Copy path" and "Copy details" text,
     tagged with `ExcludeClipboardContentFromMonitorProcessing` and `CanIncludeInClipboardHistory=0`.
@@ -217,15 +223,20 @@ public interface IIdleMonitor { TimeSpan Idle { get; } event EventHandler? IdleT
 public interface ISystemEvents { event EventHandler? SessionLocked; event EventHandler? Suspending; event EventHandler? SessionEnding; }
 public interface IShellIntegration { void RegisterFileAssociation(); void UnregisterFileAssociation(); bool IsRegistered { get; } void ApplyProcessHygiene(); }  // AppUserModelID, jump list off
 public interface ISingleInstance { IDisposable? TryAcquireVault(string path); void FocusExistingInstance(string path); }
+    // Identity (#20): a vault that exists is keyed on its file id (volume serial + 128-bit file id), so
+    // junctions, mapped drives and UNC aliases are one vault; a vault that does not exist yet is keyed on
+    // its normalised path until it does. Every acquire takes both names; the shell re-acquires after Create.
 public interface IScreenPrivacy { void SetExcludeFromCapture(bool exclude); }
 public interface IClock { DateTimeOffset UtcNow { get; } }       // reuse BastionVault.Core.IClock
 public interface IUiDispatcher { void Post(Action action); bool CheckAccess(); }
 public interface ILog { void Info(string message); void Warn(string message, Exception? ex = null); void Error(string message, Exception? ex = null); }
 public interface IKdfEstimator { Task<TimeSpan> EstimateAsync(KdfParameters p, CancellationToken ct); }     // wraps KdfBenchmark, caches per parameters
+public interface IKdfPreflight { KdfPreflightResult Check(KdfParameters p); }                                 // wraps KdfPreflight; the App never decides memory fit itself
 ```
 
 `AppSettings`: `Theme` (Dark|HighContrastAuto), `AutoLockMinutes` (default 10, 0 = off),
-`DefaultKdfPreset`, `RowDensity`, `ColumnLayout` (widths/order/sort), `WindowPlacement`
+`DefaultKdfPreset`, `RowDensity`, `ColumnLayout` (widths/order/sort; order is applied by
+`Behaviors/ColumnOrder.cs`, unknown keys ignored), `WindowPlacement`
 (validated against current monitors on restore), `RememberRecentVaults` (default true),
 `RememberKeyFilePaths` (default false), `StagingLocation` (BesideVault|SystemTemp|Custom),
 `StagingCustomPath`, `ExcludeFromScreenCapture` (default true), `PreviewEnabled` (true),
@@ -283,15 +294,25 @@ explorer owner may not add colour tokens; new styles go in `Views/*.xaml` resour
   hold-to-reveal, KDF-calibrated strength sentence ("At Standard, eight high-end GPUs would need
   about N years…") from a zxcvbn-style estimator (own implementation: patterns, dictionary of top
   10k passwords embedded, dates, sequences, repeats), hard minimum 8 characters, preset radio
-  (Fast/Standard/Strong) with measured estimate, optional keyfile (Choose… / Generate…),
-  required checkbox "I understand that if I lose this password, nobody can recover this vault."
+  (Fast/Standard/Strong) with measured estimate; a preset `IKdfPreflight` refuses carries a
+  `Brush.Warning` caption ("Exceeds this PC: needs N, M installed…"), is not preselected (the
+  largest fitting preset is), and blocks Create with a blocking reason naming the one that fits;
+  optional keyfile (Choose… / Generate…), required checkbox "I understand that if I lose this
+  password, nobody can recover this vault."
 - **Unlock**: password, optional keyfile (remembered path opt-in), header info line in `Text.Mono`
-  ("Argon2id · 512 MiB · 3 passes · needs 512 MiB RAM"), three distinct error messages per
-  FORMAT.md §9, select-all instead of clearing on failure, 1 s soft delay after 3 failures,
-  "last saved <time> · save #N" after success, rollback warning if counter decreased.
+  ("Argon2id · 512 MiB · 3 passes · needs 512 MiB RAM"), and under it, when `IKdfPreflight` says
+  the machine cannot serve the vault, a `Brush.Warning` box stating installed vs. needed and that
+  the unlock will be refused here; the Unlock button is disabled in that state. Three distinct
+  error messages per FORMAT.md §9, select-all instead of clearing on failure, 1 s soft delay after
+  3 failures. A `ResourceLimit` that arrives after the pre-flight passed (allocation failed) keeps
+  the card, states needed vs. free in the error box, does not count as a failed attempt and
+  relabels the button "Try again". "last saved <time> · save #N" after success, rollback warning
+  if counter decreased.
 - **Change credentials**: current password required, new password (+ strength), keyfile add/
-  remove, preset, mode (default full re-key; "fast, rewrap only" with the honest caveat), cost
-  line "will rewrite N GB on save, about M minutes", becomes pending; applied on Save.
+  remove, preset (same fit caption as New vault; a preset that does not fit here blocks Apply
+  with a warning box naming the largest that does; opens on the vault's current preset), mode
+  (default full re-key; "fast, rewrap only" with the honest caveat), cost line "will rewrite
+  N GB on save, about M minutes", becomes pending; applied on Save.
 - **Progress**: verb, current item (middle ellipsis), n of N, bytes, MB/s, ETA after 2 s, cancel
   semantics sentence, Cancel disables + relabels "Finishing — can't cancel" in the non-cancellable window.
 - **Confirm**: title = verb + count; buttons are verbs; destructive is non-default; no "don't ask again".

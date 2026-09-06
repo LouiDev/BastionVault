@@ -94,7 +94,7 @@ view-model boundary accepts a nullable `Passphrase`; the real path never passes 
 
 ### Test hooks (Debug builds only)
 
-Both hooks below are compiled out of Release builds (`#if DEBUG` in `App.xaml.cs`), so a
+The hooks below are compiled out of Release builds (`#if DEBUG` in `App.xaml.cs`), so a
 shipped executable ignores the flags entirely. Use a Debug build for the UI-automation
 recipe in section 4.
 
@@ -107,6 +107,8 @@ recipe in section 4.
 | `--test-pick-export-folder=<dir>` | likewise for the export destination |
 | `--test-pick-keyfile=<path>`, `--test-pick-keyfile-create=<path>` | likewise for keyfiles |
 | `--trace-bindings=<file>` | routes WPF's binding, resource, markup and dependency-property traces at Warning level into a text file |
+| `--test-installed-memory=<bytes>` | the KDF pre-flight shown by the unlock card and the preset pickers pretends the machine has this much memory (for example `1073741824` makes the Strong preset "exceed this PC"); Core's real pre-flight and the real open are untouched |
+| `--test-crash` | throws on the dispatcher once the window is up, so the crash window (`Shell/CrashWindow.cs`) can be seen |
 
 The pickers exist because the Windows common file dialogs are separate windows whose
 automation tree differs between Windows builds, so a UI-automation run cannot drive them
@@ -151,6 +153,13 @@ recipe is worth keeping:
    - "The vault has unsaved changes" is not text: it is the title-bar bullet
      (`AutomationId = DirtyBullet`) and the status-bar chip (`PendingChip`). Wait on those,
      not on a word.
+   - Rows of the entry list are `ControlType.DataItem`, not `ListItem` (a `ListView` with a
+     `GridView` reports its items that way), and folders in the tree are `TreeItem`; a name
+     lookup with the wrong control type finds nothing and the run silently types into
+     whatever window is in front. The demo vault starts dirty, so Lock (Ctrl+Shift+L) asks
+     "Lock with N unsaved changes?" first; invoke "Lock without saving" by name.
+   - Whatever `SendKeys` types goes to the foreground window. Check that the dialog you expect
+     is actually open (find one of its controls) before typing a password into it.
 4. Capture with `System.Drawing.Graphics.CopyFromScreen` over the window's
    `BoundingRectangle` plus a small margin for the DWM shadow.
 5. Read the binding-trace file at the end. Anything past the header line is a defect.
@@ -233,20 +242,23 @@ to `SaveWriter`, `StagingStore` or `Exporter`.
 ---------------------------------------------------------------------------
 ## 7. Known limitations
 
-- **Cosmetic and small**
-  - The command bar drops its labels to glyphs below a breakpoint, but the list columns do
-    not reflow with it: the tree (248 px) and the preview pane (320 px) keep their width, so
-    at the declared 880 px minimum the four columns still need more room than the middle pane
-    gets and a horizontal scrollbar remains. Making the side panes responsive is the real fix
-    and is a larger layout change than the label breakpoint was.
-  - The hex preview is 16 bytes to a line, so the ASCII column needs a preview pane wider
-    than the 320 px default.
-  - Column *order* is not persisted and reordering is off; widths and sort are persisted.
-  - The crash handler is a native `MessageBox`, so its buttons follow the OS language even
-    though the rest of the UI is pinned to en-US.
-  - The window title resets to "Bastion Vault" while the vault is locked, but the vault-name chip
-    stays in the custom title bar. The unlock card shows the full path anyway, so this leaks
-    nothing new.
+- **Layout rules worth knowing** (each one was an open item after 1.0 and is now a pinned rule)
+  - The side panes follow the window (#18): above 1180 px the tree and the preview keep the
+    widths the user gave them; between 1180 and 1000 px both shrink in proportion towards
+    160 / 200 px; below 1000 px the preview folds away (`ExplorerViewModel.IsPreviewCollapsedByWidth`,
+    the remembered *Preview* choice is untouched) and comes back when the window widens, or at
+    once when the user asks for it (Toggle preview, Enter on a file). `ExplorerView.PaneWidthsFor`
+    is the pure rule; the splitter positions are remembered for the session as before.
+  - The hex preview puts 16 bytes on a line when the pane can show 63 monospace columns and 8
+    otherwise (#19), re-rendered from the bytes already held when the pane is resized; the ASCII
+    column is never the part that falls off the edge.
+  - Column order is persisted with widths and sort (#23); headers can be dragged, the status
+    rail is pinned first, and a persisted layout naming a column the build no longer has is
+    ignored (`Behaviors/ColumnOrder.cs`).
+  - The crash handler shows its own window (`Shell/CrashWindow.cs`) with en-US buttons (#24);
+    the native `MessageBox` is only the fallback when that window itself cannot be shown.
+  - The window title keeps the vault name while locked and appends "(locked)" (#25), so it
+    agrees with the vault chip and the taskbar still identifies the window.
 - **Not exercised end to end**
   - Drag and drop is unit-tested through `DropAsync`/`CanDrop`, but no synthesised drag has
     been screenshotted, so the drag adorner and the 700 ms tree hover-expand are unverified
@@ -255,10 +267,11 @@ to `SaveWriter`, `StagingStore` or `Exporter`.
     covered: an STA test drives a poisoned byte array through `ImagePreview.Rebuild`.
   - High-contrast hot-swap (`Services/ThemeController.cs`) is implemented and registered but
     has not been screenshotted under an actual high-contrast theme.
-  - Two Core fixes carry no dedicated regression test, because both need a failure injected
-    inside a private, non-seamed path and the seam would have meant restructuring code the
-    review asked to leave alone: the Argon2 lane join when lane 0 throws, and a vault file
-    that cannot be reopened in the window between `File.Replace` and the post-save reopen.
+  - (Closed by #27.) The Argon2 lane join and the two post-save reopen windows now have
+    test-only seams: `Argon2.HashWithSegmentHook` (internal) runs a hook at the start of every
+    segment fill, and `VaultSession.TestHooks` / `SaveTestHooks` run before the verification
+    reopen and before the session's own reopen. Neither changes a byte; the golden fixtures
+    prove it. `Crypto/Argon2LaneJoinTests.cs` and `Session/SaveReopenTests.cs` use them.
 - **By design**
   - Whole-file rollback stays undetectable (THREAT-MODEL A2); only the save counter signals
     it, and the unlock screen warns.
@@ -274,31 +287,30 @@ decision waiting to be made, not a defect nobody noticed.
   `KdfMemoryFractionOfInstalled` (0.75) of the memory the machine physically has. Measuring free
   memory instead was tried and reverted: it refused the default Standard preset (512 MiB) with
   `ResourceLimit` on a 32 GiB machine that happened to have under a gigabyte free during the final
-  smoke run. What remains open is the other half of that story — a KDF that passes the pre-flight
-  and then fails to allocate still surfaces as a raw `OutOfMemoryException` (see below), nothing
-  retries, and nothing suggests a cheaper preset.
+  smoke run. The other half of that story is now handled without changing the rule: a KDF that
+  passes the pre-flight and then fails to allocate leaves Core as `ResourceLimit` (#16), the
+  unlock card keeps the figures and offers *Try again* (#17), and the preset pickers mark a preset
+  this machine cannot serve and preselect the largest one that fits (#13, #17). The question
+  itself is public as `KdfPreflight.Check`, so the UI shows Core's verdict rather than its own.
 - **The KDF phase is not interruptible.** API.md's cancellation table states normatively that
   Open, Unlock, VerifyPassword and ChangeCredentials report `IsCancellable = false` for the
   whole derivation. Making it abortable at pass boundaries is a contract change to API.md and
   the UI, so it needs a decision rather than a patch.
-- **The unlock card states the RAM the vault needs but never warns.** It reads
-  "Argon2id · 512 MiB · 3 passes · needs 512 MiB RAM" whether or not the machine can afford
-  it; the refusal only arrives after Unlock is pressed.
-- **`OutOfMemoryException` is not translated.** `IoGuard.Translate` handles `IOException`,
-  `CryptographicException` and `ArgumentOutOfRangeException` (API.md rule 5); an OOM from the
-  pinned Argon2 allocation escapes as itself. Allocating a wrapper during an OOM is its own
-  hazard, which is why it was left alone.
 - **An index may declare a `chunkSize` far larger than the file it describes.** Nothing in
   FORMAT.md section 4.6 ties the two together, so rejecting it would refuse legal v1 vaults.
   The amplification is gone anyway: `BlobReader` now publishes the real maximum chunk length
   and every reader sizes its pooled buffers from that, not from the declared number.
-- **The "one lamp" rule (UI-CONTRACT.md section 1.9) is not enforced.** Amber is currently
-  also the checkbox fill, radio dot, slider, toggle knob, menu check, sort chevron, tab rail
-  and the caret and selection brushes. Moving all of those to greyscale would rework the
-  design language on the strength of a "likely" finding; amending section 1.9 to name the
-  selection affordances that are allowed to be amber is the other option, and the one the
-  App side recommends.
-- **Single-instance identity is still the uppercased path.** The same vault reached through a
-  junction, a mapped drive or a UNC path is two instances. Deriving the mutex and pipe name
-  from the file id (volume serial plus file index) would fix it, but needs a decision about a
-  vault that does not exist yet.
+- **The "one lamp" rule (UI-CONTRACT.md section 1.9) was decided (#28, option A).** The
+  checked/selected state of a control (checkbox fill, radio dot, toggle knob, menu check,
+  active sort chevron, active tab rail, caret and text selection) is *allowed* to be amber:
+  a selected state is "something is live" in the sense of the rule. Section 1.9 names them
+  and carries the review criterion; new controls are judged against that list, not against
+  the shorter original wording. Still not enforced by a test: a resource-dictionary audit
+  would be the tool, and nobody has asked for it.
+- **Single-instance identity keys on the file id (#20).** The mutex and pipe names of a vault
+  that exists derive from its volume serial number plus 128-bit file id, so a junction, a
+  mapped drive or a UNC alias is the same vault. A vault that does not exist yet is guarded
+  by its normalised path until it does, and the shell re-acquires the lock right after
+  `CreateAsync` so the new file is guarded by its id as well; every opener checks both names.
+  The remaining window is the few milliseconds between the create finishing and the
+  re-acquire, and the save-time conflict detection stays the safety net for it.

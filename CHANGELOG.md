@@ -8,12 +8,44 @@ separately in `docs/FORMAT.md` and only changes with a major release.
 ## [Unreleased]
 
 ### Added
+- The unlock card now warns before the button is pressed when this PC cannot serve the vault's
+  key derivation (installed memory vs. the vault's requirement), and disables Unlock in that
+  state instead of letting the refusal arrive after the click (#13).
+- After a key derivation that passed the pre-flight but could not get its memory, the unlock
+  card keeps the figures (needed vs. free), does not count it as a failed attempt and offers
+  *Try again*; the New vault and Change password dialogs mark a preset this PC cannot serve,
+  preselect the largest one that fits and say which one that is (#17).
+- `KdfPreflight` in `BastionVault.Core`: the FORMAT.md §3.1 step 9 memory check as a public
+  question, so the UI shows Core's verdict rather than its own.
+- Debug-only test hooks `--test-installed-memory=<bytes>` (screenshot the memory states) and
+  `--test-crash` (screenshot the crash window).
+- The entry list's columns can be dragged into a new order, and the order is remembered with
+  the widths and the sort; a remembered layout that names a column this build no longer has
+  is ignored (#23).
 - `docs/INSTALL.md`: installation guide for the zip releases (choosing a variant, verifying
   the download, the SmartScreen prompt, the optional `.bastion` file type and why the program
   folder must not move afterwards, what is written under `%LOCALAPPDATA%`, updating, complete
   removal, command line). Linked from `README.md` and from the release notes the CI drafts.
 
+### Fixed
+- The same vault reached through a junction, a mapped drive letter or a UNC path is now one
+  vault for the single-instance check: the lock is keyed on the file id once the file exists,
+  and on the path only until then (#20).
+- An `OutOfMemoryException` from the Argon2 block allocation no longer escapes
+  `BastionVault.Core` as itself (API.md rule 5): it leaves as `ResourceLimit` with the figures,
+  and the App shows a message instead of its crash handler (#16).
+
 ### Changed
+- The explorer's side panes follow the window width: above 1180 px they keep the widths the
+  user set, down to 1000 px they shrink in proportion, and below that the preview folds away
+  until the window is wider or the user asks for it; the four list columns keep their room at
+  the 880 px minimum instead of a horizontal scrollbar (#18).
+- The hex preview puts 8 bytes on a line when the pane is too narrow for 16, so the ASCII
+  column fits in the default pane (#19).
+- The crash handler shows a Bastion Vault window with "Continue" and "Exit" instead of the
+  native message box whose buttons followed the OS language (#24).
+- While a vault is locked the window title keeps its name and appends "(locked)", agreeing
+  with the vault chip in the title bar (#25).
 - CI no longer runs a separate build for pushes to `main`; the `v*` tag pushed alongside
   already builds, tests and packages that commit. Pull requests against `main` are unchanged.
 - The log now accounts for every way a run ends, not only crashes: `Starting` and `Exiting
