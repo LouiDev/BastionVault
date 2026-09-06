@@ -67,6 +67,7 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
     private readonly ISingleInstance _singleInstance;
     private readonly IShellIntegration _shellIntegration;
     private readonly IKdfEstimator _estimator;
+    private readonly IKdfPreflight _preflight;
     private readonly IUiDispatcher _dispatcher;
     private readonly ILog _log;
     private readonly Func<IVaultSession, ExplorerViewModel> _explorerFactory;
@@ -161,6 +162,7 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
         ISingleInstance singleInstance,
         IShellIntegration shellIntegration,
         IKdfEstimator estimator,
+        IKdfPreflight preflight,
         IUiDispatcher dispatcher,
         ILog log,
         OperationViewModel operation,
@@ -178,12 +180,13 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
         _singleInstance = singleInstance;
         _shellIntegration = shellIntegration;
         _estimator = estimator;
+        _preflight = preflight;
         _dispatcher = dispatcher;
         _log = log;
         _explorerFactory = explorerFactory;
 
         Operation = operation;
-        Unlock = new UnlockViewModel(files, log);
+        Unlock = new UnlockViewModel(files, preflight, log);
         Start = new StartViewModel(recent, NewVaultCommand, OpenVaultCommand, OpenRecentCommand);
 
         _changes = new VaultChangeMarshaller(dispatcher, OnVaultChanged);
@@ -385,7 +388,7 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
     [RelayCommand]
     public async Task NewVaultAsync()
     {
-        var dialog = new NewVaultDialogViewModel(_files, _estimator, _settings.Current.DefaultKdfPreset, _log);
+        var dialog = new NewVaultDialogViewModel(_files, _estimator, _preflight, _settings.Current.DefaultKdfPreset, _log);
 
         using var measurement = new CancellationTokenSource();
         Task measuring = dialog.MeasurePresetsAsync(measurement.Token);
@@ -523,7 +526,7 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
             return;
         }
 
-        var dialog = new NewVaultDialogViewModel(_files, _estimator, _settings.Current.DefaultKdfPreset, _log)
+        var dialog = new NewVaultDialogViewModel(_files, _estimator, _preflight, _settings.Current.DefaultKdfPreset, _log)
         {
             Title = "Save a copy",
         };
@@ -623,7 +626,7 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
         while (true)
         {
             var dialog = new ChangeCredentialsDialogViewModel(
-                _files, _estimator, preset, session.Statistics.TotalPlaintextBytes, _log)
+                _files, _estimator, _preflight, preset, session.Statistics.TotalPlaintextBytes, _log)
             {
                 Error = error,
                 Mode = mode,
@@ -1069,6 +1072,14 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
             Mode = ShellMode.Locked;
             return UnlockOutcome.Damaged;
         }
+        catch (VaultResourceException ex) when (ex.Code == VaultErrorCode.ResourceLimit)
+        {
+            // The header passed the pre-flight and the allocation still failed: the card keeps the
+            // figures and offers the retry, because nothing about the file or the password is wrong.
+            Unlock.ReportResourceLimit(ex.RequiredBytes, ex.AvailableBytes);
+            Mode = ShellMode.Locked;
+            return UnlockOutcome.ResourceLimit;
+        }
         catch (Exception ex) when (ex is VaultException or IOException or UnauthorizedAccessException or NotImplementedException)
         {
             _log.Error("The vault could not be opened.", ex);
@@ -1112,6 +1123,12 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
         {
             Mode = ShellMode.Locked;
             return UnlockOutcome.WrongCredentials;
+        }
+        catch (VaultResourceException ex) when (ex.Code == VaultErrorCode.ResourceLimit)
+        {
+            Unlock.ReportResourceLimit(ex.RequiredBytes, ex.AvailableBytes);
+            Mode = ShellMode.Locked;
+            return UnlockOutcome.ResourceLimit;
         }
         catch (Exception ex) when (ex is VaultException or IOException or NotImplementedException)
         {
@@ -1311,6 +1328,12 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
 
         string message = ex switch
         {
+            VaultResourceException { Code: VaultErrorCode.ResourceLimit } resource =>
+                $"The key derivation needs {OperationViewModel.FormatBytes(resource.RequiredBytes)} of memory; " +
+                (resource.AvailableBytes > 0
+                    ? $"{OperationViewModel.FormatBytes(resource.AvailableBytes)} is what this PC can give it. "
+                    : "this PC could not provide it right now. ") +
+                "Close other programs and try again, or choose a smaller key-derivation preset.",
             VaultResourceException resource =>
                 $"Not enough room: {OperationViewModel.FormatBytes(resource.RequiredBytes)} needed, {OperationViewModel.FormatBytes(resource.AvailableBytes)} available.",
             VaultIoException { Code: VaultErrorCode.Locked } =>

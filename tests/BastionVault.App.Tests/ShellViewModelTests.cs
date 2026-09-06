@@ -28,6 +28,7 @@ public sealed class ShellViewModelTests : IDisposable
     private readonly ISingleInstance _singleInstance = Substitute.For<ISingleInstance>();
     private readonly IShellIntegration _shellIntegration = Substitute.For<IShellIntegration>();
     private readonly IKdfEstimator _estimator = Substitute.For<IKdfEstimator>();
+    private readonly FakeKdfPreflight _preflight = new();
     private readonly IOsClipboard _osClipboard = Substitute.For<IOsClipboard>();
     private readonly InternalClipboard _clipboard = new();
     private readonly MemorySettings _settings = new();
@@ -136,6 +137,35 @@ public sealed class ShellViewModelTests : IDisposable
         Assert.Equal(1, shell.Unlock.FailureCount);
         Assert.True(shell.Unlock.HasError);
         Assert.Null(shell.Session);
+    }
+
+    [Fact]
+    public async Task AMemoryRefusalAfterThePreflightKeepsTheCardWithTheFiguresAndARetry()
+    {
+        _factory.OpenAsync(
+                Arg.Any<string>(), Arg.Any<Passphrase>(), Arg.Any<KeyFile?>(), Arg.Any<OpenOptions>(),
+                Arg.Any<IProgress<VaultProgress>?>(), Arg.Any<CancellationToken>())
+            .Returns<Task<IVaultSession>>(_ => throw new VaultResourceException(
+                VaultErrorCode.ResourceLimit, "the block array could not be allocated")
+            {
+                RequiredBytes = 512L * 1024 * 1024,
+                AvailableBytes = 96L * 1024 * 1024,
+            });
+
+        ShellViewModel shell = NewShell();
+        await shell.OpenVaultCommand.ExecuteAsync(null);
+
+        UnlockOutcome outcome = await shell.Unlock.SubmitAsync(null, null);
+
+        Assert.Equal(UnlockOutcome.ResourceLimit, outcome);
+        Assert.Equal(ShellMode.Locked, shell.Mode);
+        Assert.True(shell.IsUnlockVisible, "the card stays; nothing about the file or the password is wrong");
+        Assert.Contains(OperationViewModel.FormatBytes(512L * 1024 * 1024), shell.Unlock.Error, StringComparison.Ordinal);
+        Assert.Contains(OperationViewModel.FormatBytes(96L * 1024 * 1024), shell.Unlock.Error, StringComparison.Ordinal);
+        Assert.Equal("Try again", shell.Unlock.SubmitLabel);
+        Assert.Equal(0, shell.Unlock.FailureCount);
+        Assert.Null(shell.Session);
+        Assert.DoesNotContain(_log.Lines, line => line.StartsWith("ERR", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -487,6 +517,7 @@ public sealed class ShellViewModelTests : IDisposable
             _singleInstance,
             _shellIntegration,
             _estimator,
+            _preflight,
             _dispatcher,
             _log,
             operation,

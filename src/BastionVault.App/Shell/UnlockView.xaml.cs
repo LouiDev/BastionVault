@@ -60,7 +60,9 @@ public partial class UnlockView : UserControl
 
     private void OnModelChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(UnlockViewModel.IsDeriving) or nameof(UnlockViewModel.DerivingLabel))
+        if (e.PropertyName is nameof(UnlockViewModel.IsDeriving)
+            or nameof(UnlockViewModel.DerivingLabel)
+            or nameof(UnlockViewModel.SubmitLabel))
         {
             UpdateButton();
         }
@@ -74,7 +76,8 @@ public partial class UnlockView : UserControl
         }
 
         // The button is the progress indicator: it says what it is spending, not that it is busy.
-        UnlockLabel.Text = _model.IsDeriving ? _model.DerivingLabel : "Unlock";
+        // After a memory refusal it is also the retry, and says so.
+        UnlockLabel.Text = _model.IsDeriving ? _model.DerivingLabel : _model.SubmitLabel;
     }
 
     private void OnSelectPassword(object? sender, EventArgs e)

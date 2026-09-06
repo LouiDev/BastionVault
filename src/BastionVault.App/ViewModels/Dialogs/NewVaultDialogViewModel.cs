@@ -18,6 +18,10 @@ public sealed partial class KdfPresetOption : ObservableObject
     [ObservableProperty]
     private string _estimate = "measuring...";
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasFitNote))]
+    private string? _fitNote;
+
     /// <summary>Creates an option.</summary>
     /// <param name="preset">Which preset this is.</param>
     /// <param name="parameters">The parameters the preset stands for.</param>
@@ -44,6 +48,47 @@ public sealed partial class KdfPresetOption : ObservableObject
     /// <summary>The parameters in instrument type: "512 MiB - 3 passes - 4 lanes".</summary>
     public string ParameterText =>
         $"{Parameters.MemoryKiB / 1024} MiB · {Parameters.Iterations} passes · {Parameters.Parallelism} lanes";
+
+    /// <summary>False when Core's pre-flight would refuse this preset on this machine.</summary>
+    public bool Fits { get; private set; } = true;
+
+    /// <summary>True when <see cref="FitNote"/> has something to say.</summary>
+    public bool HasFitNote => !string.IsNullOrEmpty(FitNote);
+
+    /// <summary>
+    /// Asks the pre-flight and, when the preset does not fit, writes the one line that says so with the
+    /// figures. Presets that fit stay silent: the radio group should not read as three warnings.
+    /// </summary>
+    /// <param name="preflight">Core's KDF memory pre-flight.</param>
+    public void ApplyPreflight(IKdfPreflight preflight)
+    {
+        ArgumentNullException.ThrowIfNull(preflight);
+
+        KdfPreflightResult verdict = preflight.Check(Parameters);
+        Fits = verdict.Fits;
+        FitNote = verdict.Fits
+            ? null
+            : $"Exceeds this PC: needs {OperationViewModel.FormatBytes(verdict.RequiredBytes)} of memory; with " +
+              $"{OperationViewModel.FormatBytes(verdict.InstalledBytes)} installed, a key derivation may use at most " +
+              $"{OperationViewModel.FormatBytes(verdict.BudgetBytes)} here. A vault made with it would be refused on this PC.";
+    }
+
+    /// <summary>The largest preset in <paramref name="options"/> that fits, or <see langword="null"/> when none does.</summary>
+    /// <param name="options">The presets, in ascending cost order.</param>
+    public static KdfPresetOption? LargestFitting(IReadOnlyList<KdfPresetOption> options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        for (int i = options.Count - 1; i >= 0; i--)
+        {
+            if (options[i].Fits)
+            {
+                return options[i];
+            }
+        }
+
+        return null;
+    }
 }
 
 /// <summary>
@@ -107,11 +152,14 @@ public sealed partial class NewVaultDialogViewModel : DialogViewModelBase<NewVau
     /// <summary>Creates the dialog.</summary>
     /// <param name="files">File pickers for the vault path and the keyfile.</param>
     /// <param name="estimator">Measures the cost of each preset on this machine.</param>
+    /// <param name="preflight">Core's KDF memory pre-flight; a preset it refuses is marked and not preselected.</param>
     /// <param name="defaultPreset">Preset selected when the dialog opens.</param>
     /// <param name="log">Log.</param>
     public NewVaultDialogViewModel(
-        IFileDialogService files, IKdfEstimator estimator, KdfPreset defaultPreset, ILog log)
+        IFileDialogService files, IKdfEstimator estimator, IKdfPreflight preflight, KdfPreset defaultPreset, ILog log)
     {
+        ArgumentNullException.ThrowIfNull(preflight);
+
         _files = files;
         _estimator = estimator;
         _log = log;
@@ -127,7 +175,16 @@ public sealed partial class NewVaultDialogViewModel : DialogViewModelBase<NewVau
                 "A gigabyte and four passes. Noticeably slower to open."),
         ];
 
-        _selectedPreset = Presets.FirstOrDefault(p => p.Preset == defaultPreset) ?? Presets[1];
+        foreach (KdfPresetOption option in Presets)
+        {
+            option.ApplyPreflight(preflight);
+        }
+
+        // The user's default is honoured when this machine can serve it; otherwise the dialog opens on
+        // the largest preset that fits, so the first thing on screen is a choice that will work. Every
+        // preset stays selectable: the refusal is stated, not hidden.
+        KdfPresetOption preferred = Presets.FirstOrDefault(p => p.Preset == defaultPreset) ?? Presets[1];
+        _selectedPreset = preferred.Fits ? preferred : KdfPresetOption.LargestFitting(Presets) ?? preferred;
     }
 
     /// <summary>The three presets, in the order the radio group shows them.</summary>
@@ -177,6 +234,7 @@ public sealed partial class NewVaultDialogViewModel : DialogViewModelBase<NewVau
         HasPath
         && Acknowledged
         && PasswordsMatch
+        && SelectedPreset.Fits
         && Strength.Length >= PasswordStrength.MinimumLength;
 
     /// <summary>
@@ -200,6 +258,14 @@ public sealed partial class NewVaultDialogViewModel : DialogViewModelBase<NewVau
             if (!PasswordsMatch)
             {
                 return "The two passwords do not match yet.";
+            }
+
+            if (!SelectedPreset.Fits)
+            {
+                KdfPresetOption? fitting = KdfPresetOption.LargestFitting(Presets);
+                return fitting is null
+                    ? "No key-derivation preset fits this PC's memory."
+                    : $"The {SelectedPreset.Name} preset exceeds this PC's memory. {fitting.Name} is the largest that fits.";
             }
 
             return Acknowledged ? null : "Tick the acknowledgement to continue.";

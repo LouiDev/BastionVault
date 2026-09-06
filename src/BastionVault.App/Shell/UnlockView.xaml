@@ -53,6 +53,19 @@
                            ToolTip="{Binding VaultPath}"
                            Text="{Binding VaultPath}" />
 
+                <!-- FORMAT.md section 3.1 step 9, stated before the button instead of after it. -->
+                <Border Margin="0,10,0,0" Padding="10,8"
+                        Background="{DynamicResource Brush.Bg2}"
+                        BorderBrush="{DynamicResource Brush.Warning}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource Radius.Small}"
+                        Visibility="{Binding HasMemoryWarning, Converter={StaticResource Converter.BoolToVisibility}}">
+                    <TextBlock Style="{StaticResource Text.Body}"
+                               Foreground="{DynamicResource Brush.Warning}"
+                               TextWrapping="Wrap"
+                               Text="{Binding MemoryWarning}" />
+                </Border>
+
                 <Separator Style="{StaticResource Style.Seam}" Margin="0,16,0,16" />
 
                 <TextBlock Style="{StaticResource Text.Caption}" Text="Password" />

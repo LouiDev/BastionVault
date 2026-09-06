@@ -54,6 +54,9 @@ public sealed partial class ChangeCredentialsDialogViewModel : DialogViewModelBa
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StrengthSentence))]
     [NotifyPropertyChangedFor(nameof(CostLine))]
+    [NotifyPropertyChangedFor(nameof(CanApply))]
+    [NotifyPropertyChangedFor(nameof(MemoryWarning))]
+    [NotifyPropertyChangedFor(nameof(HasMemoryWarning))]
     private KdfPresetOption _selectedPreset;
 
     [ObservableProperty]
@@ -68,12 +71,14 @@ public sealed partial class ChangeCredentialsDialogViewModel : DialogViewModelBa
     /// <summary>Creates the dialog.</summary>
     /// <param name="files">File pickers for the keyfile.</param>
     /// <param name="estimator">Measures the cost of each preset on this machine.</param>
+    /// <param name="preflight">Core's KDF memory pre-flight; a preset it refuses is marked and cannot be applied.</param>
     /// <param name="currentKdf">The parameters currently stored in the header.</param>
     /// <param name="plaintextBytes">Total plaintext volume, used for the cost line.</param>
     /// <param name="log">Log.</param>
     public ChangeCredentialsDialogViewModel(
-        IFileDialogService files, IKdfEstimator estimator, KdfParameters currentKdf, long plaintextBytes, ILog log)
+        IFileDialogService files, IKdfEstimator estimator, IKdfPreflight preflight, KdfParameters currentKdf, long plaintextBytes, ILog log)
     {
+        ArgumentNullException.ThrowIfNull(preflight);
         ArgumentNullException.ThrowIfNull(currentKdf);
 
         _files = files;
@@ -92,6 +97,14 @@ public sealed partial class ChangeCredentialsDialogViewModel : DialogViewModelBa
                 "A gigabyte and four passes. Noticeably slower to open."),
         ];
 
+        foreach (KdfPresetOption option in Presets)
+        {
+            option.ApplyPreflight(preflight);
+        }
+
+        // The vault's current preset is what the dialog opens on, because "change the password, keep
+        // the cost" is the common case. If that very preset does not fit here the user is already
+        // unlocked (so it did fit once) and the note under it says what is going on.
         _selectedPreset = Presets.FirstOrDefault(p => p.Parameters == currentKdf) ?? Presets[1];
     }
 
@@ -143,7 +156,28 @@ public sealed partial class ChangeCredentialsDialogViewModel : DialogViewModelBa
     public bool CanApply =>
         HasCurrentPassword
         && PasswordsMatch
+        && SelectedPreset.Fits
         && Strength.Length >= PasswordStrength.MinimumLength;
+
+    /// <summary>Why the selected preset cannot be applied here, or <see langword="null"/> when it can.</summary>
+    public string? MemoryWarning
+    {
+        get
+        {
+            if (SelectedPreset.Fits)
+            {
+                return null;
+            }
+
+            KdfPresetOption? fitting = KdfPresetOption.LargestFitting(Presets);
+            return fitting is null
+                ? "No key-derivation preset fits this PC's memory; the credentials cannot be changed on this machine."
+                : $"The {SelectedPreset.Name} preset exceeds this PC's memory. {fitting.Name} is the largest that fits.";
+        }
+    }
+
+    /// <summary>True while <see cref="MemoryWarning"/> has something to say.</summary>
+    public bool HasMemoryWarning => MemoryWarning is not null;
 
     /// <summary>Measures every preset on this machine.</summary>
     /// <param name="ct">Cancellation token.</param>

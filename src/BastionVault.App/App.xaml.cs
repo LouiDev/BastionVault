@@ -67,7 +67,13 @@ public partial class App : Application
             _log.Warn($"{scriptedPickers.Count} file picker(s) are answered from the command line (test mode).");
         }
 
-        _services = BuildServices(demo, _fileLog, scriptedPickers);
+        long? installedMemoryOverride = InstalledMemoryFromCommandLine(e?.Args ?? []);
+        if (installedMemoryOverride is { } pretend)
+        {
+            _log.Warn($"The KDF pre-flight pretends this machine has {pretend} bytes of memory (test mode).");
+        }
+
+        _services = BuildServices(demo, _fileLog, scriptedPickers, installedMemoryOverride);
 
         var settings = _services.GetRequiredService<ISettingsService>();
         _theme = _services.GetRequiredService<ThemeController>();
@@ -152,6 +158,31 @@ public partial class App : Application
     }
 
     /// <summary>
+    /// Test hook (DEBUG builds only): <c>--test-installed-memory=&lt;bytes&gt;</c> makes the KDF
+    /// pre-flight shown by the unlock card and the preset pickers believe the machine has that much
+    /// memory, so the "will be refused here" states can be screenshotted. Core's own pre-flight is not
+    /// touched: a real open still measures the real machine. Compiled out of Release builds.
+    /// </summary>
+    /// <param name="args">The process arguments.</param>
+    private static long? InstalledMemoryFromCommandLine(string[] args)
+    {
+#if !DEBUG
+        _ = args;
+        return null;
+#else
+        const string Prefix = "--test-installed-memory=";
+
+        string? value = args
+            .FirstOrDefault(a => a.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase))?[Prefix.Length..]
+            .Trim('"');
+
+        return long.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out long bytes) && bytes > 0
+            ? bytes
+            : null;
+#endif
+    }
+
+    /// <summary>
     /// Test hook (DEBUG builds only): <c>--trace-bindings=&lt;file&gt;</c> routes WPF's data-binding
     /// trace at Warning level into a text file, so an automated run can assert that the shell produced
     /// no binding errors. Off unless the argument is given - the listener costs a string format per
@@ -220,7 +251,7 @@ public partial class App : Application
     }
 
     private static ServiceProvider BuildServices(
-        bool demo, ILog log, IReadOnlyDictionary<string, string> scriptedPickers)
+        bool demo, ILog log, IReadOnlyDictionary<string, string> scriptedPickers, long? installedMemoryOverride)
     {
         var services = new ServiceCollection();
 
@@ -252,6 +283,9 @@ public partial class App : Application
             () => Current.Dispatcher.BeginInvoke(() => Current.MainWindow?.Activate()),
             sp.GetRequiredService<ILog>()));
         services.AddSingleton<IKdfEstimator>(sp => new KdfEstimator(sp.GetRequiredService<ILog>()));
+        services.AddSingleton<IKdfPreflight>(installedMemoryOverride is { } pretendBytes
+            ? new KdfPreflightService(pretendBytes)
+            : new KdfPreflightService());
         services.AddSingleton<IClock>(SystemClock.Instance);
         services.AddSingleton(sp => new ThemeController(
             sp.GetRequiredService<ISettingsService>(),
