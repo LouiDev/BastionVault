@@ -13,6 +13,61 @@ namespace BastionVault.App.Tests.Explorer;
 /// </summary>
 public sealed class ResponsiveLayoutTests
 {
+    // ── #19 hex dump width ────────────────────────────────────────────────────
+
+    [Fact]
+    public void Sixteen_bytes_need_sixty_three_columns_and_eight_need_thirty_seven()
+    {
+        Assert.Equal(63, PreviewViewModel.HexLineColumns(16));
+        Assert.Equal(37, PreviewViewModel.HexLineColumns(8));
+    }
+
+    [Theory]
+    [InlineData(63, 16)]
+    [InlineData(80, 16)]
+    [InlineData(62, 8)]
+    [InlineData(37, 8)]
+    [InlineData(10, 8)]
+    public void The_bytes_per_line_follow_the_columns_the_pane_can_show(int columns, int expected)
+    {
+        Assert.Equal(expected, PreviewViewModel.HexBytesPerLineFor(columns));
+    }
+
+    [Fact]
+    public void An_eight_byte_line_keeps_the_ascii_column_and_the_offsets_advance_by_eight()
+    {
+        byte[] bytes = "Bastion Vault!!!"u8.ToArray();
+
+        string dump = PreviewViewModel.FormatHexDump(bytes, bytes.Length, 8);
+        string[] lines = dump.TrimEnd('\n').Split('\n');
+
+        Assert.Equal(2, lines.Length);
+        Assert.Equal("00000000  42617374 696F6E20  Bastion ", lines[0]);
+        Assert.Equal("00000008  5661756C 74212121  Vault!!!", lines[1]);
+        Assert.All(lines, line => Assert.Equal(PreviewViewModel.HexLineColumns(8), line.Length));
+    }
+
+    [Fact]
+    public void A_sixteen_byte_line_is_the_familiar_layout()
+    {
+        byte[] bytes = "Bastion Vault!!!"u8.ToArray();
+
+        string wide = PreviewViewModel.FormatHexDump(bytes, bytes.Length, 16);
+        string implicitWidth = PreviewViewModel.FormatHexDump(bytes, bytes.Length);
+
+        Assert.Equal(implicitWidth, wide);
+        Assert.Equal(PreviewViewModel.HexLineColumns(16), wide.TrimEnd('\n').Length);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(3)]
+    [InlineData(6)]
+    public void Bytes_per_line_must_be_a_positive_multiple_of_four(int bytesPerLine)
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => PreviewViewModel.FormatHexDump([1, 2, 3], 3, bytesPerLine));
+    }
+
     // ── #23 column order ──────────────────────────────────────────────────────
 
     private static readonly string[] BuildOrder = ["name", "size", "type", "modified"];
