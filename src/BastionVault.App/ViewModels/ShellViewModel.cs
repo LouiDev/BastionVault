@@ -237,14 +237,26 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
         Session is null ? string.Empty : System.IO.Path.GetFileNameWithoutExtension(Session.Path);
 
     /// <summary>
-    /// Window title: "Bastion Vault", or "name - Bastion Vault" with a bullet when there is unsaved work.
-    /// A locked vault shows the bare product name: lock clears state (UI-CONTRACT.md section
-    /// 1.10), and the window title is also the taskbar and Alt+Tab label, which is exactly what
-    /// a locked screen must stop advertising.
+    /// Window title: "Bastion Vault", or "name - Bastion Vault" with a bullet when there is unsaved work
+    /// and "(locked)" while the vault is locked. The title and the vault chip agree about whether a vault
+    /// is there (UI-CONTRACT.md section 1.10): a locked vault is still this window's vault, so the taskbar
+    /// and Alt+Tab keep identifying it; the unlock card shows the full path anyway, so the name leaks
+    /// nothing the lock screen does not already say.
     /// </summary>
-    public string Title => Session is null || Mode is ShellMode.Locked or ShellMode.Unlocking
-        ? "Bastion Vault"
-        : $"{VaultName}{(IsDirty ? " •" : string.Empty)} - Bastion Vault";
+    public string Title
+    {
+        get
+        {
+            if (Session is null)
+            {
+                return "Bastion Vault";
+            }
+
+            string dirty = IsDirty ? " •" : string.Empty;
+            string locked = Mode is ShellMode.Locked or ShellMode.Unlocking ? " (locked)" : string.Empty;
+            return $"{VaultName}{dirty}{locked} - Bastion Vault";
+        }
+    }
 
     /// <summary>What the state stripe shows.</summary>
     public StripeState Stripe

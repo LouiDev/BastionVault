@@ -365,20 +365,35 @@ public sealed class ShellViewModelTests : IDisposable
     }
 
     [Fact]
-    public async Task LockingResetsTheWindowTitle()
+    public async Task LockingKeepsTheVaultNameInTheTitleAndMarksItLocked()
     {
-        // The title is also the taskbar and Alt+Tab label, and lock clears state
-        // (UI-CONTRACT.md section 1.10).
+        // The title is also the taskbar and Alt+Tab label. It agrees with the vault chip: a locked
+        // vault is still this window's vault (UI-CONTRACT.md section 1.10, #25).
         _dialogs.ConfirmAsync(Arg.Any<ConfirmRequest>()).Returns(Task.FromResult(ConfirmResult.Secondary));
 
         ShellViewModel shell = NewShell();
         await shell.OpenVaultCommand.ExecuteAsync(null);
         await shell.Unlock.SubmitAsync(null, null);
-        Assert.Contains(Path.GetFileNameWithoutExtension(_vaultPath), shell.Title, StringComparison.Ordinal);
+        string name = Path.GetFileNameWithoutExtension(_vaultPath);
+        Assert.StartsWith(name, shell.Title, StringComparison.Ordinal);
+        Assert.DoesNotContain("(locked)", shell.Title, StringComparison.Ordinal);
 
         await shell.LockCommand.ExecuteAsync(null);
 
         Assert.Equal(ShellMode.Locked, shell.Mode);
+        Assert.StartsWith(name, shell.Title, StringComparison.Ordinal);
+        Assert.EndsWith(" (locked) - Bastion Vault", shell.Title, StringComparison.Ordinal);
+        Assert.True(shell.HasSession, "the chip stays for the same reason");
+    }
+
+    [Fact]
+    public async Task BeforeTheFirstUnlockNeitherTheTitleNorTheChipNamesTheVault()
+    {
+        ShellViewModel shell = NewShell();
+        await shell.OpenVaultCommand.ExecuteAsync(null);
+
+        Assert.Equal(ShellMode.Locked, shell.Mode);
+        Assert.False(shell.HasSession);
         Assert.Equal("Bastion Vault", shell.Title);
     }
 
