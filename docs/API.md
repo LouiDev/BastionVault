@@ -20,7 +20,10 @@ The skeleton in `src/BastionVault.Core` mirrors this file one-to-one.
 5. **Errors are exceptions**, always a `VaultException` subclass carrying a
    `VaultErrorCode`, or `OperationCanceledException`. No raw `IOException`,
    `CryptographicException` or `ArgumentOutOfRangeException` leaves `BastionVault.Core`
-   (they are wrapped as `IoError` / `IndexInvalid` etc.). Argument misuse by the caller
+   (they are wrapped as `IoError` / `IndexInvalid` etc.). An `OutOfMemoryException` from the
+   Argon2 block allocation is translated in exactly one place (`Credentials.DeriveKekAsync`) to
+   `VaultResourceException(ResourceLimit)` carrying `RequiredBytes` and the memory free at that
+   moment in `AvailableBytes`; OOM is not wrapped anywhere else. Argument misuse by the caller
    (null, wrong id) still throws the usual `ArgumentException` family.
 6. **Progress is rate-limited at the source:** at most one report per
    `max(4 MiB, 1 % of BytesTotal)` plus one at start and one at completion.
@@ -135,6 +138,16 @@ public static class KdfBenchmark
 {
     /// Measures a small Argon2id run on this machine and scales to `parameters`.
     public static Task<TimeSpan> EstimateAsync(KdfParameters parameters, CancellationToken ct);
+}
+
+/// FORMAT.md §3.1 step 9 as a question: the same verdict Open/Unlock/Create raise as ResourceLimit, available
+/// before the button is pressed. Installed memory, never free memory (see DEVELOPING.md, "Left open deliberately").
+public sealed record KdfPreflightResult(bool Fits, long RequiredBytes, long BudgetBytes, long InstalledBytes);
+public static class KdfPreflight
+{
+    public static KdfPreflightResult Check(KdfParameters parameters);                        // this machine; unmeasurable → Fits
+    public static KdfPreflightResult Check(KdfParameters parameters, long installedBytes);   // pure; for tests and scripted hosts
+    public static KdfPreset? LargestFittingPreset();                                         // null when even Fast does not fit
 }
 
 // ───────────── secrets ─────────────
