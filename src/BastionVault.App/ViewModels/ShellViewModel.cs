@@ -443,6 +443,20 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
             _headerKeyFilePath = keyFile?.SourcePath;
             _recent.Touch(result.Path);
             StatusMessage = "Vault created.";
+
+            // The lock taken above could only be keyed on the path, because the file did not exist.
+            // Now that it does, take it again under its file id as well, so the same file reached
+            // through an alias is one vault from here on (UI-CONTRACT.md section 5).
+            IDisposable? upgraded = _singleInstance.TryAcquireVault(result.Path);
+            if (upgraded is not null)
+            {
+                _vaultLock?.Dispose();
+                _vaultLock = upgraded;
+            }
+            else
+            {
+                _log.Warn("The single-instance lock could not be re-acquired after creating the vault; the path-based lock stays.");
+            }
         }
         catch (Exception ex) when (ex is VaultException or IOException or UnauthorizedAccessException or NotImplementedException)
         {

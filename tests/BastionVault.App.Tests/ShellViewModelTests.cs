@@ -441,9 +441,14 @@ public sealed class ShellViewModelTests : IDisposable
     {
         // A vault that has just been created is as writable as any other, so it is protected from
         // the moment it exists rather than from the first time it is reopened.
-        var held = new DisposeFlag();
+        var handed = new List<DisposeFlag>();
         string fresh = _vaultPath + ".new";
-        _singleInstance.TryAcquireVault(fresh).Returns(_ => held);
+        _singleInstance.TryAcquireVault(fresh).Returns(_ =>
+        {
+            var flag = new DisposeFlag();
+            handed.Add(flag);
+            return flag;
+        });
         _dialogs.ShowAsync(Arg.Any<NewVaultDialogViewModel>())
             .Returns(Task.FromResult<NewVaultResult?>(
                 new NewVaultResult(fresh, null, null, KdfParameters.Default)));
@@ -459,12 +464,17 @@ public sealed class ShellViewModelTests : IDisposable
 
         Assert.Equal(ShellMode.Open, shell.Mode);
         Assert.Same(created, shell.Session);
-        _singleInstance.Received().TryAcquireVault(fresh);
-        Assert.False(held.Disposed);
+
+        // Taken once before the file existed (path identity) and once after (file identity, #20); the
+        // first, path-only lock is handed back the moment the second one is held.
+        _singleInstance.Received(2).TryAcquireVault(fresh);
+        Assert.Equal(2, handed.Count);
+        Assert.True(handed[0].Disposed);
+        Assert.False(handed[1].Disposed);
 
         // And it is given back when the vault is closed.
         await shell.ShutdownAsync();
-        Assert.True(held.Disposed);
+        Assert.True(handed[1].Disposed);
     }
 
     [Fact]
