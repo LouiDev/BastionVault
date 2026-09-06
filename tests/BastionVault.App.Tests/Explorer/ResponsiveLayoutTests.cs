@@ -13,6 +13,125 @@ namespace BastionVault.App.Tests.Explorer;
 /// </summary>
 public sealed class ResponsiveLayoutTests
 {
+    // ── #18 side panes ────────────────────────────────────────────────────────
+
+    [Theory]
+    [InlineData(1180)]
+    [InlineData(1400)]
+    [InlineData(2560)]
+    public void Wide_windows_keep_the_widths_the_user_chose(double width)
+    {
+        (double tree, double preview, bool collapse) = ExplorerView.PaneWidthsFor(width, 300, 400);
+
+        Assert.Equal(300, tree);
+        Assert.Equal(400, preview);
+        Assert.False(collapse);
+    }
+
+    [Fact]
+    public void Between_the_breakpoints_both_panes_shrink_in_proportion()
+    {
+        double middle = (ExplorerView.PaneShrinkBreakpoint + ExplorerView.PreviewCollapseBreakpoint) / 2;
+
+        (double tree, double preview, bool collapse) = ExplorerView.PaneWidthsFor(
+            middle, ExplorerView.DefaultTreeWidth, ExplorerView.DefaultPreviewWidth);
+
+        Assert.Equal((ExplorerView.TreeMinWidth + ExplorerView.DefaultTreeWidth) / 2, tree, 0.01);
+        Assert.Equal((ExplorerView.PreviewMinWidth + ExplorerView.DefaultPreviewWidth) / 2, preview, 0.01);
+        Assert.False(collapse);
+    }
+
+    [Theory]
+    [InlineData(999)]
+    [InlineData(880)]
+    [InlineData(700)]
+    public void Narrow_windows_fold_the_preview_away_and_put_the_tree_at_its_minimum(double width)
+    {
+        (double tree, double preview, bool collapse) = ExplorerView.PaneWidthsFor(
+            width, ExplorerView.DefaultTreeWidth, ExplorerView.DefaultPreviewWidth);
+
+        Assert.Equal(ExplorerView.TreeMinWidth, tree);
+        Assert.Equal(ExplorerView.PreviewMinWidth, preview);
+        Assert.True(collapse);
+    }
+
+    [Fact]
+    public void At_the_declared_minimum_window_width_the_list_gets_the_room_its_columns_need()
+    {
+        // 880 is the shell's minimum width. Tree at its minimum plus two 1 px seams and no preview leaves
+        // the four default columns (24 + 226 + 80 + 124 + 124 = 578) their room with margin to spare.
+        (double tree, _, bool collapse) = ExplorerView.PaneWidthsFor(880, ExplorerView.DefaultTreeWidth, ExplorerView.DefaultPreviewWidth);
+
+        double list = 880 - tree - 2;
+        Assert.True(collapse);
+        Assert.True(list >= 578 + 22, $"the list gets {list} px, the four columns need 600");
+    }
+
+    [Fact]
+    public void A_user_width_below_the_minimum_is_raised_to_it()
+    {
+        (double tree, double preview, _) = ExplorerView.PaneWidthsFor(1400, 40, 40);
+
+        Assert.Equal(ExplorerView.TreeMinWidth, tree);
+        Assert.Equal(ExplorerView.PreviewMinWidth, preview);
+    }
+
+    [Fact]
+    public void The_view_model_hides_the_preview_while_the_window_is_narrow_without_forgetting_the_choice()
+    {
+        using var context = new ExplorerTestContext();
+        ExplorerViewModel explorer = context.Explorer;
+        Assert.True(explorer.IsPreviewVisible);
+        Assert.True(explorer.IsPreviewShown);
+
+        explorer.IsPreviewCollapsedByWidth = true;
+
+        Assert.True(explorer.IsPreviewVisible, "the remembered choice is untouched");
+        Assert.False(explorer.IsPreviewShown);
+        Assert.False(explorer.Preview.IsEnabled, "a pane that is not on screen decrypts nothing");
+        Assert.True(context.Settings.Current.PreviewEnabled, "nothing was persisted");
+
+        explorer.IsPreviewCollapsedByWidth = false;
+
+        Assert.True(explorer.IsPreviewShown);
+        Assert.True(explorer.Preview.IsEnabled);
+    }
+
+    [Fact]
+    public void Toggling_the_preview_while_it_is_folded_away_brings_it_back_instead_of_turning_it_off()
+    {
+        using var context = new ExplorerTestContext();
+        ExplorerViewModel explorer = context.Explorer;
+        explorer.IsPreviewCollapsedByWidth = true;
+
+        explorer.TogglePreviewCommand.Execute(null);
+
+        Assert.True(explorer.IsPreviewVisible);
+        Assert.False(explorer.IsPreviewCollapsedByWidth);
+        Assert.True(explorer.IsPreviewShown);
+
+        // The second press is the ordinary toggle and is remembered.
+        explorer.TogglePreviewCommand.Execute(null);
+
+        Assert.False(explorer.IsPreviewVisible);
+        Assert.False(context.Settings.Current.PreviewEnabled);
+    }
+
+    [Fact]
+    public void A_preview_the_user_turned_off_stays_off_whatever_the_width_does()
+    {
+        using var context = new ExplorerTestContext();
+        ExplorerViewModel explorer = context.Explorer;
+        explorer.TogglePreviewCommand.Execute(null);
+        Assert.False(explorer.IsPreviewVisible);
+
+        explorer.IsPreviewCollapsedByWidth = true;
+        Assert.False(explorer.IsPreviewShown);
+        explorer.IsPreviewCollapsedByWidth = false;
+        Assert.False(explorer.IsPreviewShown);
+        Assert.False(context.Settings.Current.PreviewEnabled);
+    }
+
     // ── #19 hex dump width ────────────────────────────────────────────────────
 
     [Fact]

@@ -75,7 +75,12 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
     private RowDensity _density = RowDensity.Comfortable;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPreviewShown))]
     private bool _isPreviewVisible = true;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPreviewShown))]
+    private bool _isPreviewCollapsedByWidth;
 
     [ObservableProperty]
     private bool _isPanicMode;
@@ -857,10 +862,7 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
             return;
         }
 
-        if (!IsPreviewVisible)
-        {
-            TogglePreview();
-        }
+        EnsurePreviewShown();
 
         FocusedItem = item;
         Preview.Show(item);
@@ -870,21 +872,48 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void PreviewFocused()
     {
-        if (!IsPreviewVisible)
-        {
-            TogglePreview();
-        }
+        EnsurePreviewShown();
 
         Preview.Show(FocusedItem ?? (SelectedItems.Count == 1 ? SelectedItems[0] : null));
     }
 
-    /// <summary>Shows or hides the preview pane and remembers the choice.</summary>
+    /// <summary>
+    /// True when the preview pane is on screen: the user has it on and the window is not too narrow for
+    /// it. The view lays out from this; <see cref="IsPreviewVisible"/> alone is the remembered choice.
+    /// </summary>
+    public bool IsPreviewShown => IsPreviewVisible && !IsPreviewCollapsedByWidth;
+
+    /// <summary>
+    /// Shows or hides the preview pane and remembers the choice. When the pane is only folded away
+    /// because the window is narrow, the first press brings it back rather than turning the remembered
+    /// choice off: the user asked for the preview, and gets it, at its minimum width.
+    /// </summary>
     [RelayCommand]
     private void TogglePreview()
     {
+        if (IsPreviewVisible && IsPreviewCollapsedByWidth)
+        {
+            IsPreviewCollapsedByWidth = false;
+            return;
+        }
+
         IsPreviewVisible = !IsPreviewVisible;
         _settings.Current.PreviewEnabled = IsPreviewVisible;
         _settings.Save();
+    }
+
+    /// <summary>Brings the preview on screen for an explicit request (Enter, Space), whatever hid it.</summary>
+    private void EnsurePreviewShown()
+    {
+        if (IsPreviewCollapsedByWidth)
+        {
+            IsPreviewCollapsedByWidth = false;
+        }
+
+        if (!IsPreviewVisible)
+        {
+            TogglePreview();
+        }
     }
 
     /// <summary>
@@ -1595,14 +1624,23 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
         Root.IsMasked = value;
         AddressBar.IsMasked = value;
 
-        Preview.IsEnabled = IsPreviewVisible && !value;
+        Preview.IsEnabled = IsPreviewShown && !value;
         Preview.Show(value ? null : SelectedItems.Count == 1 ? SelectedItems[0] : null);
     }
 
-    partial void OnIsPreviewVisibleChanged(bool value)
+    partial void OnIsPreviewVisibleChanged(bool value) => ApplyPreviewShown();
+
+    partial void OnIsPreviewCollapsedByWidthChanged(bool value) => ApplyPreviewShown();
+
+    /// <summary>
+    /// A pane that is not on screen reads nothing: a hidden preview must not decrypt into memory for
+    /// nobody, whether it was hidden by choice or by the window's width.
+    /// </summary>
+    private void ApplyPreviewShown()
     {
-        Preview.IsEnabled = value && !IsPanicMode;
-        Preview.Show(value && !IsPanicMode && SelectedItems.Count == 1 ? SelectedItems[0] : null);
+        bool shown = IsPreviewShown && !IsPanicMode;
+        Preview.IsEnabled = shown;
+        Preview.Show(shown && SelectedItems.Count == 1 ? SelectedItems[0] : null);
     }
 
     partial void OnIsWindowActiveChanged(bool value) => Preview.IsWindowActive = value;
