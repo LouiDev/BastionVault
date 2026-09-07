@@ -10,17 +10,50 @@ using BastionVault.App.ViewModels;
 namespace BastionVault.App.Views;
 
 /// <summary>
-/// The explorer's root. The view model owns every decision; this file owns the three things a view
-/// model may not touch: keyboard routing built from <see cref="KeyMap"/>, focus movement between
-/// the panes, and the <c>RowHeight</c> resource that the density setting swaps.
+/// The explorer's root. The view model owns every decision; this file owns the things a view model
+/// may not touch: keyboard routing built from <see cref="KeyMap"/>, focus movement between the
+/// panes, the <c>RowHeight</c> resource that the density setting swaps, and the width of the two
+/// side panes, which follow the window below <see cref="PaneShrinkBreakpoint"/> so the four list
+/// columns keep their room (the command bar drops its labels the same way).
 /// </summary>
 public partial class ExplorerView : UserControl
 {
+    /// <summary>Above this width the tree and the preview have the widths the user gave them.</summary>
+    public const double PaneShrinkBreakpoint = 1180;
+
+    /// <summary>
+    /// Below this width the preview folds away (the view model's <c>IsPreviewCollapsedByWidth</c>) and
+    /// the tree sits at its minimum: with both side panes at their minimum the list would otherwise get
+    /// less than its four columns need at their default widths.
+    /// </summary>
+    public const double PreviewCollapseBreakpoint = 1000;
+
+    /// <summary>The tree never shrinks below this on its own.</summary>
+    public const double TreeMinWidth = 160;
+
+    /// <summary>The preview never shrinks below this on its own.</summary>
+    public const double PreviewMinWidth = 200;
+
+    /// <summary>Tree width before the user touched the splitter.</summary>
+    public const double DefaultTreeWidth = 248;
+
+    /// <summary>Preview width before the user touched the splitter.</summary>
+    public const double DefaultPreviewWidth = 320;
+
     private readonly List<Binding> _bindings = [];
 
     private ExplorerViewModel? _explorer;
     private Window? _window;
-    private double _previewWidth = 320;
+
+    /// <summary>The widths the user chose (or the defaults); what is drawn may be narrower.</summary>
+    private double _userTreeWidth = DefaultTreeWidth;
+    private double _userPreviewWidth = DefaultPreviewWidth;
+
+    /// <summary>True while the window is below <see cref="PreviewCollapseBreakpoint"/>.</summary>
+    private bool _narrow;
+
+    /// <summary>True while this class sets column widths itself, so its own changes are not read back as the user's.</summary>
+    private bool _layingOut;
 
     /// <summary>Creates the explorer view.</summary>
     public ExplorerView()
@@ -51,7 +84,8 @@ public partial class ExplorerView : UserControl
 
         BuildKeyBindings(explorer);
         ApplyDensity(explorer.Density);
-        ApplyPreviewVisibility(explorer.IsPreviewVisible);
+        ApplyResponsiveLayout(Root.ActualWidth);
+        ApplyPreviewVisibility(explorer.IsPreviewShown);
 
         // Loaded is not enough. The shell materialises this view once, at window load, with a null
         // Explorer and a hidden, empty list; it never fires again when a vault is opened into the
@@ -179,8 +213,8 @@ public partial class ExplorerView : UserControl
                 ApplyDensity(_explorer.Density);
                 break;
 
-            case nameof(ExplorerViewModel.IsPreviewVisible):
-                ApplyPreviewVisibility(_explorer.IsPreviewVisible);
+            case nameof(ExplorerViewModel.IsPreviewShown):
+                ApplyPreviewVisibility(_explorer.IsPreviewShown);
                 break;
 
             default:
@@ -206,15 +240,115 @@ public partial class ExplorerView : UserControl
 
     private void ApplyPreviewVisibility(bool visible)
     {
-        if (!visible && PreviewColumn.ActualWidth > 0)
+        _layingOut = true;
+        try
         {
-            _previewWidth = PreviewColumn.ActualWidth;
+            Preview.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+            PreviewSplitter.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+            PreviewColumn.MinWidth = visible ? PreviewMinWidth : 0;
+            PreviewColumn.Width = visible
+                ? new GridLength(PaneWidthsFor(Root.ActualWidth, _userTreeWidth, _userPreviewWidth).Preview)
+                : new GridLength(0);
+        }
+        finally
+        {
+            _layingOut = false;
+        }
+    }
+
+    // ── Responsive side panes ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// The side-pane widths for a given explorer width. Above <see cref="PaneShrinkBreakpoint"/> the
+    /// user's widths; between the two breakpoints both panes shrink in proportion towards their minimum;
+    /// below <see cref="PreviewCollapseBreakpoint"/> the tree is at its minimum and the preview folds
+    /// away. Exposed so a test can pin the rules.
+    /// </summary>
+    /// <param name="width">Width of the explorer, in DIP.</param>
+    /// <param name="userTree">Tree width the user chose.</param>
+    /// <param name="userPreview">Preview width the user chose.</param>
+    /// <returns>Widths to lay out with, and whether the preview should fold away.</returns>
+    public static (double Tree, double Preview, bool CollapsePreview) PaneWidthsFor(double width, double userTree, double userPreview)
+    {
+        double tree = Math.Max(TreeMinWidth, userTree);
+        double preview = Math.Max(PreviewMinWidth, userPreview);
+
+        if (width <= 0 || width >= PaneShrinkBreakpoint)
+        {
+            return (tree, preview, false);
         }
 
-        Preview.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
-        PreviewSplitter.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
-        PreviewColumn.MinWidth = visible ? 200 : 0;
-        PreviewColumn.Width = visible ? new GridLength(Math.Max(200, _previewWidth)) : new GridLength(0);
+        if (width < PreviewCollapseBreakpoint)
+        {
+            return (TreeMinWidth, PreviewMinWidth, true);
+        }
+
+        double factor = (width - PreviewCollapseBreakpoint) / (PaneShrinkBreakpoint - PreviewCollapseBreakpoint);
+        return (
+            TreeMinWidth + ((tree - TreeMinWidth) * factor),
+            PreviewMinWidth + ((preview - PreviewMinWidth) * factor),
+            false);
+    }
+
+    private void OnRootSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (e.WidthChanged)
+        {
+            ApplyResponsiveLayout(e.NewSize.Width);
+        }
+    }
+
+    /// <summary>
+    /// A splitter was released: what the user set is the new preference. Read from the column, not the
+    /// event, because the splitter only knows the delta.
+    /// </summary>
+    private void OnSplitterDragCompleted(object sender, DragCompletedEventArgs e)
+    {
+        if (_layingOut)
+        {
+            return;
+        }
+
+        if (ReferenceEquals(sender, TreeSplitter) && TreeColumn.ActualWidth > 0)
+        {
+            _userTreeWidth = TreeColumn.ActualWidth;
+        }
+        else if (ReferenceEquals(sender, PreviewSplitter) && PreviewColumn.ActualWidth > 0)
+        {
+            _userPreviewWidth = PreviewColumn.ActualWidth;
+        }
+    }
+
+    private void ApplyResponsiveLayout(double width)
+    {
+        if (_explorer is null || width <= 0)
+        {
+            return;
+        }
+
+        (double tree, double preview, bool collapse) = PaneWidthsFor(width, _userTreeWidth, _userPreviewWidth);
+
+        // Only the crossing of the breakpoint is reported, so a user who brings the preview back
+        // while narrow (Toggle preview, Enter on a file) is not overruled on the next pixel.
+        if (collapse != _narrow)
+        {
+            _narrow = collapse;
+            _explorer.IsPreviewCollapsedByWidth = collapse;
+        }
+
+        _layingOut = true;
+        try
+        {
+            TreeColumn.Width = new GridLength(tree);
+            if (Preview.Visibility == Visibility.Visible)
+            {
+                PreviewColumn.Width = new GridLength(preview);
+            }
+        }
+        finally
+        {
+            _layingOut = false;
+        }
     }
 
     // ── Keyboard ──────────────────────────────────────────────────────────────

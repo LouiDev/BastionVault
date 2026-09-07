@@ -87,11 +87,12 @@
                            Text="{Binding Text}" />
             </ScrollViewer>
 
-            <!-- Hex dump of the first bytes. -->
+            <!-- Hex dump of the first bytes. Bytes per line follow the pane's width (16 or 8), so the
+                 ASCII column fits in the 320 px default pane; the horizontal scrollbar is the fallback. -->
             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                           Padding="12,8"
                           Visibility="{Binding Mode, Converter={StaticResource Converter.EnumMatchVisibility}, ConverterParameter=Hex}">
-                <TextBlock Style="{StaticResource Text.Mono}" Text="{Binding Text}" />
+                <TextBlock x:Name="HexText" Style="{StaticResource Text.Mono}" Text="{Binding Text}" />
             </ScrollViewer>
 
             <!-- Image, decoded no wider than this pane. -->

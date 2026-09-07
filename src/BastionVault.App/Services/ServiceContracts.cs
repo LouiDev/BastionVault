@@ -307,3 +307,15 @@ public interface IKdfEstimator
     /// <param name="ct">Cancellation token.</param>
     Task<TimeSpan> EstimateAsync(KdfParameters parameters, CancellationToken ct);
 }
+
+/// <summary>
+/// Asks Core's KDF memory pre-flight (FORMAT.md section 3.1 step 9) before the button is pressed, so the
+/// unlock card and the preset pickers can say "this will be refused" instead of letting the refusal arrive
+/// after the click. It is the same verdict Open, Unlock and Create raise; the App never decides on its own.
+/// </summary>
+public interface IKdfPreflight
+{
+    /// <summary>Whether <paramref name="parameters"/> pass the pre-flight on this machine, with the figures.</summary>
+    /// <param name="parameters">Argon2id parameters from a header or a preset.</param>
+    KdfPreflightResult Check(KdfParameters parameters);
+}

@@ -21,7 +21,7 @@
         the code-behind only does what a view model may not - focus, key routing and the row-height
         resource that the density setting swaps.
     -->
-    <Grid x:Name="Root" behaviors:FileDropBehavior.Explorer="{Binding}">
+    <Grid x:Name="Root" behaviors:FileDropBehavior.Explorer="{Binding}" SizeChanged="OnRootSizeChanged">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -47,10 +47,12 @@
 
             <views:FolderTreeView x:Name="Tree" Grid.Column="0" DataContext="{Binding}" />
 
-            <GridSplitter Grid.Column="1"
+            <GridSplitter x:Name="TreeSplitter"
+                          Grid.Column="1"
                           Style="{StaticResource GridSplitter.Seam}"
                           HorizontalAlignment="Stretch"
                           VerticalAlignment="Stretch"
+                          DragCompleted="OnSplitterDragCompleted"
                           AutomationProperties.Name="Resize the folder tree" />
 
             <views:EntryListView x:Name="List" Grid.Column="2" DataContext="{Binding}" />
@@ -60,6 +62,7 @@
                           Style="{StaticResource GridSplitter.Seam}"
                           HorizontalAlignment="Stretch"
                           VerticalAlignment="Stretch"
+                          DragCompleted="OnSplitterDragCompleted"
                           AutomationProperties.Name="Resize the preview" />
 
             <views:PreviewPaneView x:Name="Preview" Grid.Column="4" DataContext="{Binding Preview}" />

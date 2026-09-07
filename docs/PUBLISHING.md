@@ -40,15 +40,14 @@ the reasoning behind the licensing and legal choices. Written for the maintainer
    desktop session, mark it with the `RequiresDesktop` trait and skip it in CI.
 6. **Create issues** from the "Left open deliberately" list in `DEVELOPING.md` so the
    limitations are visible and can be picked up:
-   - KDF phase not abortable (API.md states it; would be a contract change)
-   - `OutOfMemoryException` during key derivation surfaces as a raw exception
-   - No retry or cheaper-preset suggestion after a `ResourceLimit` refusal
-   - Unlock card states the RAM requirement but does not warn when the machine cannot meet it
-   - Side panes do not shrink below about 900 px window width (horizontal scrollbar)
-   - Single-instance identity keys on the path; a mapped drive or junction alias counts as another instance
+   - KDF phase not abortable (API.md states it; would be a contract change; #15)
+   - A signed release: unsigned executables trigger SmartScreen (#22)
    - One unreproduced silent exit during UI automation (#21; every exit now leaves a line
      with its trigger and exit code, the ordinary close included)
-   - A signed release: unsigned executables trigger SmartScreen
+   - Closed since: OOM translation (#16), unlock-card warning (#13), retry and fitting preset
+     (#17), responsive side panes (#18), hex preview width (#19), single-instance file id (#20),
+     column order (#23), crash window (#24), title while locked (#25), regression seams (#27),
+     one-lamp decision (#28)
 7. **Release**: on `dev`, turn the *Unreleased* section of `CHANGELOG.md` into the new
    version and bump `<Version>` in `Directory.Build.props` by pull request; then
    `git checkout main && git merge --ff-only dev && git tag -a v1.0.0 -m "release: 1.0.0" && git push origin main --follow-tags`.

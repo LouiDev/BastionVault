@@ -32,6 +32,7 @@ public sealed class RealVaultEndToEndTests : IDisposable
     private readonly ISingleInstance _singleInstance = Substitute.For<ISingleInstance>();
     private readonly IShellIntegration _integration = Substitute.For<IShellIntegration>();
     private readonly IKdfEstimator _estimator = Substitute.For<IKdfEstimator>();
+    private readonly FakeKdfPreflight _preflight = new();
     private readonly IOsClipboard _osClipboard = Substitute.For<IOsClipboard>();
     private readonly InternalClipboard _clipboard = new();
     private readonly MemorySettings _settings = new();
@@ -277,6 +278,7 @@ public sealed class RealVaultEndToEndTests : IDisposable
             _singleInstance,
             _integration,
             _estimator,
+            _preflight,
             _dispatcher,
             _log,
             operation,

@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using BastionVault.App.Services;
+using BastionVault.Core;
 
 namespace BastionVault.App.Tests.Fakes;
 
@@ -155,6 +156,26 @@ public sealed class MemorySettings : ISettingsService
 }
 
 /// <summary>A disposable that records whether it was released.</summary>
+/// <summary>
+/// An <see cref="IKdfPreflight"/> for a machine of a chosen size. The default, 0 installed bytes, is the
+/// "nothing could be measured" case of FORMAT.md section 3.1 step 9 and lets everything through.
+/// </summary>
+public sealed class FakeKdfPreflight : IKdfPreflight
+{
+    /// <summary>Installed memory the fake machine reports; 0 means unmeasurable.</summary>
+    public long InstalledBytes { get; set; }
+
+    /// <summary>Every parameter set that was asked about, in order.</summary>
+    public List<KdfParameters> Asked { get; } = [];
+
+    /// <inheritdoc />
+    public KdfPreflightResult Check(KdfParameters parameters)
+    {
+        Asked.Add(parameters);
+        return KdfPreflight.Check(parameters, InstalledBytes);
+    }
+}
+
 public sealed class DisposeFlag : IDisposable
 {
     /// <summary>True once <see cref="Dispose"/> ran.</summary>

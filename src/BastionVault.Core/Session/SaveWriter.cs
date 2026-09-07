@@ -26,9 +26,27 @@ internal sealed class WrapPlan
     public KeyMaterial? Kek { get; init; }
 }
 
+/// <summary>
+/// Test seams for the two reopen windows of the save state machine (FORMAT.md section 8.3 steps 8 and 9):
+/// the moment after <c>File.Replace</c> and before the post-save verification reopens the file, and the
+/// moment before the session reopens its own read handle. A hook may hold the file so that the reopen
+/// fails. Nothing here changes a byte that is written; the App never sets these.
+/// </summary>
+internal sealed class SaveTestHooks
+{
+    /// <summary>Runs right before step 8 reopens the replaced file for verification; receives the vault path.</summary>
+    public Action<string>? BeforeVerifyReopen { get; init; }
+
+    /// <summary>Runs right before step 9 reopens the session's read handle; receives the vault path.</summary>
+    public Action<string>? BeforeSessionReopen { get; init; }
+}
+
 /// <summary>Everything one run of the save state machine needs.</summary>
 internal sealed class SaveRequest
 {
+    /// <summary>Test seams; <see langword="null"/> outside the test assemblies.</summary>
+    public SaveTestHooks? TestHooks { get; init; }
+
     /// <summary>Absolute path the file is written to.</summary>
     public required string DestinationPath { get; init; }
 
@@ -673,6 +691,7 @@ internal sealed class SaveWriter
     private static FileStat Verify(SaveRequest request, VaultHeader expectedHeader, VaultIndex expectedIndex, string? backupPath)
     {
         string path = request.DestinationPath;
+        request.TestHooks?.BeforeVerifyReopen?.Invoke(path);
         try
         {
             using SafeFileHandle handle = File.OpenHandle(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete);

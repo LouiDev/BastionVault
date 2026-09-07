@@ -26,6 +26,12 @@ public enum UnlockOutcome
 
     /// <summary>The attempt was cancelled.</summary>
     Cancelled,
+
+    /// <summary>
+    /// The machine could not give the key derivation its memory right now (<see cref="VaultErrorCode.ResourceLimit"/>).
+    /// The preset is fixed by the vault; freeing memory and trying again is the only way forward.
+    /// </summary>
+    ResourceLimit,
 }
 
 /// <summary>
@@ -38,7 +44,11 @@ public sealed partial class UnlockViewModel : ObservableObject
     private static readonly TimeSpan SoftDelay = TimeSpan.FromSeconds(1);
     private const int SoftDelayAfterFailures = 3;
 
+    private readonly IKdfPreflight _preflight;
     private readonly ILog _log;
+
+    private long _refusedRequiredBytes;
+    private long _refusedAvailableBytes;
 
     [ObservableProperty]
     private string _vaultPath = string.Empty;
@@ -64,6 +74,14 @@ public sealed partial class UnlockViewModel : ObservableObject
     private string _derivingLabel = "Unlock";
 
     [ObservableProperty]
+    private string _submitLabel = "Unlock";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasMemoryWarning))]
+    [NotifyPropertyChangedFor(nameof(CanSubmit))]
+    private string? _memoryWarning;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasError))]
     private string? _error;
 
@@ -83,10 +101,12 @@ public sealed partial class UnlockViewModel : ObservableObject
 
     /// <summary>Creates the card.</summary>
     /// <param name="files">File picker for the keyfile.</param>
+    /// <param name="preflight">Core's KDF memory pre-flight, asked when the card is shown.</param>
     /// <param name="log">Log.</param>
-    public UnlockViewModel(IFileDialogService files, ILog log)
+    public UnlockViewModel(IFileDialogService files, IKdfPreflight preflight, ILog log)
     {
         Files = files;
+        _preflight = preflight;
         _log = log;
     }
 
@@ -114,8 +134,15 @@ public sealed partial class UnlockViewModel : ObservableObject
     /// <summary>True when the save counter went backwards since this machine last saw the vault.</summary>
     public bool HasRollbackWarning => !string.IsNullOrEmpty(RollbackWarning);
 
+    /// <summary>
+    /// True when this machine cannot serve the vault's key derivation and Core would refuse the unlock. The
+    /// button is taken away rather than de-emphasised: pressing it could only produce the refusal the card
+    /// already states.
+    /// </summary>
+    public bool HasMemoryWarning => !string.IsNullOrEmpty(MemoryWarning);
+
     /// <summary>True when the unlock button is live.</summary>
-    public bool CanSubmit => HasPassword && !IsDeriving;
+    public bool CanSubmit => HasPassword && !IsDeriving && !HasMemoryWarning;
 
     /// <summary>Points the card at a vault and describes what unlocking it will cost.</summary>
     /// <param name="path">Full path of the vault file.</param>
@@ -129,12 +156,31 @@ public sealed partial class UnlockViewModel : ObservableObject
         Error = null;
         StatusLine = null;
         RollbackWarning = null;
+        MemoryWarning = null;
+        SubmitLabel = "Unlock";
         FailureCount = 0;
         IsDeriving = false;
 
         HeaderLine = kdf is null
             ? "Argon2id · parameters read at unlock"
             : $"Argon2id · {kdf.MemoryKiB / 1024} MiB · {kdf.Iterations} passes · needs {kdf.MemoryKiB / 1024} MiB RAM";
+
+        if (kdf is not null)
+        {
+            // FORMAT.md section 3.1 step 9, asked now instead of after the click. The line above states
+            // what the vault needs; this one says whether this machine can give it.
+            KdfPreflightResult verdict = _preflight.Check(kdf);
+            if (!verdict.Fits)
+            {
+                // Installed, budget and need, in that order: the budget is what makes "has 512 MB, needs
+                // 512 MB, refused" add up.
+                MemoryWarning =
+                    $"This PC has {OperationViewModel.FormatBytes(verdict.InstalledBytes)} of memory and lets a key derivation use " +
+                    $"at most {OperationViewModel.FormatBytes(verdict.BudgetBytes)} of it; this vault needs " +
+                    $"{OperationViewModel.FormatBytes(verdict.RequiredBytes)} and will be refused here. " +
+                    "Open it on a machine with more memory, or change its key-derivation preset there.";
+            }
+        }
 
         DerivingLabel = kdf is null
             ? "Deriving key · Argon2id"
@@ -160,6 +206,19 @@ public sealed partial class UnlockViewModel : ObservableObject
             : null;
     }
 
+    /// <summary>
+    /// Records the figures of a <see cref="VaultErrorCode.ResourceLimit"/> refusal that arrived after the
+    /// pre-flight had passed, so the error line can name them. Called by the shell before it returns
+    /// <see cref="UnlockOutcome.ResourceLimit"/>.
+    /// </summary>
+    /// <param name="requiredBytes">Memory the key derivation needed.</param>
+    /// <param name="availableBytes">Memory that was free at that moment, or 0 when unknown.</param>
+    public void ReportResourceLimit(long requiredBytes, long availableBytes)
+    {
+        _refusedRequiredBytes = requiredBytes;
+        _refusedAvailableBytes = availableBytes;
+    }
+
     /// <summary>Runs one unlock attempt with the credentials the view collected.</summary>
     /// <param name="password">The password; this method disposes it.</param>
     /// <param name="keyFile">The keyfile; this method disposes it.</param>
@@ -183,6 +242,17 @@ public sealed partial class UnlockViewModel : ObservableObject
             if (outcome == UnlockOutcome.Success)
             {
                 FailureCount = 0;
+                SubmitLabel = "Unlock";
+                return outcome;
+            }
+
+            if (outcome == UnlockOutcome.ResourceLimit)
+            {
+                // Not a credential failure: the password was never checked, so it is neither counted
+                // against the soft delay nor selected for retyping. The button becomes the retry.
+                Error = MessageFor(outcome);
+                SubmitLabel = "Try again";
+                _log.Info("Unlock refused: the key derivation could not get its memory.");
                 return outcome;
             }
 
@@ -190,6 +260,7 @@ public sealed partial class UnlockViewModel : ObservableObject
             {
                 FailureCount++;
                 Error = MessageFor(outcome);
+                SubmitLabel = "Unlock";
                 _log.Info($"Unlock attempt failed ({outcome}); attempt {FailureCount}.");
 
                 if (FailureCount >= SoftDelayAfterFailures)
@@ -227,8 +298,14 @@ public sealed partial class UnlockViewModel : ObservableObject
     [RelayCommand]
     public void RemoveKeyFile() => KeyFilePath = null;
 
-    private static string MessageFor(UnlockOutcome outcome) => outcome switch
+    private string MessageFor(UnlockOutcome outcome) => outcome switch
     {
+        UnlockOutcome.ResourceLimit =>
+            $"The key derivation needs {OperationViewModel.FormatBytes(_refusedRequiredBytes)} of memory" +
+            (_refusedAvailableBytes > 0
+                ? $" and only {OperationViewModel.FormatBytes(_refusedAvailableBytes)} is free right now."
+                : " and this PC could not provide it right now.") +
+            " Close other programs, then try again.",
         UnlockOutcome.WrongCredentials =>
             "That did not unlock the vault. The password, the keyfile, or the header itself is wrong - Bastion Vault cannot tell which, and saying which would help an attacker.",
         UnlockOutcome.Damaged =>

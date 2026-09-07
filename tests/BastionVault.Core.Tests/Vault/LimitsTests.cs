@@ -30,7 +30,7 @@ public sealed class LimitsTests
         // which does not move while the test runs: the verdict depends on the machine and on nothing
         // else, so it is predicted up front. Either way the answer is immediate, and either way the KDF
         // is asked for exactly the declared cost or not asked at all.
-        long installed = Credentials.InstalledPhysicalMemoryBytes();
+        long installed = KdfPreflight.InstalledPhysicalMemoryBytes();
         long budget = (long)(installed * VaultLimits.KdfMemoryFractionOfInstalled);
         long required = (long)VaultLimits.MaxKdfMemoryKiB * 1024;
         bool refused = installed > 0 && required > budget;

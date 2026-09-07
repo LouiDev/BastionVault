@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using BastionVault.Core.Crypto;
 
@@ -36,7 +34,7 @@ internal sealed class PendingCredentials : IDisposable
 }
 
 /// <summary>Runs the password KDF and turns a password plus an optional keyfile into a KEK.</summary>
-internal static partial class Credentials
+internal static class Credentials
 {
     /// <summary>Length of the Argon2id tag and of every derived key.</summary>
     private const int KeyLength = 32;
@@ -72,9 +70,16 @@ internal static partial class Credentials
         byte[]? argon2 = null;
         try
         {
-            argon2 = await Task.Run(
-                () => kdf.DeriveArgon2id(secret.Span, salt, parameters, KeyLength, ct),
-                ct).ConfigureAwait(false);
+            try
+            {
+                argon2 = await Task.Run(
+                    () => kdf.DeriveArgon2id(secret.Span, salt, parameters, KeyLength, ct),
+                    ct).ConfigureAwait(false);
+            }
+            catch (OutOfMemoryException oom)
+            {
+                throw TranslateOutOfMemory(parameters, oom);
+            }
 
             ct.ThrowIfCancellationRequested();
             return keyFile is null
@@ -92,10 +97,8 @@ internal static partial class Credentials
 
     /// <summary>
     /// FORMAT.md section 3.1 step 9: refuse a KDF that would claim more than 75 % of the memory the
-    /// machine physically has. Installed memory, not free memory: what is free moves with whatever else
-    /// the machine is doing this second, so measuring it refused the default preset on a large machine
-    /// during a busy moment. The pre-flight exists to reject a header no machine of this size could
-    /// ever serve, and that question has a stable answer.
+    /// machine physically has. The question itself lives in <see cref="KdfPreflight"/> so a UI can ask
+    /// it before the button is pressed; this is the refusal.
     /// </summary>
     /// <param name="parameters">Argon2id parameters from the header.</param>
     /// <exception cref="VaultResourceException"><see cref="VaultErrorCode.ResourceLimit"/>.</exception>
@@ -103,91 +106,49 @@ internal static partial class Credentials
     {
         ArgumentNullException.ThrowIfNull(parameters);
 
-        long installed = InstalledPhysicalMemoryBytes();
-        if (installed <= 0)
-        {
-            return;
-        }
-
-        long budget = (long)(installed * Format.VaultLimits.KdfMemoryFractionOfInstalled);
-        long required = parameters.MemoryBytes;
-        if (required <= budget)
+        KdfPreflightResult verdict = KdfPreflight.Check(parameters);
+        if (verdict.Fits)
         {
             return;
         }
 
         throw new VaultResourceException(
             VaultErrorCode.ResourceLimit,
-            $"Opening this vault needs {Mebibytes(required)} MiB of memory for the key derivation; " +
-            $"this machine has {Mebibytes(installed)} MiB installed.")
+            $"Opening this vault needs {Mebibytes(verdict.RequiredBytes)} MiB of memory for the key derivation; " +
+            $"this machine has {Mebibytes(verdict.InstalledBytes)} MiB installed.")
         {
-            RequiredBytes = required,
-            AvailableBytes = budget,
+            RequiredBytes = verdict.RequiredBytes,
+            AvailableBytes = verdict.BudgetBytes,
         };
     }
 
     /// <summary>
-    /// Installed physical memory in bytes, which is what FORMAT.md section 3.1 step 9 measures:
-    /// <c>GlobalMemoryStatusEx.ullTotalPhys</c>, falling back to
-    /// <see cref="GCMemoryInfo.TotalAvailableMemoryBytes"/> (the machine's or the container's total)
-    /// where that call is unavailable.
+    /// The one place an <see cref="OutOfMemoryException"/> from the KDF is turned into a vault error
+    /// (API.md rule 5). The pinned Argon2 block array is the only allocation in Core large enough to fail
+    /// on a machine that passed the pre-flight; by the time this runs, that allocation has been released
+    /// and the runtime has already produced the exception object itself, so building a small wrapper here
+    /// is not the hazard that wrapping an arbitrary OOM would be.
     /// </summary>
-    /// <returns>Installed physical memory, or 0 when nothing can be measured.</returns>
-    internal static long InstalledPhysicalMemoryBytes()
+    /// <param name="parameters">The parameters whose derivation failed.</param>
+    /// <param name="inner">The allocation failure.</param>
+    private static VaultResourceException TranslateOutOfMemory(KdfParameters parameters, OutOfMemoryException inner)
     {
-        if (OperatingSystem.IsWindows())
-        {
-            var status = new MemoryStatusEx { Length = (uint)Marshal.SizeOf<MemoryStatusEx>() };
-            if (GlobalMemoryStatusEx(ref status) && status.TotalPhysical is > 0 and <= long.MaxValue)
-            {
-                return (long)status.TotalPhysical;
-            }
-        }
+        long required = parameters.MemoryBytes;
+        long available = KdfPreflight.AvailablePhysicalMemoryBytes();
+        string now = available > 0 ? $"{Mebibytes(available)} MiB is free right now" : "less than that is free right now";
 
-        long total = GC.GetGCMemoryInfo().TotalAvailableMemoryBytes;
-        return total > 0 ? total : 0;
+        return new VaultResourceException(
+            VaultErrorCode.ResourceLimit,
+            $"The key derivation needs {Mebibytes(required)} MiB of memory and {now}. " +
+            "Close other programs and try again.",
+            inner)
+        {
+            RequiredBytes = required,
+            AvailableBytes = available,
+        };
     }
 
     /// <summary>Rounds a byte count up to whole mebibytes, for the message.</summary>
     /// <param name="bytes">Byte count to convert.</param>
     private static long Mebibytes(long bytes) => (bytes + (1024 * 1024) - 1) / (1024 * 1024);
-
-    /// <summary>The subset of <c>MEMORYSTATUSEX</c> the pre-flight needs.</summary>
-    [StructLayout(LayoutKind.Sequential)]
-    private struct MemoryStatusEx
-    {
-        /// <summary>Size of the structure in bytes; set by the caller.</summary>
-        public uint Length;
-
-        /// <summary>Percentage of physical memory in use.</summary>
-        public uint MemoryLoad;
-
-        /// <summary>Total physical memory: the quantity section 3.1 step 9 asks for.</summary>
-        public ulong TotalPhysical;
-
-        /// <summary>Free physical memory; not consulted by the pre-flight.</summary>
-        public ulong AvailablePhysical;
-
-        /// <summary>Committed memory limit.</summary>
-        public ulong TotalPageFile;
-
-        /// <summary>Remaining commit charge.</summary>
-        public ulong AvailablePageFile;
-
-        /// <summary>Size of the process virtual address space.</summary>
-        public ulong TotalVirtual;
-
-        /// <summary>Unreserved address space.</summary>
-        public ulong AvailableVirtual;
-
-        /// <summary>Reserved; always zero.</summary>
-        public ulong AvailableExtendedVirtual;
-    }
-
-    /// <summary>Queries the machine's memory state.</summary>
-    /// <param name="buffer">Structure to fill; its <c>Length</c> must be set.</param>
-    [SupportedOSPlatform("windows")]
-    [LibraryImport("kernel32.dll", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool GlobalMemoryStatusEx(ref MemoryStatusEx buffer);
 }

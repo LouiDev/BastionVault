@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,8 +12,10 @@ namespace BastionVault.App.Behaviors;
 /// <summary>
 /// Wires the grid view's headers to the explorer's sort: a click sorts (and a second click on the
 /// same column reverses), the header shows the chevron through its <c>Tag</c>, the list's
-/// <c>CustomSort</c> is kept in step with an <see cref="EntryComparer"/>, and column widths and the
-/// sort survive a restart through <see cref="ISettingsService"/> (UI-CONTRACT.md section 1.5).
+/// <c>CustomSort</c> is kept in step with an <see cref="EntryComparer"/>, and column widths, column
+/// order and the sort survive a restart through <see cref="ISettingsService"/> (UI-CONTRACT.md section
+/// 1.5). Headers can be dragged into a new order; the status rail (the one column without a key) is
+/// pinned to the left whatever is dropped in front of it.
 /// </summary>
 public static class ColumnSortBehavior
 {
@@ -99,6 +102,9 @@ public static class ColumnSortBehavior
         /// <summary>The width the user chose for Name; what is drawn may be narrower.</summary>
         private double _preferredNameWidth = double.NaN;
 
+        /// <summary>True while this class itself is moving columns, so its own moves are not persisted twice.</summary>
+        private bool _reordering;
+
         public void Attach()
         {
             list.AddHandler(GridViewColumnHeader.ClickEvent, new RoutedEventHandler(OnHeaderClick));
@@ -107,8 +113,13 @@ public static class ColumnSortBehavior
             list.SizeChanged += OnListSizeChanged;
             explorer.PropertyChanged += OnExplorerPropertyChanged;
             _itemsSource?.AddValueChanged(list, OnItemsSourceChanged);
+            if (list.View is GridView view)
+            {
+                view.Columns.CollectionChanged += OnColumnsChanged;
+            }
 
             ApplyPersistedWidths();
+            ApplyPersistedOrder();
             FitNameColumn();
             Apply();
         }
@@ -122,10 +133,96 @@ public static class ColumnSortBehavior
             list.SizeChanged -= OnListSizeChanged;
             explorer.PropertyChanged -= OnExplorerPropertyChanged;
             _itemsSource?.RemoveValueChanged(list, OnItemsSourceChanged);
+            if (list.View is GridView view)
+            {
+                view.Columns.CollectionChanged -= OnColumnsChanged;
+            }
         }
 
         private static IEnumerable<GridViewColumn> Columns(ListView list) =>
             list.View is GridView view ? view.Columns : [];
+
+        /// <summary>
+        /// A header was dropped somewhere else. The rail stays first, the new order is persisted, and the
+        /// Name column is refitted because the space around it may have moved.
+        /// </summary>
+        private void OnColumnsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (_reordering || e.Action != NotifyCollectionChangedAction.Move || list.View is not GridView view)
+            {
+                return;
+            }
+
+            PinRailFirst(view);
+            SaveWidths();
+            FitNameColumn();
+        }
+
+        /// <summary>Moves the keyless status rail back to index 0 if a drag put something in front of it.</summary>
+        private void PinRailFirst(GridView view)
+        {
+            for (int i = 1; i < view.Columns.Count; i++)
+            {
+                if (GetSortKey(view.Columns[i]) is not { Length: > 0 })
+                {
+                    Move(view, i, 0);
+                    return;
+                }
+            }
+        }
+
+        /// <summary>Puts the keyed columns into the persisted order; unknown keys are ignored (see <see cref="ColumnOrder"/>).</summary>
+        private void ApplyPersistedOrder()
+        {
+            if (list.View is not GridView view)
+            {
+                return;
+            }
+
+            List<ColumnState> saved = explorer.Settings.Current.ColumnLayout.Columns;
+            if (saved.Count == 0)
+            {
+                return;
+            }
+
+            List<string> currentKeys = [.. view.Columns.Select(GetSortKey).Where(k => !string.IsNullOrEmpty(k)).Select(k => k!)];
+            IReadOnlyList<string> wanted = ColumnOrder.Resolve(currentKeys, saved);
+
+            // Keyless columns (the rail) keep their position at the front; keyed ones follow in the wanted order.
+            int slot = view.Columns.Count(c => string.IsNullOrEmpty(GetSortKey(c)));
+            foreach (string key in wanted)
+            {
+                int from = -1;
+                for (int i = 0; i < view.Columns.Count; i++)
+                {
+                    if (string.Equals(GetSortKey(view.Columns[i]), key, StringComparison.OrdinalIgnoreCase))
+                    {
+                        from = i;
+                        break;
+                    }
+                }
+
+                if (from >= 0 && from != slot)
+                {
+                    Move(view, from, slot);
+                }
+
+                slot++;
+            }
+        }
+
+        private void Move(GridView view, int from, int to)
+        {
+            _reordering = true;
+            try
+            {
+                view.Columns.Move(from, to);
+            }
+            finally
+            {
+                _reordering = false;
+            }
+        }
 
         private void OnUnloaded(object? sender, RoutedEventArgs e) => SaveWidths();
 

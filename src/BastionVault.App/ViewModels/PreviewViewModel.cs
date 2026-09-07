@@ -60,9 +60,16 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     private readonly ISettingsService _settings;
     private readonly ILog _log;
 
+    /// <summary>Bytes per hex line when the pane is wide enough for the familiar layout.</summary>
+    public const int WideHexBytesPerLine = 16;
+
+    /// <summary>Bytes per hex line in a narrow pane; the ASCII column stays.</summary>
+    public const int NarrowHexBytesPerLine = 8;
+
     private CancellationTokenSource? _pending;
     private byte[]? _buffer;
     private EntryId? _showing;
+    private long _hexTotalLength;
 
     [ObservableProperty]
     private PreviewMode _mode = PreviewMode.Empty;
@@ -84,6 +91,9 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private int _decodeWidth = 320;
+
+    [ObservableProperty]
+    private int _hexBytesPerLine = WideHexBytesPerLine;
 
     [ObservableProperty]
     private bool _isWindowActive = true;
@@ -189,21 +199,54 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     /// <inheritdoc />
     public void Dispose() => Clear();
 
+    /// <summary>
+    /// Width of one hex line in monospace columns: 8 offset digits, two spaces, two digits per byte, one
+    /// space after every group of four, one space before the ASCII column, one column per byte of ASCII.
+    /// </summary>
+    /// <param name="bytesPerLine">Bytes on the line; a positive multiple of 4.</param>
+    public static int HexLineColumns(int bytesPerLine)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(bytesPerLine, 4);
+        return 8 + 2 + (bytesPerLine * 2) + (bytesPerLine / 4) + 1 + bytesPerLine;
+    }
+
+    /// <summary>
+    /// Chooses the bytes per hex line for a pane that can show <paramref name="availableColumns"/> monospace
+    /// characters: 16 when the familiar layout fits, 8 otherwise, so the ASCII column is never the part that
+    /// falls off the edge.
+    /// </summary>
+    /// <param name="availableColumns">Monospace columns the pane can show without a horizontal scrollbar.</param>
+    public static int HexBytesPerLineFor(int availableColumns) =>
+        availableColumns >= HexLineColumns(WideHexBytesPerLine) ? WideHexBytesPerLine : NarrowHexBytesPerLine;
+
+    /// <summary>Formats bytes as the pane's hex dump: offset, uppercase hex in fours, ASCII, 16 bytes to a line.</summary>
+    /// <param name="bytes">The bytes to dump.</param>
+    /// <param name="totalLength">Length of the whole file, for the trailing note.</param>
+    public static string FormatHexDump(ReadOnlySpan<byte> bytes, long totalLength) =>
+        FormatHexDump(bytes, totalLength, WideHexBytesPerLine);
+
     /// <summary>Formats bytes as the pane's hex dump: offset, uppercase hex in fours, ASCII.</summary>
     /// <param name="bytes">The bytes to dump.</param>
     /// <param name="totalLength">Length of the whole file, for the trailing note.</param>
-    public static string FormatHexDump(ReadOnlySpan<byte> bytes, long totalLength)
+    /// <param name="bytesPerLine">Bytes on each line; a positive multiple of 4.</param>
+    public static string FormatHexDump(ReadOnlySpan<byte> bytes, long totalLength, int bytesPerLine)
     {
-        var text = new StringBuilder(bytes.Length * 4);
-        var ascii = new StringBuilder(16);
-
-        for (int offset = 0; offset < bytes.Length; offset += 16)
+        ArgumentOutOfRangeException.ThrowIfLessThan(bytesPerLine, 4);
+        if (bytesPerLine % 4 != 0)
         {
-            int count = Math.Min(16, bytes.Length - offset);
+            throw new ArgumentOutOfRangeException(nameof(bytesPerLine), bytesPerLine, "Bytes per line must be a multiple of 4.");
+        }
+
+        var text = new StringBuilder(bytes.Length * 4);
+        var ascii = new StringBuilder(bytesPerLine);
+
+        for (int offset = 0; offset < bytes.Length; offset += bytesPerLine)
+        {
+            int count = Math.Min(bytesPerLine, bytes.Length - offset);
             text.Append(offset.ToString("X8", CultureInfo.InvariantCulture)).Append("  ");
             ascii.Clear();
 
-            for (int i = 0; i < 16; i++)
+            for (int i = 0; i < bytesPerLine; i++)
             {
                 if (i < count)
                 {
@@ -322,10 +365,23 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             }
         }
 
-        int dump = Math.Min(bytes.Length, HexDumpBytes);
-        Text = FormatHexDump(bytes.AsSpan(0, dump), item.Length);
+        _hexTotalLength = item.Length;
+        Text = FormatHexDump(bytes.AsSpan(0, Math.Min(bytes.Length, HexDumpBytes)), item.Length, HexBytesPerLine);
         Mode = PreviewMode.Hex;
         OnPropertyChanged(nameof(IsBlurred));
+    }
+
+    /// <summary>
+    /// Re-renders the dump on show when the pane changed width. The bytes are the ones already held for the
+    /// current entry, so nothing is decrypted again and nothing new is kept.
+    /// </summary>
+    /// <param name="value">The new bytes-per-line figure.</param>
+    partial void OnHexBytesPerLineChanged(int value)
+    {
+        if (Mode == PreviewMode.Hex && _buffer is { } bytes)
+        {
+            Text = FormatHexDump(bytes.AsSpan(0, Math.Min(bytes.Length, HexDumpBytes)), _hexTotalLength, value);
+        }
     }
 
     private async Task<byte[]> ReadAsync(EntryId id, long take, CancellationToken ct)

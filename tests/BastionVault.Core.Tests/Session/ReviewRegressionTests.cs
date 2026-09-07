@@ -382,10 +382,10 @@ public sealed class ReviewRegressionTests
     [Fact]
     public void The_kdf_preflight_measures_installed_memory_and_does_not_move_with_load()
     {
-        long installed = Credentials.InstalledPhysicalMemoryBytes();
+        long installed = KdfPreflight.InstalledPhysicalMemoryBytes();
 
         Assert.True(installed > 0, "the pre-flight found no memory at all");
-        Assert.Equal(installed, Credentials.InstalledPhysicalMemoryBytes());
+        Assert.Equal(installed, KdfPreflight.InstalledPhysicalMemoryBytes());
 
         GCMemoryInfo info = GC.GetGCMemoryInfo();
         if (info.MemoryLoadBytes > 0)

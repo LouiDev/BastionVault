@@ -28,6 +28,7 @@ public sealed class ShellViewModelTests : IDisposable
     private readonly ISingleInstance _singleInstance = Substitute.For<ISingleInstance>();
     private readonly IShellIntegration _shellIntegration = Substitute.For<IShellIntegration>();
     private readonly IKdfEstimator _estimator = Substitute.For<IKdfEstimator>();
+    private readonly FakeKdfPreflight _preflight = new();
     private readonly IOsClipboard _osClipboard = Substitute.For<IOsClipboard>();
     private readonly InternalClipboard _clipboard = new();
     private readonly MemorySettings _settings = new();
@@ -136,6 +137,35 @@ public sealed class ShellViewModelTests : IDisposable
         Assert.Equal(1, shell.Unlock.FailureCount);
         Assert.True(shell.Unlock.HasError);
         Assert.Null(shell.Session);
+    }
+
+    [Fact]
+    public async Task AMemoryRefusalAfterThePreflightKeepsTheCardWithTheFiguresAndARetry()
+    {
+        _factory.OpenAsync(
+                Arg.Any<string>(), Arg.Any<Passphrase>(), Arg.Any<KeyFile?>(), Arg.Any<OpenOptions>(),
+                Arg.Any<IProgress<VaultProgress>?>(), Arg.Any<CancellationToken>())
+            .Returns<Task<IVaultSession>>(_ => throw new VaultResourceException(
+                VaultErrorCode.ResourceLimit, "the block array could not be allocated")
+            {
+                RequiredBytes = 512L * 1024 * 1024,
+                AvailableBytes = 96L * 1024 * 1024,
+            });
+
+        ShellViewModel shell = NewShell();
+        await shell.OpenVaultCommand.ExecuteAsync(null);
+
+        UnlockOutcome outcome = await shell.Unlock.SubmitAsync(null, null);
+
+        Assert.Equal(UnlockOutcome.ResourceLimit, outcome);
+        Assert.Equal(ShellMode.Locked, shell.Mode);
+        Assert.True(shell.IsUnlockVisible, "the card stays; nothing about the file or the password is wrong");
+        Assert.Contains(OperationViewModel.FormatBytes(512L * 1024 * 1024), shell.Unlock.Error, StringComparison.Ordinal);
+        Assert.Contains(OperationViewModel.FormatBytes(96L * 1024 * 1024), shell.Unlock.Error, StringComparison.Ordinal);
+        Assert.Equal("Try again", shell.Unlock.SubmitLabel);
+        Assert.Equal(0, shell.Unlock.FailureCount);
+        Assert.Null(shell.Session);
+        Assert.DoesNotContain(_log.Lines, line => line.StartsWith("ERR", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -335,20 +365,35 @@ public sealed class ShellViewModelTests : IDisposable
     }
 
     [Fact]
-    public async Task LockingResetsTheWindowTitle()
+    public async Task LockingKeepsTheVaultNameInTheTitleAndMarksItLocked()
     {
-        // The title is also the taskbar and Alt+Tab label, and lock clears state
-        // (UI-CONTRACT.md section 1.10).
+        // The title is also the taskbar and Alt+Tab label. It agrees with the vault chip: a locked
+        // vault is still this window's vault (UI-CONTRACT.md section 1.10, #25).
         _dialogs.ConfirmAsync(Arg.Any<ConfirmRequest>()).Returns(Task.FromResult(ConfirmResult.Secondary));
 
         ShellViewModel shell = NewShell();
         await shell.OpenVaultCommand.ExecuteAsync(null);
         await shell.Unlock.SubmitAsync(null, null);
-        Assert.Contains(Path.GetFileNameWithoutExtension(_vaultPath), shell.Title, StringComparison.Ordinal);
+        string name = Path.GetFileNameWithoutExtension(_vaultPath);
+        Assert.StartsWith(name, shell.Title, StringComparison.Ordinal);
+        Assert.DoesNotContain("(locked)", shell.Title, StringComparison.Ordinal);
 
         await shell.LockCommand.ExecuteAsync(null);
 
         Assert.Equal(ShellMode.Locked, shell.Mode);
+        Assert.StartsWith(name, shell.Title, StringComparison.Ordinal);
+        Assert.EndsWith(" (locked) - Bastion Vault", shell.Title, StringComparison.Ordinal);
+        Assert.True(shell.HasSession, "the chip stays for the same reason");
+    }
+
+    [Fact]
+    public async Task BeforeTheFirstUnlockNeitherTheTitleNorTheChipNamesTheVault()
+    {
+        ShellViewModel shell = NewShell();
+        await shell.OpenVaultCommand.ExecuteAsync(null);
+
+        Assert.Equal(ShellMode.Locked, shell.Mode);
+        Assert.False(shell.HasSession);
         Assert.Equal("Bastion Vault", shell.Title);
     }
 
@@ -411,9 +456,14 @@ public sealed class ShellViewModelTests : IDisposable
     {
         // A vault that has just been created is as writable as any other, so it is protected from
         // the moment it exists rather than from the first time it is reopened.
-        var held = new DisposeFlag();
+        var handed = new List<DisposeFlag>();
         string fresh = _vaultPath + ".new";
-        _singleInstance.TryAcquireVault(fresh).Returns(_ => held);
+        _singleInstance.TryAcquireVault(fresh).Returns(_ =>
+        {
+            var flag = new DisposeFlag();
+            handed.Add(flag);
+            return flag;
+        });
         _dialogs.ShowAsync(Arg.Any<NewVaultDialogViewModel>())
             .Returns(Task.FromResult<NewVaultResult?>(
                 new NewVaultResult(fresh, null, null, KdfParameters.Default)));
@@ -429,12 +479,17 @@ public sealed class ShellViewModelTests : IDisposable
 
         Assert.Equal(ShellMode.Open, shell.Mode);
         Assert.Same(created, shell.Session);
-        _singleInstance.Received().TryAcquireVault(fresh);
-        Assert.False(held.Disposed);
+
+        // Taken once before the file existed (path identity) and once after (file identity, #20); the
+        // first, path-only lock is handed back the moment the second one is held.
+        _singleInstance.Received(2).TryAcquireVault(fresh);
+        Assert.Equal(2, handed.Count);
+        Assert.True(handed[0].Disposed);
+        Assert.False(handed[1].Disposed);
 
         // And it is given back when the vault is closed.
         await shell.ShutdownAsync();
-        Assert.True(held.Disposed);
+        Assert.True(handed[1].Disposed);
     }
 
     [Fact]
@@ -487,6 +542,7 @@ public sealed class ShellViewModelTests : IDisposable
             _singleInstance,
             _shellIntegration,
             _estimator,
+            _preflight,
             _dispatcher,
             _log,
             operation,
