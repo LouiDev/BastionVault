@@ -169,20 +169,6 @@ public sealed class ReviewFixTests
         Assert.Equal([1, 2], seen);
     }
 
-    // ── ux-08: the strength sentence stays grammatical ──────────────────────────
-
-    [Fact]
-    public void AnOpenEndedCrackTimeDoesNotGetTheAboutLeadIn()
-    {
-        string sentence = PasswordStrength.Sentence(
-            PasswordStrength.Estimate("correct horse battery staple mountain lantern 42!"),
-            KdfParameters.Default,
-            "Standard");
-
-        Assert.DoesNotContain("about longer than", sentence, StringComparison.Ordinal);
-        Assert.DoesNotContain("about less than", sentence, StringComparison.Ordinal);
-    }
-
     // ── ux-12: one clock convention in the Modified column ──────────────────────
 
     [Fact]

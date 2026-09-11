@@ -296,8 +296,8 @@ explorer owner may not add colour tokens; new styles go in `Views/*.xaml` resour
 ## 7. Dialog flows (summary)
 
 - **New vault**: file path (Save picker), password + confirm (`PasswordBox`), Caps Lock banner,
-  hold-to-reveal, KDF-calibrated strength sentence ("At Standard, eight high-end GPUs would need
-  about N years…") from a zxcvbn-style estimator (own implementation: patterns, dictionary of top
+  hold-to-reveal, strength band (Very weak … Very strong) with a plain-language sentence that
+  never quotes a crack time, from a zxcvbn-style estimator (own implementation: patterns, dictionary of top
   10k passwords embedded, dates, sequences, repeats), hard minimum 8 characters, preset radio
   (Fast/Standard/Strong) with measured estimate; a preset `IKdfPreflight` refuses carries a
   `Brush.Warning` caption ("Exceeds this PC: needs N, M installed…"), is not preselected (the

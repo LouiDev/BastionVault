@@ -14,7 +14,7 @@ namespace BastionVault.App.Services;
 /// </summary>
 public sealed class ShellIntegration : IShellIntegration
 {
-    private const string AppUserModelId = "HMDSoftware.BastionVault";
+    private const string AppUserModelId = "LouiDev.BastionVault";
     private const string Extension = ".bastion";
     private const string ProgId = "BastionVault.Vault.1";
     private const uint SHCNE_ASSOCCHANGED = 0x08000000;

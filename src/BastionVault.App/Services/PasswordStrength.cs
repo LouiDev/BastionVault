@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Security.Cryptography;
 using BastionVault.Core;
 
@@ -77,19 +76,13 @@ public sealed record PasswordStrengthResult(
 ///
 /// The score is a sum over recognised pieces - common-password hits (charged log2 of their rank),
 /// repeats, sequences, keyboard walks and dates - with everything unrecognised charged at the
-/// full character-set rate. The crack-time sentence then converts those bits into wall-clock time
-/// at the vault's own Argon2id cost, which is the only number a user can act on.
+/// full character-set rate. The total maps to a coarse band; the sentence under the field
+/// describes that band in words and never quotes a crack time.
 /// </summary>
 public static class PasswordStrength
 {
     /// <summary>Hard minimum length enforced by the New vault dialog.</summary>
     public const int MinimumLength = 8;
-
-    /// <summary>Number of GPUs the crack-time sentence assumes.</summary>
-    private const double GpuCount = 8;
-
-    /// <summary>Guesses per second one GPU manages at 1 MiB and one pass.</summary>
-    private const double GuessesPerSecondAtUnitCost = 1e9;
 
     private static readonly string[] KeyboardRows =
     [
@@ -162,134 +155,34 @@ public static class PasswordStrength
     }
 
     /// <summary>
-    /// Guesses per second the sentence assumes: eight high-end GPUs, each managing
-    /// 1e9 / (memory in MiB x passes) Argon2id evaluations per second.
-    /// </summary>
-    /// <param name="kdf">The vault's Argon2id parameters.</param>
-    public static double GuessesPerSecond(KdfParameters kdf)
-    {
-        ArgumentNullException.ThrowIfNull(kdf);
-
-        double mebibytes = Math.Max(1, kdf.MemoryKiB / 1024.0);
-        double perGpu = GuessesPerSecondAtUnitCost / (mebibytes * Math.Max(1, kdf.Iterations));
-        return GpuCount * perGpu;
-    }
-
-    /// <summary>Seconds an offline attacker needs at <paramref name="kdf"/>, given the estimated bits.</summary>
-    /// <param name="entropyBits">Estimated entropy.</param>
-    /// <param name="kdf">The vault's Argon2id parameters.</param>
-    public static double CrackSeconds(double entropyBits, KdfParameters kdf) =>
-        Math.Pow(2, entropyBits) / GuessesPerSecond(kdf);
-
-    /// <summary>
-    /// The sentence shown under the password field, for example
-    /// "At Standard, eight high-end GPUs would need about 4 thousand years to guess this password."
+    /// The sentence shown under the password field: a plain-language reading of the strength band
+    /// and what would improve it. It deliberately makes no claim about how long an attack would
+    /// take. Such figures depend on hardware and budget nobody here can know, and they read as a
+    /// promise the program cannot keep.
     /// </summary>
     /// <param name="result">The estimator's verdict.</param>
-    /// <param name="kdf">The vault's Argon2id parameters.</param>
-    /// <param name="presetName">Name of the preset, as shown in the preset radio group.</param>
-    public static string Sentence(PasswordStrengthResult result, KdfParameters kdf, string presetName)
+    public static string Sentence(PasswordStrengthResult result)
     {
         ArgumentNullException.ThrowIfNull(result);
 
         if (result.Length == 0)
         {
-            return "Type a password to see how long it would take to guess.";
+            return "Type a password to see its strength.";
         }
 
-        string duration = FormatDuration(CrackSeconds(result.Entropy, kdf));
-
-        // "about" only reads as English in front of a bare quantity. Both open-ended phrases the
-        // formatter can return are already complete comparisons, and "about longer than the age
-        // of the universe" was the sentence a strong password produced.
-        bool isPhrase =
-            duration.StartsWith("less than", StringComparison.Ordinal)
-            || duration.StartsWith("longer than", StringComparison.Ordinal);
-        string lead = isPhrase ? string.Empty : "about ";
-        return $"At {presetName}, eight high-end GPUs would need {lead}{duration} to guess this password.";
-    }
-
-    /// <summary>Renders a number of seconds as the coarse phrase the sentence uses.</summary>
-    /// <param name="seconds">Seconds; may be infinite.</param>
-    public static string FormatDuration(double seconds)
-    {
-        if (double.IsNaN(seconds) || seconds < 1)
+        return result.Level switch
         {
-            return "less than a second";
-        }
-
-        if (double.IsInfinity(seconds))
-        {
-            return "longer than the age of the universe";
-        }
-
-        const double Minute = 60;
-        const double Hour = 60 * Minute;
-        const double Day = 24 * Hour;
-        const double Month = 30 * Day;
-        const double Year = 365.25 * Day;
-
-        if (seconds < Minute)
-        {
-            return Plural(seconds, "second");
-        }
-
-        if (seconds < Hour)
-        {
-            return Plural(seconds / Minute, "minute");
-        }
-
-        if (seconds < Day)
-        {
-            return Plural(seconds / Hour, "hour");
-        }
-
-        if (seconds < Month)
-        {
-            return Plural(seconds / Day, "day");
-        }
-
-        if (seconds < Year)
-        {
-            return Plural(seconds / Month, "month");
-        }
-
-        double years = seconds / Year;
-        if (years < 1_000)
-        {
-            return Plural(years, "year");
-        }
-
-        if (years < 1e6)
-        {
-            return $"{Round(years / 1e3)} thousand years";
-        }
-
-        if (years < 1e9)
-        {
-            return $"{Round(years / 1e6)} million years";
-        }
-
-        if (years < 1.4e10)
-        {
-            return $"{Round(years / 1e9)} billion years";
-        }
-
-        return "longer than the age of the universe";
-    }
-
-    private static string Plural(double value, string unit)
-    {
-        long rounded = (long)Math.Max(1, Math.Round(value, MidpointRounding.AwayFromZero));
-        return rounded == 1
-            ? $"1 {unit}"
-            : $"{rounded.ToString("N0", CultureInfo.CurrentCulture)} {unit}s";
-    }
-
-    private static string Round(double value)
-    {
-        long rounded = (long)Math.Max(1, Math.Round(value, MidpointRounding.AwayFromZero));
-        return rounded.ToString("N0", CultureInfo.CurrentCulture);
+            PasswordStrengthLevel.VeryWeak =>
+                "Easily guessed. Use a longer password that is not a word, a name or a simple pattern.",
+            PasswordStrengthLevel.Weak =>
+                "Guessable with modest effort. Add length and mix unrelated words or characters.",
+            PasswordStrengthLevel.Fair =>
+                "Acceptable. More length would make it noticeably stronger.",
+            PasswordStrengthLevel.Strong =>
+                "Suitable for protecting a vault. Store it safely; a lost password cannot be recovered.",
+            _ =>
+                "Excellent. Store it safely; a lost password cannot be recovered.",
+        };
     }
 
     private static PasswordStrengthLevel LevelFor(double entropy, int length) => entropy switch

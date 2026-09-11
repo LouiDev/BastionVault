@@ -116,7 +116,6 @@ public sealed partial class NewVaultDialogViewModel : DialogViewModelBase<NewVau
     [NotifyPropertyChangedFor(nameof(CanCreate))]
     [NotifyPropertyChangedFor(nameof(BlockingReason))]
     [NotifyPropertyChangedFor(nameof(HasBlockingReason))]
-    [NotifyPropertyChangedFor(nameof(StrengthSentence))]
     private KdfPresetOption _selectedPreset;
 
     [ObservableProperty]
@@ -225,9 +224,9 @@ public sealed partial class NewVaultDialogViewModel : DialogViewModelBase<NewVau
     /// <summary>The one useful thing to say about the password's structure, if anything.</summary>
     public string? Weakness => Strength.Weakness;
 
-    /// <summary>The crack-time sentence at the selected preset.</summary>
+    /// <summary>The plain-language reading of the strength band.</summary>
     public string StrengthSentence =>
-        PasswordStrength.Sentence(Strength, SelectedPreset.Parameters, SelectedPreset.Name);
+        PasswordStrength.Sentence(Strength);
 
     /// <summary>True when every requirement is met and the vault can be created.</summary>
     public bool CanCreate =>

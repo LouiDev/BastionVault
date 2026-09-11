@@ -7,7 +7,15 @@ separately in `docs/FORMAT.md` and only changes with a major release.
 
 ## [Unreleased]
 
-Nothing yet.
+### Changed
+- The password strength meter no longer quotes a crack time ("eight high-end GPUs would need
+  about N years…"). It shows the strength band (Very weak, Weak, Fair, Strong, Very strong) with
+  a plain-language sentence about what would improve the password. The estimated time depended
+  on hardware and budget nobody can know and read as a promise the program cannot keep.
+- The assembly metadata and the Windows application identity (AppUserModelID) now name
+  LouiDev, the author, instead of a company label. Windows treats the changed identity as a
+  new application for taskbar grouping; a file association registered with 1.1.0 or earlier
+  picks up the new identity when it is registered again from Settings.
 
 ## [1.1.0] - 2026-09-11
 

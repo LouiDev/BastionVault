@@ -30,7 +30,7 @@ A full run is about 15 seconds:
 | Project              | Tests | Covers                                                    |
 |----------------------|-------|-----------------------------------------------------------|
 | `BastionVault.Core.Tests` |  747  | crypto vectors, the format, the session, the tamper matrix, golden fixtures |
-| `BastionVault.App.Tests`  |  309  | view models, converters, the keymap, the video thumbnailer, and real end-to-end runs |
+| `BastionVault.App.Tests`  |  307  | view models, converters, the keymap, the video thumbnailer, and real end-to-end runs |
 
 Useful filters:
 

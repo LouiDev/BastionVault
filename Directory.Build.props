@@ -6,7 +6,7 @@
     <Deterministic>true</Deterministic>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
-    <Company>HMD Software</Company>
+    <Company>LouiDev</Company>
     <Authors>LouiDev</Authors>
     <Product>Bastion Vault</Product>
     <Copyright>Copyright (c) 2026 LouiDev</Copyright>

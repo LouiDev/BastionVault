@@ -52,7 +52,6 @@ public sealed partial class ChangeCredentialsDialogViewModel : DialogViewModelBa
     private string? _keyFilePath;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(StrengthSentence))]
     [NotifyPropertyChangedFor(nameof(CostLine))]
     [NotifyPropertyChangedFor(nameof(CanApply))]
     [NotifyPropertyChangedFor(nameof(MemoryWarning))]
@@ -127,9 +126,9 @@ public sealed partial class ChangeCredentialsDialogViewModel : DialogViewModelBa
         _ => "Very strong",
     };
 
-    /// <summary>The crack-time sentence at the selected preset.</summary>
+    /// <summary>The plain-language reading of the strength band.</summary>
     public string StrengthSentence =>
-        PasswordStrength.Sentence(Strength, SelectedPreset.Parameters, SelectedPreset.Name);
+        PasswordStrength.Sentence(Strength);
 
     /// <summary>The honest caveat attached to the selected mode.</summary>
     public string ModeCaveat => Mode == CredentialChangeMode.Rekey

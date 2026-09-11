@@ -1,5 +1,4 @@
 using BastionVault.App.Services;
-using BastionVault.Core;
 
 namespace BastionVault.App.Tests;
 
@@ -88,44 +87,34 @@ public sealed class PasswordStrengthTests
     }
 
     [Fact]
-    public void CrackTimeFollowsTheKdfCost()
+    public void TheSentenceNeverQuotesACrackTime()
     {
-        PasswordStrengthResult result = PasswordStrength.Estimate("7Kq!vX2m@Ld9Zt#4");
+        string[] passwords = ["123456", "sunshine1", "7Kq!vX2m", "7Kq!vX2m@Ld9Zt#4", "correct horse battery staple mountain lantern 42!"];
+        foreach (string password in passwords)
+        {
+            string sentence = PasswordStrength.Sentence(PasswordStrength.Estimate(password));
 
-        double fast = PasswordStrength.CrackSeconds(result.Entropy, KdfParameters.FromPreset(KdfPreset.Fast));
-        double strong = PasswordStrength.CrackSeconds(result.Entropy, KdfParameters.FromPreset(KdfPreset.Strong));
-
-        // Strong costs 1 GiB x 4 passes against Fast's 64 MiB x 3, so it must buy real time.
-        Assert.True(strong > fast * 20, $"fast {fast:E2} s, strong {strong:E2} s");
+            Assert.False(string.IsNullOrWhiteSpace(sentence), password);
+            Assert.DoesNotMatch("GPU|would need|seconds|minutes|hours|days|months|years|universe", sentence);
+        }
     }
 
     [Fact]
-    public void TheSentenceNamesThePresetAndTheGpus()
+    public void EveryBandHasItsOwnSentence()
     {
-        PasswordStrengthResult result = PasswordStrength.Estimate("7Kq!vX2m@Ld9Zt#4");
-        string sentence = PasswordStrength.Sentence(result, KdfParameters.Default, "Standard");
+        var sentences = new HashSet<string>(StringComparer.Ordinal);
+        foreach (PasswordStrengthLevel level in Enum.GetValues<PasswordStrengthLevel>())
+        {
+            string sentence = PasswordStrength.Sentence(new PasswordStrengthResult(12, 50, level, [], null));
 
-        Assert.StartsWith("At Standard, eight high-end GPUs would need ", sentence, StringComparison.Ordinal);
-        Assert.EndsWith(" to guess this password.", sentence, StringComparison.Ordinal);
+            Assert.False(string.IsNullOrWhiteSpace(sentence), level.ToString());
+            Assert.True(sentences.Add(sentence), $"{level} shares its sentence with another band.");
+        }
     }
 
     [Fact]
-    public void AWeakPasswordFallsInsideASecond()
+    public void AnEmptyPasswordAsksForOne()
     {
-        PasswordStrengthResult result = PasswordStrength.Estimate("123456");
-        string sentence = PasswordStrength.Sentence(result, KdfParameters.Default, "Standard");
-
-        Assert.Contains("less than a second", sentence, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void DurationsAreRoundedIntoWords()
-    {
-        Assert.Equal("less than a second", PasswordStrength.FormatDuration(0.4));
-        Assert.Equal("1 second", PasswordStrength.FormatDuration(1));
-        Assert.Contains("minute", PasswordStrength.FormatDuration(120), StringComparison.Ordinal);
-        Assert.Contains("year", PasswordStrength.FormatDuration(60 * 60 * 24 * 400), StringComparison.Ordinal);
-        Assert.Contains("thousand years", PasswordStrength.FormatDuration(60d * 60 * 24 * 365 * 5000), StringComparison.Ordinal);
-        Assert.Equal("longer than the age of the universe", PasswordStrength.FormatDuration(double.PositiveInfinity));
+        Assert.Equal("Type a password to see its strength.", PasswordStrength.Sentence(PasswordStrengthResult.Empty));
     }
 }
