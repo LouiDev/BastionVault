@@ -7,6 +7,10 @@ separately in `docs/FORMAT.md` and only changes with a major release.
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.1.1] - 2026-09-11
+
 ### Changed
 - The password strength meter no longer quotes a crack time ("eight high-end GPUs would need
   about N years…"). It shows the strength band (Very weak, Weak, Fair, Strong, Very strong) with
@@ -122,7 +126,8 @@ Format version 1.
   releases, Dependabot, issue and pull request templates. Test hooks are compiled into
   Debug builds only.
 
-[Unreleased]: https://github.com/LouiDev/BastionVault/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/LouiDev/BastionVault/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/LouiDev/BastionVault/releases/tag/v1.1.1
 [1.1.0]: https://github.com/LouiDev/BastionVault/releases/tag/v1.1.0
 [1.0.1]: https://github.com/LouiDev/BastionVault/releases/tag/v1.0.1
 [1.0.0]: https://github.com/LouiDev/BastionVault/releases/tag/v1.0.0
