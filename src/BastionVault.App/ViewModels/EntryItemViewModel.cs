@@ -74,6 +74,9 @@ public sealed partial class EntryItemViewModel : ObservableObject, ISortableEntr
     /// <summary>How the preview pane should try to render this entry.</summary>
     public PreviewKind Preview => _type.Preview;
 
+    /// <summary>MIME hint for the media stack when <see cref="Preview"/> is <see cref="PreviewKind.Video"/>.</summary>
+    public string? ContentType => _type.ContentType;
+
     /// <summary>True for a folder; the list uses it to pick the double-click behaviour.</summary>
     public bool IsFolder => Info.Kind == EntryKind.Folder;
 

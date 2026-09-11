@@ -45,6 +45,11 @@ partially written export is deleted on failure. A crafted vault opened with its
 (attacker-supplied) password cannot make the reader allocate more than the documented
 limits, recurse, or follow reserved/relative names on export (see FORMAT.md §6 and §7).
 A damaged primary index falls back to the authenticated index copy.
+Content that authenticates is still attacker-chosen: the preview pane hands image bytes to
+WIC and, for videos, the decrypted stream to Media Foundation's demuxers and decoders, a
+much larger parser surface than the format's own. Both run in-process with hardware
+(DXVA) decoding switched off for video, every failure is contained, and the preview can be
+turned off in Settings. A vault you did not fill yourself deserves that switch.
 
 ### A5 — Traces on the local machine
 Bastion Vault never writes plaintext except on explicit export. Imported content is
@@ -62,7 +67,8 @@ close, crash-handler and dispose; the Argon2 working memory is zeroed after each
 derivation (own implementation); passwords are read from `PasswordBox.SecurePassword`
 into pinned UTF-8 buffers, never into `string` (NFC normalisation of a non-ASCII
 password creates one transient managed string, which cannot be zeroed). Not zeroable:
-WPF `PasswordBox` internals, decoded preview bitmaps (unmanaged WIC buffers), text shown
+WPF `PasswordBox` internals, decoded preview bitmaps (unmanaged WIC buffers), the video
+frame Media Foundation decodes and the buffers its demuxer keeps while probing, text shown
 on screen, entry names in the in-memory tree while the vault is open or soft-locked. Bastion Vault
 does not disable the pagefile or Windows Error Reporting for you.
 

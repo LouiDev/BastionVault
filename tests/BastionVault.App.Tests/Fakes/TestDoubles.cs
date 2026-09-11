@@ -184,3 +184,50 @@ public sealed class DisposeFlag : IDisposable
     /// <inheritdoc />
     public void Dispose() => Disposed = true;
 }
+
+/// <summary>
+/// An <see cref="IVideoThumbnailer"/> that answers from a script: a fixed probe, or a hold that lets a
+/// test cancel the caller while the probe is "running". It records what it was asked so tests can
+/// check the stream was seekable and the hint came from the file name.
+/// </summary>
+public sealed class FakeVideoThumbnailer : IVideoThumbnailer
+{
+    /// <summary>The probe every call returns; <see langword="null"/> plays an unrecognised container.</summary>
+    public VideoProbe? Result { get; set; }
+
+    /// <summary>When set, a call waits on this before answering, so a test can cancel it mid-flight.</summary>
+    public TaskCompletionSource? Hold { get; set; }
+
+    /// <summary>Content-type hints received, in order.</summary>
+    public List<string?> ContentTypes { get; } = [];
+
+    /// <summary>Maximum widths received, in order.</summary>
+    public List<int> MaxWidths { get; } = [];
+
+    /// <summary>Whether every stream handed in reported <see cref="Stream.CanSeek"/>.</summary>
+    public bool AllStreamsSeekable { get; private set; } = true;
+
+    /// <summary>Number of calls so far.</summary>
+    public int Calls { get; private set; }
+
+    /// <summary>A 2x2 BGRA frame that is easy to recognise in assertions.</summary>
+    public static VideoFrame SampleFrame() => new(
+        [0x10, 0x20, 0x30, 0xFF, 0x11, 0x21, 0x31, 0xFF, 0x12, 0x22, 0x32, 0xFF, 0x13, 0x23, 0x33, 0xFF], 2, 2);
+
+    /// <inheritdoc />
+    public async Task<VideoProbe?> ProbeAsync(Stream video, string? contentType, int maxWidth, CancellationToken ct)
+    {
+        Calls++;
+        ContentTypes.Add(contentType);
+        MaxWidths.Add(maxWidth);
+        AllStreamsSeekable &= video.CanSeek;
+
+        if (Hold is { } hold)
+        {
+            await hold.Task.WaitAsync(ct).ConfigureAwait(false);
+        }
+
+        ct.ThrowIfCancellationRequested();
+        return Result;
+    }
+}

@@ -14,7 +14,8 @@ public sealed class FileTypeCatalogTests
     [InlineData("Notes.txt", "Text document", "Glyph.Document", PreviewKind.Text)]
     [InlineData("Family portrait.jpg", "JPEG image", "Glyph.Image", PreviewKind.Image)]
     [InlineData("backup.tar", "Tar archive", "Glyph.Archive", PreviewKind.Binary)]
-    [InlineData("clip.mp4", "MP4 video", "Glyph.Video", PreviewKind.Binary)]
+    [InlineData("clip.mp4", "MP4 video", "Glyph.Video", PreviewKind.Video)]
+    [InlineData("clip.mkv", "Matroska video", "Glyph.Video", PreviewKind.Video)]
     [InlineData("song.flac", "FLAC audio", "Glyph.Audio", PreviewKind.Binary)]
     [InlineData("signing.pfx", "PKCS 12 store", "Glyph.KeyFile", PreviewKind.Binary)]
     [InlineData("Program.cs", "C# source file", "Glyph.Code", PreviewKind.Text)]
@@ -25,6 +26,17 @@ public sealed class FileTypeCatalogTests
         Assert.Equal(type, info.FriendlyType);
         Assert.Equal(glyph, info.GlyphKey);
         Assert.Equal(preview, info.Preview);
+    }
+
+    [Theory]
+    [InlineData("clip.mp4", "video/mp4")]
+    [InlineData("clip.mov", "video/quicktime")]
+    [InlineData("clip.webm", "video/webm")]
+    [InlineData("photo.jpg", null)]
+    [InlineData("notes.txt", null)]
+    public void OnlyVideosCarryAContentTypeHint(string name, string? contentType)
+    {
+        Assert.Equal(contentType, FileTypeCatalog.Describe(name).ContentType);
     }
 
     [Fact]

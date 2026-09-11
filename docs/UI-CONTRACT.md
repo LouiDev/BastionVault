@@ -232,6 +232,10 @@ public interface IUiDispatcher { void Post(Action action); bool CheckAccess(); }
 public interface ILog { void Info(string message); void Warn(string message, Exception? ex = null); void Error(string message, Exception? ex = null); }
 public interface IKdfEstimator { Task<TimeSpan> EstimateAsync(KdfParameters p, CancellationToken ct); }     // wraps KdfBenchmark, caches per parameters
 public interface IKdfPreflight { KdfPreflightResult Check(KdfParameters p); }                                 // wraps KdfPreflight; the App never decides memory fit itself
+public interface IVideoThumbnailer { Task<VideoProbe?> ProbeAsync(Stream video, string? contentType, int maxWidth, CancellationToken ct); }
+    // One still frame (BGRA, reduced to maxWidth) plus dimensions and running time, read from the seekable
+    // vault stream in memory only; null when the container is not recognised, Frame null when no decoder
+    // is installed. Never throws for content. Implementation: Media Foundation source reader, DXVA off (#33).
 ```
 
 `AppSettings`: `Theme` (Dark|HighContrastAuto), `AutoLockMinutes` (default 10, 0 = off),
@@ -271,7 +275,8 @@ src/BastionVault.App/
               Dialogs/*                                                                              [shell]
   Services/ all interfaces above + implementations, PasswordBoxBinder, ThrottledProgress,
             VaultChangeMarshaller, JsonSettingsService, DpapiStore                                    [shell]
-            InternalClipboard, NaturalStringComparer (StrCmpLogicalW), EntryComparer, FileTypeCatalog [explorer]
+            InternalClipboard, NaturalStringComparer (StrCmpLogicalW), EntryComparer, FileTypeCatalog,
+            MediaFoundationThumbnailer (+ MediaFoundationInterop)                                     [explorer]
   Behaviors/ FileDropBehavior, ListDragBehavior, TreeDropBehavior, ColumnSortBehavior,
              InlineRenameBehavior, MarqueeSelectionBehavior (optional), FocusRingBehavior            [explorer]
   Converters/ ByteSize, RelativeDate, EntryKindToGlyph, FileTypeToGlyph, BoolToVisibility, StateToPip [explorer]

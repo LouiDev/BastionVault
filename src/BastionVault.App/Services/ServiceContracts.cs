@@ -319,3 +319,41 @@ public interface IKdfPreflight
     /// <param name="parameters">Argon2id parameters from a header or a preset.</param>
     KdfPreflightResult Check(KdfParameters parameters);
 }
+
+/// <summary>One decoded video frame: 32-bit BGRA, rows top-down, stride <c>Width * 4</c>.</summary>
+/// <param name="Pixels">The pixel bytes; the owner zeroes them when the frame is dropped.</param>
+/// <param name="Width">Width in pixels.</param>
+/// <param name="Height">Height in pixels.</param>
+public sealed record VideoFrame(byte[] Pixels, int Width, int Height);
+
+/// <summary>What the media stack could tell about a video without playing it.</summary>
+/// <param name="FrameWidth">Width of the video stream in pixels, as declared by the container.</param>
+/// <param name="FrameHeight">Height of the video stream in pixels, as declared by the container.</param>
+/// <param name="Duration">Running time, when the container declares one.</param>
+/// <param name="Frame">
+/// One still frame from early in the video, or <see langword="null"/> when no decoder for the codec is
+/// installed. The container was still recognised in that case; the caller shows the figures without a picture.
+/// </param>
+public sealed record VideoProbe(int FrameWidth, int FrameHeight, TimeSpan? Duration, VideoFrame? Frame);
+
+/// <summary>
+/// Reads one still frame plus dimensions and running time out of a video stream, in memory only. The
+/// implementation wraps the OS media stack (Media Foundation), which is the only part of the app that
+/// hands vault plaintext to code outside the process's own assemblies; keep it behind this seam.
+/// </summary>
+public interface IVideoThumbnailer
+{
+    /// <summary>
+    /// Probes a video. The stream must be seekable: containers keep their index wherever they like.
+    /// Nothing is written to disk, and the stream is not disposed.
+    /// </summary>
+    /// <param name="video">Seekable plaintext stream of the file.</param>
+    /// <param name="contentType">MIME hint from the file name, for example <c>video/mp4</c>.</param>
+    /// <param name="maxWidth">The frame is reduced to at most this many pixels wide; the height follows.</param>
+    /// <param name="ct">Cancellation token; honoured between reads.</param>
+    /// <returns>
+    /// The probe, or <see langword="null"/> when the media stack is unavailable on this machine or does not
+    /// recognise the container. Never throws for bad content; only <see cref="OperationCanceledException"/>.
+    /// </returns>
+    Task<VideoProbe?> ProbeAsync(Stream video, string? contentType, int maxWidth, CancellationToken ct);
+}
