@@ -29,8 +29,8 @@ A full run is about 15 seconds:
 
 | Project              | Tests | Covers                                                    |
 |----------------------|-------|-----------------------------------------------------------|
-| `BastionVault.Core.Tests` |  724  | crypto vectors, the format, the session, the tamper matrix, golden fixtures |
-| `BastionVault.App.Tests`  |  232  | view models, converters, the keymap, and one real end-to-end run |
+| `BastionVault.Core.Tests` |  747  | crypto vectors, the format, the session, the tamper matrix, golden fixtures |
+| `BastionVault.App.Tests`  |  309  | view models, converters, the keymap, the video thumbnailer, and real end-to-end runs |
 
 Useful filters:
 
@@ -66,6 +66,23 @@ after `--` to xUnit v2. Never regenerate a fixture to turn a red test green — 
 means either the format changed deliberately (and `FORMAT.md` says so) or a writer that must
 be deterministic no longer is, which is a real bug. `tests/fixtures/README.md` lists exactly
 what is pinned in each fixture.
+
+### The video fixture
+
+`tests/BastionVault.App.Tests/Fixtures/tiny-h264.mp4` is a 4 KB, two-second, 160 x 90 H.264 clip
+(ffmpeg's `testsrc` pattern, `moov` box at the end of the file so a probe has to seek), and
+`tiny-h264-frames.png` holds its eight frames as ffmpeg decoded them, stacked vertically.
+`MediaFoundationThumbnailerTests` compares the frame Media Foundation returns against that strip,
+which catches a bottom-up copy, a swapped channel order and a wrong stride at once. Both files
+were made with:
+
+```
+ffmpeg -f lavfi -i testsrc=size=160x90:rate=4 -t 2 -pix_fmt yuv420p -c:v libx264 -profile:v baseline -preset veryslow -crf 30 tiny-h264.mp4
+ffmpeg -i tiny-h264.mp4 -vf tile=1x8 -frames:v 1 tiny-h264-frames.png
+```
+
+The decode tests return early on a machine without Media Foundation (Windows N without the
+Media Feature Pack); `MediaFoundationThumbnailer.IsAvailable` tells which case a run was.
 
 ---------------------------------------------------------------------------
 ## 3. Running the app
@@ -242,6 +259,16 @@ to `SaveWriter`, `StagingStore` or `Exporter`.
 ---------------------------------------------------------------------------
 ## 7. Known limitations
 
+- **Video preview is a still frame, not a player (#33).** The pane shows one frame from about
+  a tenth of the way in (at most ten seconds), the resolution and the running time; playback
+  would need a frame server or a third-party stack and is a separate decision. Codec coverage
+  is whatever Windows can decode: H.264 in MP4/MOV, AVI and MKV work out of the box, HEVC needs
+  Microsoft's extension, VP9/AV1 in WebM the optional Web Media Extensions. A container Windows
+  does not recognise, or a Windows N without the Media Feature Pack, gets a note and the export
+  hint instead of a hex dump. The probe runs on a thread-pool thread and is cancelled through
+  the stream when the selection moves on, but a demuxer that spins without reading cannot be
+  interrupted from outside; nothing of the kind has been seen, and the preview switch in
+  Settings is the way out if it ever is.
 - **Layout rules worth knowing** (each one was an open item after 1.0 and is now a pinned rule)
   - The side panes follow the window (#18): above 1180 px the tree and the preview keep the
     widths the user gave them; between 1180 and 1000 px both shrink in proportion towards

@@ -11,6 +11,9 @@ public enum PreviewKind
     /// <summary>Hand the bytes to an image decoder.</summary>
     Image,
 
+    /// <summary>Ask the OS media stack for a still frame and the running time; never for playback.</summary>
+    Video,
+
     /// <summary>Nothing better than a hex dump of the first bytes.</summary>
     Binary,
 }
@@ -19,7 +22,11 @@ public enum PreviewKind
 /// <param name="FriendlyType">The Type column's text, for example "PDF document".</param>
 /// <param name="GlyphKey">Resource key of the 16 px type icon.</param>
 /// <param name="Preview">How the preview pane should try to render the file.</param>
-public sealed record FileTypeInfo(string FriendlyType, string GlyphKey, PreviewKind Preview);
+/// <param name="ContentType">
+/// MIME type handed to the media stack as a hint for <see cref="PreviewKind.Video"/>; <see langword="null"/>
+/// for everything else.
+/// </param>
+public sealed record FileTypeInfo(string FriendlyType, string GlyphKey, PreviewKind Preview, string? ContentType = null);
 
 /// <summary>
 /// Extension to friendly type name, icon and preview strategy. The table is fixed and lives in
@@ -115,11 +122,13 @@ public static class FileTypeCatalog
         ["iso"] = new("Disc image", GlyphArchive, PreviewKind.Binary),
 
         // Media
-        ["mp4"] = new("MP4 video", GlyphVideo, PreviewKind.Binary),
-        ["mkv"] = new("Matroska video", GlyphVideo, PreviewKind.Binary),
-        ["mov"] = new("QuickTime video", GlyphVideo, PreviewKind.Binary),
-        ["avi"] = new("AVI video", GlyphVideo, PreviewKind.Binary),
-        ["webm"] = new("WebM video", GlyphVideo, PreviewKind.Binary),
+        ["mp4"] = new("MP4 video", GlyphVideo, PreviewKind.Video, "video/mp4"),
+        ["m4v"] = new("MP4 video", GlyphVideo, PreviewKind.Video, "video/mp4"),
+        ["mkv"] = new("Matroska video", GlyphVideo, PreviewKind.Video, "video/x-matroska"),
+        ["mov"] = new("QuickTime video", GlyphVideo, PreviewKind.Video, "video/quicktime"),
+        ["avi"] = new("AVI video", GlyphVideo, PreviewKind.Video, "video/avi"),
+        ["webm"] = new("WebM video", GlyphVideo, PreviewKind.Video, "video/webm"),
+        ["wmv"] = new("Windows Media video", GlyphVideo, PreviewKind.Video, "video/x-ms-wmv"),
         ["mp3"] = new("MP3 audio", GlyphAudio, PreviewKind.Binary),
         ["wav"] = new("WAV audio", GlyphAudio, PreviewKind.Binary),
         ["flac"] = new("FLAC audio", GlyphAudio, PreviewKind.Binary),

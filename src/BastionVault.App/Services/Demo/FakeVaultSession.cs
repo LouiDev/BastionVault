@@ -742,6 +742,7 @@ public sealed class FakeVaultSession : IVaultSession
         AddFile(trip.Id, "IMG_0418.jpg", 5_505_024, EntryState.Stored);
         AddFile(trip.Id, "IMG_0419.jpg", 4_980_736, EntryState.Stored);
         AddFile(trip.Id, "IMG_0420.jpg", 5_767_168, EntryState.Added);
+        AddFile(trip.Id, "Harbour at dusk.mp4", 88_080_384, EntryState.Stored);
         AddFile(trip.Id, "Itinerary.md", 8_192, EntryState.Stored);
 
         AddFile(keys.Id, "ssh_ed25519", 464, EntryState.Stored);

@@ -25,6 +25,9 @@ public enum PreviewMode
     /// <summary>A decoded image.</summary>
     Image,
 
+    /// <summary>A still frame and the figures of a video; the frame is missing when no decoder is installed.</summary>
+    Video,
+
     /// <summary>A hex dump of the first bytes.</summary>
     Hex,
 
@@ -40,10 +43,12 @@ public enum PreviewMode
 
 /// <summary>
 /// The preview pane. It reads a file's plaintext into memory through
-/// <see cref="IVaultSession.OpenReadAsync"/> - never to a temporary file - shows text, an image or
-/// a hex dump, and drops every buffer the moment the selection changes or the vault locks
-/// (UI-CONTRACT.md section 1.10). Reads are debounced so arrowing down a long list does not start
-/// a decrypt per row, and an in-flight read is cancelled when the selection moves on.
+/// <see cref="IVaultSession.OpenReadAsync"/> - never to a temporary file - shows text, an image, a
+/// hex dump or one still frame of a video, and drops every buffer the moment the selection changes
+/// or the vault locks (UI-CONTRACT.md section 1.10). Reads are debounced so arrowing down a long list
+/// does not start a decrypt per row, and an in-flight read is cancelled when the selection moves on.
+/// A video is not read into memory at all: the seekable stream is handed to the
+/// <see cref="IVideoThumbnailer"/>, which pulls only the bytes the container's index and one frame need.
 /// </summary>
 public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 {
@@ -58,7 +63,11 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 
     private readonly IVaultSession _session;
     private readonly ISettingsService _settings;
+    private readonly IVideoThumbnailer _thumbnailer;
     private readonly ILog _log;
+
+    /// <summary>A video frame is never reduced below this width, whatever the pane's size at the time.</summary>
+    public const int MinVideoFrameWidth = 640;
 
     /// <summary>Bytes per hex line when the pane is wide enough for the familiar layout.</summary>
     public const int WideHexBytesPerLine = 16;
@@ -87,6 +96,9 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     private byte[]? _imageBytes;
 
     [ObservableProperty]
+    private VideoFrame? _videoFrame;
+
+    [ObservableProperty]
     private string? _message;
 
     [ObservableProperty]
@@ -104,20 +116,23 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     /// <summary>Creates the pane over a session.</summary>
     /// <param name="session">The open session.</param>
     /// <param name="settings">Application settings; the blur-when-inactive switch lives there.</param>
+    /// <param name="thumbnailer">Reads one frame and the figures out of a video.</param>
     /// <param name="log">Log.</param>
-    public PreviewViewModel(IVaultSession session, ISettingsService settings, ILog log)
+    public PreviewViewModel(IVaultSession session, ISettingsService settings, IVideoThumbnailer thumbnailer, ILog log)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(thumbnailer);
 
         _session = session;
         _settings = settings;
+        _thumbnailer = thumbnailer;
         _log = log;
         IsEnabled = settings.Current.PreviewEnabled;
     }
 
     /// <summary>True when the pane should be blurred because the window is not the active one.</summary>
-    public bool IsBlurred => !IsWindowActive && _settings.Current.BlurPreviewWhenInactive && Mode is PreviewMode.Text or PreviewMode.Image or PreviewMode.Hex;
+    public bool IsBlurred => !IsWindowActive && _settings.Current.BlurPreviewWhenInactive && Mode is PreviewMode.Text or PreviewMode.Image or PreviewMode.Video or PreviewMode.Hex;
 
     /// <summary>How long the pane waits before reading, so arrowing through a list is free.</summary>
     internal TimeSpan Debounce { get; set; } = TimeSpan.FromMilliseconds(400);
@@ -297,6 +312,12 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         {
             await Task.Delay(Debounce, ct).ConfigureAwait(true);
 
+            if (item.Preview == PreviewKind.Video)
+            {
+                await LoadVideoAsync(item, ct).ConfigureAwait(true);
+                return;
+            }
+
             long cap = item.Preview == PreviewKind.Image ? MaxImageBytes : MaxTextBytes;
             if (item.Preview != PreviewKind.Binary && item.Length > cap)
             {
@@ -330,6 +351,91 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             Message = ex is VaultIntegrityException
                 ? "This file failed its integrity check. Run Verify to see how much of the vault is affected."
                 : "This file could not be read.";
+        }
+    }
+
+    /// <summary>
+    /// Probes a video through the thumbnailer. The whole file is never held: the stream is seekable and
+    /// the media stack reads the container index and the one frame it needs. There is no size cap for
+    /// the same reason.
+    /// </summary>
+    private async Task LoadVideoAsync(EntryItemViewModel item, CancellationToken ct)
+    {
+        int maxWidth = Math.Max(DecodeWidth, MinVideoFrameWidth);
+        VideoProbe? probe = await Task.Run(
+            async () =>
+            {
+                await using Stream stream = await _session.OpenReadAsync(item.Id, ct).ConfigureAwait(false);
+                return await _thumbnailer.ProbeAsync(stream, item.ContentType, maxWidth, ct).ConfigureAwait(false);
+            },
+            ct).ConfigureAwait(true);
+
+        ct.ThrowIfCancellationRequested();
+
+        if (_showing != item.Id)
+        {
+            ZeroFrame(probe?.Frame);
+            return;
+        }
+
+        InstrumentLine = VideoInstrumentLine(item, probe);
+        VideoFrame = probe?.Frame;
+        Message = probe switch
+        {
+            null => "No preview for this video. Export it to play it.",
+            { Frame: null } => "No decoder for this video format is installed. Export it to play it.",
+            _ => null,
+        };
+        Mode = PreviewMode.Video;
+        OnPropertyChanged(nameof(IsBlurred));
+    }
+
+    /// <summary>"MP4 video · 1920×1080 · 12:34 · 512 MB", leaving out whatever the probe did not learn.</summary>
+    /// <param name="item">The entry on show.</param>
+    /// <param name="probe">What the thumbnailer found, or <see langword="null"/>.</param>
+    public static string VideoInstrumentLine(EntryItemViewModel item, VideoProbe? probe)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+
+        var parts = new List<string>(4) { item.TypeName };
+        if (probe is { FrameWidth: > 0, FrameHeight: > 0 })
+        {
+            parts.Add(string.Create(CultureInfo.InvariantCulture, $"{probe.FrameWidth}×{probe.FrameHeight}"));
+        }
+
+        if (probe?.Duration is { } duration)
+        {
+            parts.Add(FormatDuration(duration));
+        }
+
+        parts.Add(OperationViewModel.FormatBytes(item.Length));
+        return string.Join(" · ", parts);
+    }
+
+    /// <summary>Minutes and seconds, with hours in front once there are any: "0:07", "12:34", "1:02:03".</summary>
+    /// <param name="duration">The running time; negative values are shown as zero.</param>
+    public static string FormatDuration(TimeSpan duration)
+    {
+        if (duration < TimeSpan.Zero)
+        {
+            duration = TimeSpan.Zero;
+        }
+
+        long totalSeconds = (long)Math.Round(duration.TotalSeconds);
+        long hours = totalSeconds / 3600;
+        long minutes = (totalSeconds % 3600) / 60;
+        long seconds = totalSeconds % 60;
+
+        return hours > 0
+            ? string.Create(CultureInfo.InvariantCulture, $"{hours}:{minutes:00}:{seconds:00}")
+            : string.Create(CultureInfo.InvariantCulture, $"{minutes}:{seconds:00}");
+    }
+
+    private static void ZeroFrame(VideoFrame? frame)
+    {
+        if (frame is not null)
+        {
+            CryptographicOperations.ZeroMemory(frame.Pixels);
         }
     }
 
@@ -444,6 +550,12 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         if (ImageBytes is not null)
         {
             ImageBytes = null;
+        }
+
+        if (VideoFrame is not null)
+        {
+            ZeroFrame(VideoFrame);
+            VideoFrame = null;
         }
 
         Text = null;

@@ -33,6 +33,7 @@ public sealed class ShellViewModelTests : IDisposable
     private readonly InternalClipboard _clipboard = new();
     private readonly MemorySettings _settings = new();
     private readonly MemoryLog _log = new();
+    private readonly FakeVideoThumbnailer _thumbnailer = new();
     private readonly InlineDispatcher _dispatcher = new();
 
     private FakeVaultSession _session;
@@ -113,7 +114,7 @@ public sealed class ShellViewModelTests : IDisposable
         Assert.Same(_session, shell.Session);
         Assert.NotNull(shell.Explorer);
         Assert.True(shell.IsExplorerVisible);
-        Assert.Equal(42, shell.Explorer!.ItemCount);
+        Assert.Equal(43, shell.Explorer!.ItemCount);
         _recent.Received().Touch(_vaultPath);
         _privacy.Received().SetExcludeFromCapture(true);
     }
@@ -547,6 +548,6 @@ public sealed class ShellViewModelTests : IDisposable
             _log,
             operation,
             session => new ExplorerViewModel(
-                session, _dialogs, _files, _clipboard, _osClipboard, _settings, _dispatcher, _log, operation));
+                session, _dialogs, _files, _clipboard, _osClipboard, _settings, _dispatcher, _log, operation, _thumbnailer));
     }
 }

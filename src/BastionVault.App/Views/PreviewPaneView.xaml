@@ -113,6 +113,42 @@
                            Visibility="{Binding Failure, ElementName=Image, Converter={StaticResource Converter.NotEmptyToVisibility}}" />
             </Grid>
 
+            <!--
+                Video: one still frame from the OS decoder under a play badge, or the reason there is
+                none. The figures (size, running time) sit in the instrument line above the seam. The
+                badge says "this is a video", it is not a control: playback is not offered (#33).
+            -->
+            <Grid Visibility="{Binding Mode, Converter={StaticResource Converter.EnumMatchVisibility}, ConverterParameter=Video}">
+                <views:VideoPreview Margin="12"
+                                    Stretch="Uniform"
+                                    StretchDirection="DownOnly"
+                                    RenderOptions.BitmapScalingMode="HighQuality"
+                                    Frame="{Binding VideoFrame}" />
+                <Grid Width="44" Height="44"
+                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                      IsHitTestVisible="False"
+                      Visibility="{Binding VideoFrame, Converter={StaticResource Converter.NotNullToVisibility}}">
+                    <Ellipse Fill="{DynamicResource Brush.Bg0}"
+                             Opacity="0.78"
+                             Stroke="{DynamicResource Brush.StrokeControl}"
+                             StrokeThickness="1" />
+                    <!-- Nudged 2 px right: a triangle's visual centre sits left of its box centre. -->
+                    <Path Data="{DynamicResource Geometry.Play}"
+                          Fill="{DynamicResource Brush.TextPrimary}"
+                          Width="14" Height="16"
+                          Margin="2,0,0,0"
+                          Stretch="Fill"
+                          HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Grid>
+                <TextBlock Style="{StaticResource Text.BodySecondary}"
+                           Margin="24"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           VerticalAlignment="Center"
+                           Text="{Binding Message}"
+                           Visibility="{Binding Message, Converter={StaticResource Converter.NotEmptyToVisibility}}" />
+            </Grid>
+
             <!-- Folder summary. -->
             <views:EmptyStateView Blueprint="{StaticResource Blueprint.Folder}"
                                   Headline="{Binding Title}"

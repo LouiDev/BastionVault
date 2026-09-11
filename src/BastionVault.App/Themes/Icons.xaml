@@ -98,6 +98,8 @@
     <Geometry x:Key="Geometry.ChevronRight">M 1,1 L 5,5 L 1,9</Geometry>
     <Geometry x:Key="Geometry.ChevronDown">M 1,1 L 5,5 L 9,1</Geometry>
     <Geometry x:Key="Geometry.CheckMark">M 0,4 L 3.5,7.5 L 10,0.5</Geometry>
+    <!-- Play triangle for the video preview badge; filled, so it reads at 14 px on a still frame. -->
+    <Geometry x:Key="Geometry.Play">M 0,0 L 10,6 L 0,12 Z</Geometry>
 
     <!-- ══ Glyph text blocks ══ -->
     <Style x:Key="Style.Glyph" TargetType="TextBlock">

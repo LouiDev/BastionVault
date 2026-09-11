@@ -163,8 +163,8 @@ public interface IVaultSession : IAsyncDisposable
                                    IProgress<VaultProgress>? progress, CancellationToken ct);
 
     /// <summary>
-    /// Opens a forward-only decrypting stream over a file (stored or pending). Each chunk is
-    /// authenticated before its bytes are returned.
+    /// Opens a read-only, seekable decrypting stream over a file (stored or pending). Each chunk is
+    /// authenticated before its bytes are returned; a seek into a chunk authenticates that chunk.
     /// </summary>
     /// <param name="file">File entry to read.</param>
     /// <param name="ct">Cancellation token.</param>

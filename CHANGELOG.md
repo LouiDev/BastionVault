@@ -8,6 +8,14 @@ separately in `docs/FORMAT.md` and only changes with a major release.
 ## [Unreleased]
 
 ### Added
+- The preview pane shows a still frame, the resolution and the running time of a video
+  (MP4, M4V, MOV, MKV, AVI, WebM, WMV) instead of a hex dump. The frame comes from Windows'
+  own decoders through Media Foundation, read straight out of the vault stream: nothing is
+  written to disk and the file is never held in memory whole. Codecs Windows cannot decode
+  (HEVC without the extension, for example) still get the figures and a note to export the
+  file. Playback is not offered (#33).
+- `IVaultSession.OpenReadAsync` streams are now seekable. A seek authenticates the chunk it
+  lands in, exactly as a forward read does; nothing on disk changes (#33).
 - The unlock card now warns before the button is pressed when this PC cannot serve the vault's
   key derivation (installed memory vs. the vault's requirement), and disables Unlock in that
   state instead of letting the refusal arrive after the click (#13).

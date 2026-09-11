@@ -3,8 +3,11 @@ using System.Buffers;
 namespace BastionVault.Core.Session;
 
 /// <summary>
-/// A forward-only stream over the plaintext of one blob. Every chunk is authenticated before a single
-/// byte of it is handed out; a tag failure surfaces as <see cref="VaultErrorCode.DataCorrupt"/>.
+/// A read-only, seekable stream over the plaintext of one blob. Every chunk is authenticated before a
+/// single byte of it is handed out; a tag failure surfaces as <see cref="VaultErrorCode.DataCorrupt"/>.
+/// Seeking is cheap because every chunk carries its own tag bound to its position (FORMAT.md section
+/// 5): landing on an offset decrypts and authenticates just the chunk that holds it, so a container
+/// parser that jumps to an index at the end of the file does not pay for the bytes in between.
 /// </summary>
 internal sealed class DecryptingBlobStream : Stream
 {
@@ -32,7 +35,7 @@ internal sealed class DecryptingBlobStream : Stream
     public override bool CanRead => !_disposed;
 
     /// <inheritdoc />
-    public override bool CanSeek => false;
+    public override bool CanSeek => !_disposed;
 
     /// <inheritdoc />
     public override bool CanWrite => false;
@@ -44,7 +47,7 @@ internal sealed class DecryptingBlobStream : Stream
     public override long Position
     {
         get => _position;
-        set => throw new NotSupportedException("A vault content stream is forward-only.");
+        set => Seek(value, SeekOrigin.Begin);
     }
 
     /// <inheritdoc />
@@ -106,8 +109,60 @@ internal sealed class DecryptingBlobStream : Stream
     }
 
     /// <inheritdoc />
-    public override long Seek(long offset, SeekOrigin origin) =>
-        throw new NotSupportedException("A vault content stream is forward-only.");
+    /// <remarks>
+    /// A target inside the chunk that is already decrypted only moves the cursor. Any other target
+    /// inside the blob decrypts and authenticates its chunk right away, so a bad tag surfaces from the
+    /// seek rather than from the read that follows. A target at or beyond the end is allowed, as for
+    /// any <see cref="Stream"/>; reads there return zero.
+    /// </remarks>
+    public override long Seek(long offset, SeekOrigin origin)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        long target = origin switch
+        {
+            SeekOrigin.Begin => offset,
+            SeekOrigin.Current => _position + offset,
+            SeekOrigin.End => Length + offset,
+            _ => throw new ArgumentOutOfRangeException(nameof(origin), origin, "Unknown seek origin."),
+        };
+
+        if (target < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(offset), offset, "A seek before the start of the stream is not possible.");
+        }
+
+        if (target == _position)
+        {
+            return target;
+        }
+
+        long loadedStart = _position - _consumed;
+        if (_available > 0 && target >= loadedStart && target < loadedStart + _available)
+        {
+            _consumed = (int)(target - loadedStart);
+        }
+        else if (target >= Length)
+        {
+            _nextChunk = _reader.ChunkCount;
+            _available = 0;
+            _consumed = 0;
+        }
+        else
+        {
+            _nextChunk = (uint)(target / _reader.ChunkSize);
+            _available = 0;
+            _consumed = 0;
+            if (FillNextChunk())
+            {
+                long chunkStart = (long)(_nextChunk - 1) * _reader.ChunkSize;
+                _consumed = (int)Math.Min(target - chunkStart, _available);
+            }
+        }
+
+        _position = target;
+        return target;
+    }
 
     /// <inheritdoc />
     public override void SetLength(long value) =>

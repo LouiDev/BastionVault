@@ -255,8 +255,9 @@ public interface IVaultSession : IAsyncDisposable
                                    IProgress<VaultProgress>? progress, CancellationToken ct);
     Task<ExportResult> ExportAsync(IReadOnlyList<EntryId> entries, string destinationDirectory, ExportOptions options,
                                    IProgress<VaultProgress>? progress, CancellationToken ct);
-    /// Forward-only decrypting stream over a file (stored or pending). Each chunk is authenticated
-    /// before its bytes are returned; a tag failure throws VaultIntegrityException(DataCorrupt).
+    /// Read-only, seekable decrypting stream over a file (stored or pending). Each chunk is authenticated
+    /// before its bytes are returned; a seek into a chunk authenticates that chunk first. A tag failure
+    /// throws VaultIntegrityException(DataCorrupt). The stream does not hold the session lock.
     Task<Stream> OpenReadAsync(EntryId file, CancellationToken ct);
     Task<VerifyReport> VerifyAsync(IProgress<VaultProgress>? progress, CancellationToken ct);
     Task<ExportResult> RecoverAsync(string destinationDirectory, ExportOptions options,

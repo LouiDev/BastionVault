@@ -37,6 +37,7 @@ public sealed class RealVaultEndToEndTests : IDisposable
     private readonly InternalClipboard _clipboard = new();
     private readonly MemorySettings _settings = new();
     private readonly MemoryLog _log = new();
+    private readonly FakeVideoThumbnailer _thumbnailer = new();
     private readonly InlineDispatcher _dispatcher = new();
 
     private readonly string _vaultPath;
@@ -283,6 +284,6 @@ public sealed class RealVaultEndToEndTests : IDisposable
             _log,
             operation,
             session => new ExplorerViewModel(
-                session, _dialogs, _files, _clipboard, _osClipboard, _settings, _dispatcher, _log, operation));
+                session, _dialogs, _files, _clipboard, _osClipboard, _settings, _dispatcher, _log, operation, _thumbnailer));
     }
 }

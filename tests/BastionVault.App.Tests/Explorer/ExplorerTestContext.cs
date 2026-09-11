@@ -47,10 +47,14 @@ public sealed class ExplorerTestContext : IDisposable
         Dispatcher = new InlineDispatcher();
         Log = new MemoryLog();
         Operation = new OperationViewModel(Dispatcher, Log);
+        Thumbnailer = new FakeVideoThumbnailer();
 
         Explorer = new ExplorerViewModel(
-            Session, Dialogs, Files, Clipboard, OsClipboard, Settings, Dispatcher, Log, Operation);
+            Session, Dialogs, Files, Clipboard, OsClipboard, Settings, Dispatcher, Log, Operation, Thumbnailer);
     }
+
+    /// <summary>The scripted video prober behind the preview pane.</summary>
+    public FakeVideoThumbnailer Thumbnailer { get; }
 
     /// <summary>The session under the explorer.</summary>
     public IVaultSession Session { get; }

@@ -98,6 +98,7 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
     /// <param name="dispatcher">UI thread marshaller.</param>
     /// <param name="log">Log.</param>
     /// <param name="operation">The shared long-operation runner.</param>
+    /// <param name="thumbnailer">Reads one frame and the figures out of a video for the preview pane.</param>
     public ExplorerViewModel(
         IVaultSession session,
         IDialogService dialogs,
@@ -107,13 +108,15 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
         ISettingsService settings,
         IUiDispatcher dispatcher,
         ILog log,
-        OperationViewModel operation)
+        OperationViewModel operation,
+        IVideoThumbnailer thumbnailer)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(dialogs);
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(dispatcher);
         ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(thumbnailer);
 
         _session = session;
         _dialogs = dialogs;
@@ -134,7 +137,7 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
         History.Changed += (_, _) => RaiseNavigationCanExecute();
 
         AddressBar = new AddressBarViewModel(session, id => NavigateTo(id));
-        Preview = new PreviewViewModel(session, settings, log) { IsEnabled = _isPreviewVisible };
+        Preview = new PreviewViewModel(session, settings, thumbnailer, log) { IsEnabled = _isPreviewVisible };
         StatusBar = new StatusBarViewModel(session, operation, UndoCommand);
         CommandBar = new CommandBarViewModel(this);
 
