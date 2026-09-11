@@ -9,7 +9,7 @@ folder structure, sizes, entry count — is encrypted and authenticated.
 > One lamp in a stone room. Bastion Vault's dark "Lamplight" theme uses a single amber accent
 > only where something is live, focused or unsaved.
 
-**Status:** version 1.0, format version 1. Source-available, free for non-commercial use
+**Status:** version 1.1, format version 1. Source-available, free for non-commercial use
 (see [License](#license)). The cryptography has **not been independently audited**; see
 [SECURITY.md](SECURITY.md) before trusting it with anything you cannot afford to lose.
 

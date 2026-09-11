@@ -7,6 +7,10 @@ separately in `docs/FORMAT.md` and only changes with a major release.
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.1.0] - 2026-09-11
+
 ### Added
 - The preview pane shows a still frame, the resolution and the running time of a video
   (MP4, M4V, MOV, MKV, AVI, WebM, WMV) instead of a hex dump. The frame comes from Windows'
@@ -110,6 +114,7 @@ Format version 1.
   releases, Dependabot, issue and pull request templates. Test hooks are compiled into
   Debug builds only.
 
-[Unreleased]: https://github.com/LouiDev/BastionVault/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/LouiDev/BastionVault/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/LouiDev/BastionVault/releases/tag/v1.1.0
 [1.0.1]: https://github.com/LouiDev/BastionVault/releases/tag/v1.0.1
 [1.0.0]: https://github.com/LouiDev/BastionVault/releases/tag/v1.0.0
