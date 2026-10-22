@@ -7,6 +7,21 @@ separately in `docs/FORMAT.md` and only changes with a major release.
 
 ## [Unreleased]
 
+### Added
+- A type filter beside the search box narrows the listing and the search results to one family
+  (documents, code and data, images, audio, video, archives, keys, other, or folders only). A
+  folder the filter empties says so instead of looking empty.
+- Rename with several items selected (F2 or the Rename button) opens a batch rename: find and
+  replace, prefix and suffix before the extension, with a live preview that asks Core's name check
+  about every new name and refuses collisions. Each rename is its own undo step.
+- *Find duplicate files...* in the overflow menu compares the vault's files by contents. Only files
+  whose length occurs more than once are read, through the decrypting stream, and nothing but the
+  digests is kept. The result groups identical files; tick the copies (or *Keep the first of each*)
+  and delete them in one undoable step, or jump to a file.
+- Vault properties gain three sections from a walk of the tree: files by type with their sizes,
+  the five largest files with their paths, and the structure (deepest folder, empty folders,
+  average file size).
+
 ### Fixed
 - Under a Windows contrast theme the checked *Preview pane* toggle was a white square with an
   invisible glyph, and every hovered or pressed button, menu item, column header, tab and

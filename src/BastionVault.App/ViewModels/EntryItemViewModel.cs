@@ -71,6 +71,9 @@ public sealed partial class EntryItemViewModel : ObservableObject, ISortableEntr
     /// <summary>Resource key of the 16 px type icon.</summary>
     public string GlyphKey => _type.GlyphKey;
 
+    /// <summary>The family the row belongs to, for the type filter and the Properties dialog.</summary>
+    public FileTypeGroup Group => _type.Group;
+
     /// <summary>How the preview pane should try to render this entry.</summary>
     public PreviewKind Preview => _type.Preview;
 

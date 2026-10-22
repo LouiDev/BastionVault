@@ -39,7 +39,7 @@ fork that is the contributor, in the upstream repository the maintainer.
    `docs/API.md` "Rules". They are review criteria, not suggestions.
 6. **Warnings are errors, tests are green, UI changes are seen.** "Done" means
    `dotnet build BastionVault.slnx -warnaserror` is clean, `dotnet test BastionVault.slnx`
-   passes (currently 747 Core + 377 App), and any visible change was verified with a
+   passes (currently 747 Core + 431 App), and any visible change was verified with a
    screenshot of the running app (section 5). Report failures verbatim; never weaken a test
    to make it pass unless the test itself is wrong, and then say so.
 7. **Language.** Code, comments, commit messages, documentation, issues and pull requests

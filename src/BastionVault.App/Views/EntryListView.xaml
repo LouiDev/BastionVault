@@ -284,5 +284,12 @@
                               Headline="No matches"
                               Body="Nothing in this folder matches. Turn on All to search the whole vault."
                               Visibility="{Binding IsSearchEmpty, Converter={StaticResource Converter.BoolToVisibility}}" />
+
+        <views:EmptyStateView
+                              Margin="0,28,0,0"
+                              Blueprint="{StaticResource Blueprint.Magnifier}"
+                              Headline="Nothing of this type here"
+                              Body="The type filter hides everything in this folder. Set it back to All types to see the rest."
+                              Visibility="{Binding IsFilterEmpty, Converter={StaticResource Converter.BoolToVisibility}}" />
     </Grid>
 </UserControl>

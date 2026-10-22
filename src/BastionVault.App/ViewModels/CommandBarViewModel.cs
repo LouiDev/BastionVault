@@ -1,5 +1,7 @@
 using System.Windows.Input;
 using BastionVault.App.Input;
+using BastionVault.App.Services;
+using BastionVault.App.ViewModels.Dialogs;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace BastionVault.App.ViewModels;
@@ -68,6 +70,12 @@ public sealed partial class CommandBarViewModel : ObservableObject
 
     /// <summary>The groups, left to right.</summary>
     public IReadOnlyList<CommandBarGroup> Groups { get; }
+
+    /// <summary>The type filter's choices, "All types" first, in the catalog's order.</summary>
+    public IReadOnlyList<Choice<FileTypeGroup>> TypeFilters { get; } =
+    [
+        .. Enum.GetValues<FileTypeGroup>().Select(g => new Choice<FileTypeGroup>(g, FileTypeCatalog.GroupLabel(g))),
+    ];
 
     /// <summary>Tooltip for the preview toggle, which is a toggle rather than a plain button.</summary>
     public string PreviewToolTip => Tip("Preview pane", "Preview");

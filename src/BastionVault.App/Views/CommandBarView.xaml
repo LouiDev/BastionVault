@@ -102,9 +102,31 @@
             collapsed outright below the breakpoint the code-behind computes; Ctrl+F then reports
             that search needs a wider window instead of putting the caret in an unpainted box.
         -->
-        <Grid x:Name="SearchArea" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center"
-              MinWidth="140" MaxWidth="260" Margin="12,0"
-              Visibility="{Binding ShowSearch, RelativeSource={RelativeSource AncestorType=local:CommandBarView}, Converter={StaticResource Converter.BoolToVisibility}}">
+        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center"
+                    Visibility="{Binding ShowSearch, RelativeSource={RelativeSource AncestorType=local:CommandBarView}, Converter={StaticResource Converter.BoolToVisibility}}">
+        <!--
+            Type filter: one family or all. It narrows the listing and the search results alike and
+            is a view setting of this session, not persisted. A record-backed ComboBox needs an
+            ItemTemplate, or the closed box shows the record's ToString. It collapses below the
+            filter breakpoint (code-behind), where it would otherwise push the search field off.
+        -->
+        <ComboBox x:Name="TypeFilterBox"
+                  Height="28" Width="150" Margin="0,0,8,0"
+                  ToolTip="Show only one kind of item"
+                  AutomationProperties.Name="Type filter"
+                  Visibility="{Binding ShowTypeFilter, RelativeSource={RelativeSource AncestorType=local:CommandBarView}, Converter={StaticResource Converter.BoolToVisibility}}"
+                  ItemsSource="{Binding TypeFilters}"
+                  SelectedValuePath="Value"
+                  SelectedValue="{Binding Explorer.TypeFilter, Mode=TwoWay}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Style="{StaticResource Text.Body}" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+
+        <Grid x:Name="SearchArea" VerticalAlignment="Center"
+              MinWidth="140" MaxWidth="260" Margin="0,0,12,0">
             <TextBox x:Name="SearchBox"
                      Height="28"
                      Padding="28,0,54,0"
@@ -140,6 +162,7 @@
                 </Button>
             </StackPanel>
         </Grid>
+        </StackPanel>
 
         <!-- View and vault commands. -->
         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
@@ -231,6 +254,8 @@
                                   InputGestureText="{conv:ShortcutText Id=SaveCopy}"
                                   Command="{Binding SaveCopyCommand}" />
                         <Separator />
+                        <MenuItem Header="Find duplicate files..."
+                                  Command="{Binding Explorer.FindDuplicatesCommand}" />
                         <MenuItem Header="Vault properties"
                                   Command="{Binding ShowVaultPropertiesCommand}" />
                         <MenuItem Header="Settings"

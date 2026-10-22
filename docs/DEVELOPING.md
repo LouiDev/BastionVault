@@ -30,7 +30,7 @@ A full run is about 15 seconds:
 | Project              | Tests | Covers                                                    |
 |----------------------|-------|-----------------------------------------------------------|
 | `BastionVault.Core.Tests` |  747  | crypto vectors, the format, the session, the tamper matrix, golden fixtures |
-| `BastionVault.App.Tests`  |  377  | view models, converters, the keymap, the video thumbnailer, the audio prober, the Markdown parser and renderer, and real end-to-end runs |
+| `BastionVault.App.Tests`  |  431  | view models, converters, the keymap, the video thumbnailer, the audio prober, the Markdown parser and renderer, the type filter, batch rename, the duplicate finder, and real end-to-end runs |
 
 Useful filters:
 
@@ -281,6 +281,18 @@ to `SaveWriter`, `StagingStore` or `Exporter`.
   AAC/M4A and WMA work out of the box, Ogg and Opus need the optional Web Media Extensions. A
   recognised container without a decoder shows the figures and a note; an unrecognised one gets
   the export hint. Bit rate is the container's figure or, failing that, length over running time.
+- **Duplicate detection is a scan, not an index lookup.** The format stores a hash per blob,
+  but it is not on Core's public surface and a copy made inside the vault gets a fresh blob
+  anyway, so *Find duplicate files...* (`Services/DuplicateFinder.cs`) groups files by length
+  and reads every file whose length occurs more than once through `OpenReadAsync`, hashing
+  with SHA-256. On a vault full of same-sized files that is a full read; the progress card
+  shows it and Cancel works between reads. Exposing the blob hash would be an API.md change.
+- **The type filter is a view setting of the session.** `ExplorerViewModel.TypeFilter` is not
+  persisted and is reset by *Show* from the duplicates dialog so the revealed file is listed. The
+  combo box collapses below `CommandBarView.FilterBreakpointWithLabels` (1360 px) or, with the
+  buttons as glyphs, `FilterBreakpointWithGlyphs` (1080 px): beside the search field it needs
+  about 160 px the bar does not have there, and a clipped field is worse than a missing one. The
+  filter itself stays in force; a filtered folder still shows its own empty state.
 - **Markdown preview is a bounded subset, rendered, with no way back to the source.** The
   parser (`Services/MarkdownParser.cs`) knows ATX and setext headings, paragraphs, hard breaks,
   fenced and indented code, block quotes, nested bulleted and numbered lists, rules, emphasis,
