@@ -77,6 +77,11 @@ build the App in parallel without merging each other's files.
     `%LOCALAPPDATA%\BastionVault\logs`, never an entry name, in-vault path, key, salt or id.
 14. **All brushes are `DynamicResource`** so a High Contrast dictionary can be swapped in when
     `SystemParameters.HighContrast` is true (`Themes/HighContrast.xaml` maps tokens to `SystemColors`).
+    A hover, pressed or checked state paints with `HoverFill` / `PressedFill` and sets its text or
+    glyph to `OnStateFill` in the same trigger; never with `Bg2` / `Bg3`, which are surfaces and
+    map to the control face and shadow under High Contrast, where the state pair maps to
+    `Highlight` / `HighlightText` (#44). *Review criterion:* a trigger that sets a state fill
+    without the paired foreground is a defect.
 
 ---------------------------------------------------------------------------
 ## 2. Design tokens (resource keys, `Themes/Tokens.xaml`)
@@ -105,6 +110,9 @@ build the App in parallel without merging each other's files.
 | `FocusInner`           | #0E1116  | 1 px ring inside the control                               |
 | `SelectRest`           | #2B2724  | selected row (active window)                               |
 | `SelectInactive`       | #232833  | selected row (inactive window)                             |
+| `HoverFill`            | #1C222D  | hover on the window ground: command-bar and icon buttons, headers, tabs, expanders (same value as `Bg2`; a state, not a surface) |
+| `PressedFill`          | #232B38  | pressed or checked button, open submenu, and hover on a `Bg2` surface: menu and combo items, default buttons (same value as `Bg3`) |
+| `OnStateFill`          | #E7EAF0  | text and glyphs on `HoverFill` / `PressedFill` (same value as `TextPrimary`) |
 | `DangerText`           | #FF6B6F  | red text and icons                                         |
 | `DangerFill`           | #B32830  | destructive button fill (white text)                       |
 | `Success`              | #3DD68C  |                                                            |

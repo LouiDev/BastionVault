@@ -13,8 +13,15 @@
     -->
     <SolidColorBrush x:Key="Brush.Bg0" Color="{x:Static SystemColors.WindowColor}" />
     <SolidColorBrush x:Key="Brush.Bg1" Color="{x:Static SystemColors.WindowColor}" />
+    <!--
+        Bg2 is a surface (inputs, cards, menus) and takes the control face; what sits on it is
+        WindowText. Bg3 is the raised surface (tracks, pressed rows, drop targets) and takes the
+        control shadow, a mid grey that both WindowText and HighlightText read on. ControlLight was
+        tried for Bg3 and is pure white in the dark contrast themes, which put a white glyph on a
+        white checked toggle (#44); the interactive states themselves now use the Highlight pair.
+    -->
     <SolidColorBrush x:Key="Brush.Bg2" Color="{x:Static SystemColors.ControlColor}" />
-    <SolidColorBrush x:Key="Brush.Bg3" Color="{x:Static SystemColors.ControlLightColor}" />
+    <SolidColorBrush x:Key="Brush.Bg3" Color="{x:Static SystemColors.ControlDarkColor}" />
 
     <SolidColorBrush x:Key="Brush.StrokeDivider" Color="{x:Static SystemColors.WindowTextColor}" />
     <SolidColorBrush x:Key="Brush.StrokeShadow" Color="{x:Static SystemColors.WindowColor}" />
@@ -37,6 +44,11 @@
 
     <SolidColorBrush x:Key="Brush.SelectRest" Color="{x:Static SystemColors.HighlightColor}" />
     <SolidColorBrush x:Key="Brush.SelectInactive" Color="{x:Static SystemColors.ControlColor}" />
+
+    <!-- Hover, pressed and checked states: the system's own selected pair, always legible together. -->
+    <SolidColorBrush x:Key="Brush.HoverFill" Color="{x:Static SystemColors.HighlightColor}" />
+    <SolidColorBrush x:Key="Brush.PressedFill" Color="{x:Static SystemColors.HighlightColor}" />
+    <SolidColorBrush x:Key="Brush.OnStateFill" Color="{x:Static SystemColors.HighlightTextColor}" />
 
     <SolidColorBrush x:Key="Brush.DangerText" Color="{x:Static SystemColors.WindowTextColor}" />
     <SolidColorBrush x:Key="Brush.DangerFill" Color="{x:Static SystemColors.HighlightColor}" />

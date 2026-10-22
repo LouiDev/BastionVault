@@ -7,6 +7,13 @@ separately in `docs/FORMAT.md` and only changes with a major release.
 
 ## [Unreleased]
 
+### Fixed
+- Under a Windows contrast theme the checked *Preview pane* toggle was a white square with an
+  invisible glyph, and every hovered or pressed button, menu item, column header, tab and
+  expander painted either white under white text or the same colour as the ground. Those states
+  now use the theme's own highlight pair, and the raised surfaces (progress and slider tracks,
+  drop targets) take the control shadow instead of white (#44).
+
 ### Added
 - The preview pane shows a waveform, the running time, sample rate, channels and bit rate of
   an audio file (MP3, WAV, FLAC, M4A, AAC, WMA, Ogg, Opus) instead of a hex dump. The samples

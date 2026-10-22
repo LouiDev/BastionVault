@@ -38,16 +38,18 @@
                                 Visibility="Collapsed" />
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <!-- State fills and their paired foreground (#44): Bg2/Bg3 are surfaces, not states. -->
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg2}" />
-                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.HoverFill}" />
+                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.OnStateFill}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg3}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.PressedFill}" />
+                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.OnStateFill}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg3}" />
-                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.PressedFill}" />
+                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.OnStateFill}" />
                             <Setter TargetName="Rail" Property="Visibility" Value="Visible" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">

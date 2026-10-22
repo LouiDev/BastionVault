@@ -37,9 +37,9 @@
                             <Setter TargetName="Chevron" Property="Text" Value="{DynamicResource Glyph.ChevronDown}" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg2}" />
-                            <Setter TargetName="Header" Property="TextElement.Foreground" Value="{DynamicResource Brush.TextPrimary}" />
-                            <Setter TargetName="Chevron" Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.HoverFill}" />
+                            <Setter TargetName="Header" Property="TextElement.Foreground" Value="{DynamicResource Brush.OnStateFill}" />
+                            <Setter TargetName="Chevron" Property="Foreground" Value="{DynamicResource Brush.OnStateFill}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

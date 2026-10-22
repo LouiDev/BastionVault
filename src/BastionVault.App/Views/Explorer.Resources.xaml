@@ -75,11 +75,12 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg2}" />
-                            <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.HoverFill}" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.OnStateFill}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg3}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.PressedFill}" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.OnStateFill}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -122,8 +123,8 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg2}" />
-                            <Setter TargetName="Glyph" Property="Stroke" Value="{DynamicResource Brush.TextPrimary}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.HoverFill}" />
+                            <Setter TargetName="Glyph" Property="Stroke" Value="{DynamicResource Brush.OnStateFill}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="Glyph" Property="Data" Value="{DynamicResource Geometry.ChevronDown}" />
@@ -168,8 +169,8 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg2}" />
-                            <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.HoverFill}" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.OnStateFill}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Foreground" Value="{DynamicResource Brush.TextDisabled}" />
