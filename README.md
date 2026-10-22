@@ -32,8 +32,10 @@ and keys are zeroed on lock. Details: [docs/FORMAT.md](docs/FORMAT.md) and
 - Create / open / lock / auto-lock vaults; change password (full re-key by default), add or
   remove a keyfile, change the KDF cost.
 - Explorer-like navigation: folder tree, details list with natural sort, breadcrumb /
-  editable address bar, back/forward history, search, multi-select, F2 rename, drag & drop
-  from Explorer (import) and inside the vault (move), internal cut/copy/paste, undo/redo.
+  editable address bar, back/forward history, search, a type filter, multi-select, F2 rename
+  (a batch rename with find/replace, prefix and suffix for several items), drag & drop from
+  Explorer (import) and inside the vault (move), internal cut/copy/paste, undo/redo, and a
+  duplicate finder that compares files by contents.
 - Import files and folders (streamed, reparse points skipped, conflict handling), export
   selection or everything (timestamps restored, Mark-of-the-Web), in-memory preview of
   text, rendered Markdown, images, a still frame of a video and the waveform of an audio

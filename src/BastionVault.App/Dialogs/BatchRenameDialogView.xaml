@@ -1,0 +1,113 @@
+<UserControl x:Class="BastionVault.App.Dialogs.BatchRenameDialogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:BastionVault.App.Controls"
+             xmlns:dialogs="clr-namespace:BastionVault.App.ViewModels.Dialogs"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=dialogs:BatchRenameDialogViewModel}">
+
+    <DockPanel Margin="24" MinWidth="560" MaxWidth="720">
+        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Text.Title}" Text="{Binding Title}" />
+
+        <!-- Bottom: the verdict line and the buttons. Rename is the primary; nothing here is destructive. -->
+        <Grid DockPanel.Dock="Bottom" Margin="0,20,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Style="{StaticResource Text.Caption}" VerticalAlignment="Center"
+                       TextWrapping="Wrap" Text="{Binding Summary}" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Style="{StaticResource Button.Default}" Height="36" Margin="0,0,8,0"
+                        Content="Cancel" Command="{Binding CancelCommand}" />
+                <Button x:Name="ApplyButton"
+                        Style="{StaticResource Button.Primary}" Height="36" MinWidth="110"
+                        Content="Rename" Command="{Binding ApplyCommand}"
+                        AutomationProperties.Name="Rename" />
+            </StackPanel>
+        </Grid>
+
+        <StackPanel Margin="0,16,0,0">
+            <controls:SectionHeader Text="Find and replace" />
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox Grid.Column="0" Style="{StaticResource TextBox.Default}" IsUndoEnabled="False"
+                         Tag="Find" AutomationProperties.Name="Find"
+                         Text="{Binding Find, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox Grid.Column="2" Style="{StaticResource TextBox.Default}" IsUndoEnabled="False"
+                         Tag="Replace with" AutomationProperties.Name="Replace with"
+                         Text="{Binding Replace, UpdateSourceTrigger=PropertyChanged}" />
+                <CheckBox Grid.Column="4" Style="{StaticResource CheckBox.Default}" VerticalAlignment="Center"
+                          Content="Match case" IsChecked="{Binding MatchCase}" />
+            </Grid>
+
+            <controls:SectionHeader Text="Add" />
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBox Grid.Column="0" Style="{StaticResource TextBox.Default}" IsUndoEnabled="False"
+                         Tag="Prefix" AutomationProperties.Name="Prefix"
+                         ToolTip="Put in front of every name"
+                         Text="{Binding Prefix, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox Grid.Column="2" Style="{StaticResource TextBox.Default}" IsUndoEnabled="False"
+                         Tag="Suffix" AutomationProperties.Name="Suffix"
+                         ToolTip="Put before the extension (at the end of a folder name)"
+                         Text="{Binding Suffix, UpdateSourceTrigger=PropertyChanged}" />
+            </Grid>
+
+            <controls:SectionHeader Text="Preview" />
+            <ScrollViewer MaxHeight="280" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl ItemsSource="{Binding Rows}" AutomationProperties.Name="Preview">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource Text.BodySecondary}"
+                                           TextTrimming="CharacterEllipsis" ToolTip="{Binding OldName}"
+                                           Text="{Binding OldName}" />
+                                <TextBlock Grid.Column="1" Style="{StaticResource Text.BodySecondary}"
+                                           Margin="10,0" Text="→" />
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock TextTrimming="CharacterEllipsis" ToolTip="{Binding NewName}"
+                                               Text="{Binding NewName}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Body}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsChanged}" Value="False">
+                                                        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsInvalid}" Value="True">
+                                                        <Setter Property="Foreground" Value="{DynamicResource Brush.DangerText}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
+                                               Foreground="{DynamicResource Brush.DangerText}"
+                                               Text="{Binding Reason}"
+                                               Visibility="{Binding Reason, Converter={StaticResource Converter.NotEmptyToVisibility}}" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </StackPanel>
+    </DockPanel>
+</UserControl>

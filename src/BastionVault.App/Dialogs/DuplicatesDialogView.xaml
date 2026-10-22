@@ -1,0 +1,96 @@
+<UserControl x:Class="BastionVault.App.Dialogs.DuplicatesDialogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:BastionVault.App.Controls"
+             xmlns:dialogs="clr-namespace:BastionVault.App.ViewModels.Dialogs"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=dialogs:DuplicatesDialogViewModel}">
+
+    <DockPanel Margin="24" MinWidth="560" MaxWidth="720">
+        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Text.Title}" Text="{Binding Title}" />
+        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Text.Mono}" Margin="0,10,0,0" Text="{Binding Summary}" />
+
+        <!--
+            Bottom: what is ticked, then the buttons. Delete is destructive, so it is styled danger
+            and is not the default; Close is the one Enter and Escape reach (UI-CONTRACT.md section 7).
+        -->
+        <Grid DockPanel.Dock="Bottom" Margin="0,20,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Style="{StaticResource Text.Caption}" VerticalAlignment="Center"
+                       Text="{Binding SelectionLine}"
+                       Visibility="{Binding IsClean, Converter={StaticResource Converter.InverseBoolToVisibility}}" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Style="{StaticResource Button.Danger}" Height="36" Margin="0,0,8,0"
+                        Content="Delete ticked" Command="{Binding DeleteSelectedCommand}"
+                        AutomationProperties.Name="Delete ticked"
+                        Visibility="{Binding IsClean, Converter={StaticResource Converter.InverseBoolToVisibility}}" />
+                <Button Style="{StaticResource Button.Primary}" Height="36" MinWidth="110"
+                        Content="Close" Command="{Binding CancelCommand}" />
+            </StackPanel>
+        </Grid>
+
+        <StackPanel Margin="0,16,0,0">
+            <StackPanel Orientation="Horizontal"
+                        Visibility="{Binding IsClean, Converter={StaticResource Converter.BoolToVisibility}}">
+                <TextBlock Style="{StaticResource Style.Glyph20}"
+                           Text="{DynamicResource Glyph.Ok}"
+                           Foreground="{DynamicResource Brush.Success}" />
+                <TextBlock Margin="10,0,0,0" VerticalAlignment="Center"
+                           Style="{StaticResource Text.Body}"
+                           Text="No two files in this vault have the same contents." />
+            </StackPanel>
+
+            <StackPanel Visibility="{Binding IsClean, Converter={StaticResource Converter.InverseBoolToVisibility}}">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <Button Style="{StaticResource Button.Default}" Height="32" Margin="0,0,8,0"
+                            Content="Keep the first of each" Command="{Binding KeepFirstCommand}"
+                            ToolTip="Tick every copy except the first one in each group" />
+                    <Button Style="{StaticResource Button.Default}" Height="32"
+                            Content="Clear ticks" Command="{Binding KeepAllCommand}" />
+                </StackPanel>
+
+                <ScrollViewer MaxHeight="340" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding Groups}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,0,0,12">
+                                    <controls:SectionHeader Text="{Binding Heading}" />
+                                    <ItemsControl ItemsSource="{Binding Rows}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,2">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <CheckBox Grid.Column="0" Style="{StaticResource CheckBox.Default}"
+                                                              VerticalAlignment="Center" Margin="0,0,10,0"
+                                                              IsChecked="{Binding IsSelected}"
+                                                              AutomationProperties.Name="{Binding Path}" />
+                                                    <TextBlock Grid.Column="1" Style="{StaticResource Text.Mono}"
+                                                               VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis" ToolTip="{Binding Path}"
+                                                               Text="{Binding Path}" />
+                                                    <Button Grid.Column="2" Style="{StaticResource Button.Link}"
+                                                            Margin="10,0,0,0" Content="Show"
+                                                            Command="{Binding DataContext.RevealCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </StackPanel>
+        </StackPanel>
+    </DockPanel>
+</UserControl>

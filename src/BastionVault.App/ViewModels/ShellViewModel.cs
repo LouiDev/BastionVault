@@ -910,7 +910,8 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
             session.Kdf,
             session.Pending,
             _settings.Current.SizeObfuscation,
-            _settings.Current.ReencryptOnSave);
+            _settings.Current.ReencryptOnSave,
+            VaultTreeWalker.Summarize(session));
 
         return _dialogs.ShowAsync(dialog);
     }

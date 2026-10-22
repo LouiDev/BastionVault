@@ -1,4 +1,5 @@
 using System.Globalization;
+using BastionVault.App.Services;
 using BastionVault.Core;
 
 namespace BastionVault.App.ViewModels.Dialogs;
@@ -28,20 +29,22 @@ public sealed class PropertiesDialogViewModel : DialogViewModelBase<bool>
     /// <param name="pending">What a save would commit.</param>
     /// <param name="sizeObfuscation">True when size obfuscation is on for this vault.</param>
     /// <param name="reencryptOnSave">True when every save re-encrypts.</param>
+    /// <param name="contents">A walk of the tree, for the by-type and largest-files sections; <see langword="null"/> leaves them out.</param>
     public PropertiesDialogViewModel(
         string vaultPath,
         VaultStatistics statistics,
         KdfParameters kdf,
         PendingChanges pending,
         bool sizeObfuscation,
-        bool reencryptOnSave)
+        bool reencryptOnSave,
+        VaultContentsSummary? contents = null)
     {
         ArgumentNullException.ThrowIfNull(statistics);
         ArgumentNullException.ThrowIfNull(kdf);
         ArgumentNullException.ThrowIfNull(pending);
 
         Title = "Vault properties";
-        Sections =
+        List<PropertySection> sections =
         [
             new PropertySection("File",
             [
@@ -55,6 +58,15 @@ public sealed class PropertiesDialogViewModel : DialogViewModelBase<bool>
                 new PropertyRow("Files", statistics.FileCount.ToString("N0", CultureInfo.CurrentCulture)),
                 new PropertyRow("Plaintext", OperationViewModel.FormatBytes(statistics.TotalPlaintextBytes), true),
             ]),
+        ];
+
+        if (contents is not null)
+        {
+            sections.AddRange(ContentsSections(contents));
+        }
+
+        sections.AddRange(
+        [
             new PropertySection("Key derivation",
             [
                 new PropertyRow("Algorithm", "Argon2id (RFC 9106), version 0x13", true),
@@ -78,7 +90,48 @@ public sealed class PropertiesDialogViewModel : DialogViewModelBase<bool>
                 new PropertyRow("Size obfuscation", sizeObfuscation ? "on" : "off"),
                 new PropertyRow("Re-encrypt on save", reencryptOnSave ? "on" : "off"),
             ]),
-        ];
+        ]);
+
+        Sections = sections;
+    }
+
+    /// <summary>
+    /// The sections a tree walk adds to the vault flavour: files by family (heaviest first), the
+    /// largest files with their paths, and the shape of the tree.
+    /// </summary>
+    /// <param name="contents">The walk.</param>
+    public static IReadOnlyList<PropertySection> ContentsSections(VaultContentsSummary contents)
+    {
+        ArgumentNullException.ThrowIfNull(contents);
+
+        var sections = new List<PropertySection>(3);
+
+        if (contents.ByGroup.Count > 0)
+        {
+            sections.Add(new PropertySection("By type",
+            [
+                .. contents.ByGroup.Select(g => new PropertyRow(
+                    FileTypeCatalog.GroupLabel(g.Group),
+                    string.Create(CultureInfo.CurrentCulture, $"{g.Count:N0} file{(g.Count == 1 ? string.Empty : "s")} · {OperationViewModel.FormatBytes(g.Bytes)}"))),
+            ]));
+        }
+
+        if (contents.LargestFiles.Count > 0)
+        {
+            sections.Add(new PropertySection("Largest files",
+            [
+                .. contents.LargestFiles.Select(f => new PropertyRow(OperationViewModel.FormatBytes(f.Length), f.Path)),
+            ]));
+        }
+
+        sections.Add(new PropertySection("Structure",
+        [
+            new PropertyRow("Deepest folder", contents.MaxDepth == 0 ? "everything is in the root" : $"{contents.MaxDepth:N0} level{(contents.MaxDepth == 1 ? string.Empty : "s")} down"),
+            new PropertyRow("Empty folders", contents.EmptyFolders.ToString("N0", CultureInfo.CurrentCulture)),
+            new PropertyRow("Average file", contents.FileCount == 0 ? "-" : OperationViewModel.FormatBytes(contents.TotalBytes / contents.FileCount), true),
+        ]));
+
+        return sections;
     }
 
     /// <summary>Creates the entry flavour.</summary>

@@ -60,6 +60,10 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
     private bool _searchWholeVault;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsTypeFilterActive))]
+    private FileTypeGroup _typeFilter = FileTypeGroup.All;
+
+    [ObservableProperty]
     private bool _isSearching;
 
     [ObservableProperty]
@@ -250,11 +254,17 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
         }
     }
 
-    /// <summary>True when the list has nothing to show and no search is running.</summary>
-    public bool IsFolderEmpty => Items.Count == 0 && !IsSearchActive && !IsSearching;
+    /// <summary>True when the list has nothing to show and no search or type filter is narrowing it.</summary>
+    public bool IsFolderEmpty => Items.Count == 0 && !IsSearchActive && !IsSearching && !IsTypeFilterActive;
 
     /// <summary>True when a search returned nothing.</summary>
     public bool IsSearchEmpty => Items.Count == 0 && IsSearchActive && !IsSearching;
+
+    /// <summary>True when the type filter hid everything in a folder that is not empty.</summary>
+    public bool IsFilterEmpty => Items.Count == 0 && IsTypeFilterActive && !IsSearchActive && !IsSearching;
+
+    /// <summary>True when the list shows one family only.</summary>
+    public bool IsTypeFilterActive => TypeFilter != FileTypeGroup.All;
 
     /// <summary>Name of the folder being shown, for the empty state and the window title.</summary>
     public string CurrentFolderName =>
@@ -632,6 +642,7 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
                 }),
         ];
 
+        ApplyTypeFilter(items);
         items.Sort(comparer);
 
         // When the folder still holds the same entries in the same order, update the rows that are
@@ -656,6 +667,43 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
         StatusBar.Update(Items, SelectedItems);
         RaiseEmptyState();
     }
+
+    /// <summary>
+    /// Keeps only the rows of the chosen family. "Folders" keeps folders alone; any file family hides
+    /// folders too, because the user asked to see files of that kind.
+    /// </summary>
+    /// <param name="items">The rows about to be shown.</param>
+    private void ApplyTypeFilter(List<EntryItemViewModel> items)
+    {
+        if (TypeFilter == FileTypeGroup.All)
+        {
+            return;
+        }
+
+        FileTypeGroup wanted = TypeFilter;
+        items.RemoveAll(item => item.Group != wanted);
+    }
+
+    partial void OnTypeFilterChanged(FileTypeGroup value)
+    {
+        if (IsSearchActive)
+        {
+            OnSearchTextChanged(SearchText);
+        }
+        else
+        {
+            LoadItems();
+        }
+
+        // The rows were rebuilt, so match the old selection by id and keep what is still listed.
+        HashSet<EntryId> selected = [.. SelectedItems.Select(i => i.Id)];
+        SetSelection([.. Items.Where(i => selected.Contains(i.Id))]);
+        RaiseEmptyState();
+    }
+
+    /// <summary>Puts the list back to every type.</summary>
+    [RelayCommand]
+    private void ClearTypeFilter() => TypeFilter = FileTypeGroup.All;
 
     private bool SameShape(List<EntryItemViewModel> candidate)
     {
@@ -778,7 +826,8 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
                 }),
             ];
 
-            items.Sort(comparer);
+            ApplyTypeFilter(items);
+        items.Sort(comparer);
             Items = items;
             SetSelection([]);
         }
@@ -843,6 +892,7 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
     {
         OnPropertyChanged(nameof(IsFolderEmpty));
         OnPropertyChanged(nameof(IsSearchEmpty));
+        OnPropertyChanged(nameof(IsFilterEmpty));
     }
 
     // ── Opening, focus, view state ────────────────────────────────────────────
@@ -1032,15 +1082,140 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
         }
     }
 
-    /// <summary>Starts the inline rename editor on the focused row.</summary>
+    /// <summary>
+    /// Starts the inline rename editor on the focused row, or, with several rows selected, opens the
+    /// batch rename dialog for all of them.
+    /// </summary>
     [RelayCommand(CanExecute = nameof(CanRename))]
-    private void Rename()
+    private async Task RenameAsync()
     {
+        if (SelectedItems.Count > 1)
+        {
+            await BatchRenameAsync().ConfigureAwait(true);
+            return;
+        }
+
         EntryItemViewModel? item = SelectedItems.Count == 1 ? SelectedItems[0] : FocusedItem;
         if (item is not null)
         {
             RenameRequested?.Invoke(this, item);
         }
+    }
+
+    /// <summary>
+    /// Renames the selection through the batch dialog. Each rename is its own Core call and its own
+    /// undo step; the first one Core refuses stops the run and is reported with what was done so far.
+    /// </summary>
+    public async Task BatchRenameAsync()
+    {
+        List<RenameCandidate> candidates =
+        [
+            .. SelectedItems.Select(i => new RenameCandidate(i.Id, i.Info.ParentId, i.RealName, i.IsFolder)),
+        ];
+        if (candidates.Count == 0 || !CanMutate())
+        {
+            return;
+        }
+
+        var dialog = new BatchRenameDialogViewModel(
+            candidates,
+            (candidate, name) => _session.ValidateName(candidate.ParentId, name, candidate.Id));
+        IReadOnlyList<RenameInstruction>? instructions = await _dialogs.ShowAsync(dialog).ConfigureAwait(true);
+        if (instructions is not { Count: > 0 })
+        {
+            return;
+        }
+
+        int renamed = 0;
+        try
+        {
+            foreach (RenameInstruction instruction in instructions)
+            {
+                await _session.RenameAsync(instruction.Id, instruction.NewName, CancellationToken.None).ConfigureAwait(true);
+                renamed++;
+            }
+
+            StatusBar.Message = string.Create(CultureInfo.CurrentCulture, $"Renamed {renamed:N0} item{Plural(renamed)}.");
+        }
+        catch (VaultException ex)
+        {
+            await ReportAsync(
+                renamed == 0 ? "The names could not be changed" : $"Stopped after {renamed:N0} of {instructions.Count:N0} renames",
+                ex).ConfigureAwait(true);
+        }
+        finally
+        {
+            Refresh();
+        }
+    }
+
+    /// <summary>
+    /// Scans the vault for files with identical contents and offers to delete the copies. The scan
+    /// reads every file whose length occurs more than once; nothing is written and nothing is kept.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanRunOperation))]
+    private async Task FindDuplicatesAsync()
+    {
+        DuplicateScan? scan;
+        try
+        {
+            scan = await Operation.RunAsync(
+                VaultOperation.Verify,
+                "Comparing files",
+                (progress, ct) => DuplicateFinder.FindAsync(_session, progress, ct)).ConfigureAwait(true);
+        }
+        catch (Exception ex) when (ex is VaultException or IOException)
+        {
+            await ReportAsync("The files could not be compared", ex).ConfigureAwait(true);
+            return;
+        }
+
+        if (scan is null)
+        {
+            StatusBar.Message = "Comparison cancelled.";
+            return;
+        }
+
+        var dialog = new DuplicatesDialogViewModel(scan.Groups, scan.FilesScanned);
+        DuplicatesDecision? decision = await _dialogs.ShowAsync(dialog).ConfigureAwait(true);
+
+        switch (decision)
+        {
+            case DeleteDuplicates delete when CanMutate():
+                try
+                {
+                    await _session.DeleteAsync(delete.Ids, CancellationToken.None).ConfigureAwait(true);
+                    StatusBar.Message = string.Create(CultureInfo.CurrentCulture, $"Deleted {delete.Ids.Count:N0} cop{(delete.Ids.Count == 1 ? "y" : "ies")}. Ctrl+Z puts them back.");
+                }
+                catch (VaultException ex)
+                {
+                    await ReportAsync("The copies could not be deleted", ex).ConfigureAwait(true);
+                }
+
+                Refresh();
+                break;
+
+            case RevealDuplicate reveal:
+                Reveal(reveal.File.ParentId, reveal.File.Id);
+                break;
+        }
+    }
+
+    /// <summary>Navigates to a folder and selects one of its entries.</summary>
+    /// <param name="folder">The folder to show.</param>
+    /// <param name="entry">The entry to select in it.</param>
+    public void Reveal(EntryId folder, EntryId entry)
+    {
+        if (IsSearchActive || SearchText.Length > 0)
+        {
+            ClearSearch();
+        }
+
+        TypeFilter = FileTypeGroup.All;
+        NavigateTo(folder);
+        EntryItemViewModel? row = Items.FirstOrDefault(i => i.Id == entry);
+        SetSelection(row is null ? [] : [row]);
+        FocusList();
     }
 
     /// <summary>Deletes the selection. There is no confirmation; Ctrl+Z puts it back.</summary>
@@ -1267,7 +1442,8 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
                 _session.Kdf,
                 _session.Pending,
                 _settings.Current.SizeObfuscation,
-                _settings.Current.ReencryptOnSave);
+                _settings.Current.ReencryptOnSave,
+                VaultTreeWalker.Summarize(_session));
         }
 
         await _dialogs.ShowAsync(dialog).ConfigureAwait(true);
@@ -1327,7 +1503,7 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
 
     private bool CanActOnSelection() => SelectedItems.Count > 0 && CanMutate();
 
-    private bool CanRename() => (SelectedItems.Count == 1 || FocusedItem is not null) && CanMutate();
+    private bool CanRename() => (SelectedItems.Count >= 1 || FocusedItem is not null) && CanMutate();
 
     private bool CanPaste() => CanMutate() && (_clipboard.Content is not null || _osClipboard.HasFileDrop);
 

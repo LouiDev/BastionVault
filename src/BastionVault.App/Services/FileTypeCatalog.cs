@@ -24,6 +24,44 @@ public enum PreviewKind
     Binary,
 }
 
+/// <summary>
+/// The families the explorer can filter by and the Properties dialog counts by. Each one is the
+/// glyph family of <see cref="FileTypeInfo.GlyphKey"/>, so a type is in exactly one group and the
+/// list stays short enough for a combo box.
+/// </summary>
+public enum FileTypeGroup
+{
+    /// <summary>No filter: everything.</summary>
+    All,
+
+    /// <summary>Folders only.</summary>
+    Folders,
+
+    /// <summary>PDF, Office, text and other documents.</summary>
+    Documents,
+
+    /// <summary>Source, scripts, configuration and data files.</summary>
+    Code,
+
+    /// <summary>Images.</summary>
+    Images,
+
+    /// <summary>Audio.</summary>
+    Audio,
+
+    /// <summary>Video.</summary>
+    Video,
+
+    /// <summary>Archives and disc images.</summary>
+    Archives,
+
+    /// <summary>Keys, certificates, password databases and vaults.</summary>
+    Keys,
+
+    /// <summary>Everything the catalog does not know.</summary>
+    Other,
+}
+
 /// <summary>What the catalog knows about one extension.</summary>
 /// <param name="FriendlyType">The Type column's text, for example "PDF document".</param>
 /// <param name="GlyphKey">Resource key of the 16 px type icon.</param>
@@ -32,7 +70,22 @@ public enum PreviewKind
 /// MIME type handed to the media stack as a hint for <see cref="PreviewKind.Video"/> and
 /// <see cref="PreviewKind.Audio"/>; <see langword="null"/> for everything else.
 /// </param>
-public sealed record FileTypeInfo(string FriendlyType, string GlyphKey, PreviewKind Preview, string? ContentType = null);
+public sealed record FileTypeInfo(string FriendlyType, string GlyphKey, PreviewKind Preview, string? ContentType = null)
+{
+    /// <summary>The family this type belongs to, from its glyph.</summary>
+    public FileTypeGroup Group => GlyphKey switch
+    {
+        "Glyph.Folder" => FileTypeGroup.Folders,
+        "Glyph.Document" => FileTypeGroup.Documents,
+        "Glyph.Code" => FileTypeGroup.Code,
+        "Glyph.Image" => FileTypeGroup.Images,
+        "Glyph.Audio" => FileTypeGroup.Audio,
+        "Glyph.Video" => FileTypeGroup.Video,
+        "Glyph.Archive" => FileTypeGroup.Archives,
+        "Glyph.KeyFile" => FileTypeGroup.Keys,
+        _ => FileTypeGroup.Other,
+    };
+}
 
 /// <summary>
 /// Extension to friendly type name, icon and preview strategy. The table is fixed and lives in
@@ -176,6 +229,22 @@ public static class FileTypeCatalog
 
     /// <summary>What a folder is called and drawn with.</summary>
     public static FileTypeInfo Folder { get; } = new("Folder", GlyphFolder, PreviewKind.Binary);
+
+    /// <summary>What a group is called in the filter and in the Properties dialog.</summary>
+    /// <param name="group">The group.</param>
+    public static string GroupLabel(FileTypeGroup group) => group switch
+    {
+        FileTypeGroup.All => "All types",
+        FileTypeGroup.Folders => "Folders",
+        FileTypeGroup.Documents => "Documents",
+        FileTypeGroup.Code => "Code and data",
+        FileTypeGroup.Images => "Images",
+        FileTypeGroup.Audio => "Audio",
+        FileTypeGroup.Video => "Video",
+        FileTypeGroup.Archives => "Archives",
+        FileTypeGroup.Keys => "Keys and certificates",
+        _ => "Other files",
+    };
 
     /// <summary>Describes an entry from its kind and name.</summary>
     /// <param name="kind">Folder or file.</param>

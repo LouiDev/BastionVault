@@ -55,4 +55,12 @@
         <dialogs:PendingChangesPopover />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type vm:BatchRenameDialogViewModel}">
+        <dialogs:BatchRenameDialogView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:DuplicatesDialogViewModel}">
+        <dialogs:DuplicatesDialogView />
+    </DataTemplate>
+
 </ResourceDictionary>

@@ -26,6 +26,15 @@ public partial class CommandBarView : UserControl
     /// <summary>Below this width the search field is collapsed instead of clipped.</summary>
     public const double SearchBreakpoint = 720;
 
+    /// <summary>
+    /// Below this width, with the labels on, the type filter is collapsed: the combo box takes about
+    /// 160 px next to the search field, which the labelled bar has only above this.
+    /// </summary>
+    public const double FilterBreakpointWithLabels = 1360;
+
+    /// <summary>Below this width, with the buttons as glyphs, the type filter is collapsed.</summary>
+    public const double FilterBreakpointWithGlyphs = 1080;
+
     /// <summary>Identifies the <see cref="ShowLabels"/> dependency property.</summary>
     public static readonly DependencyProperty ShowLabelsProperty = DependencyProperty.Register(
         nameof(ShowLabels), typeof(bool), typeof(CommandBarView), new PropertyMetadata(true));
@@ -33,6 +42,10 @@ public partial class CommandBarView : UserControl
     /// <summary>Identifies the <see cref="ShowSearch"/> dependency property.</summary>
     public static readonly DependencyProperty ShowSearchProperty = DependencyProperty.Register(
         nameof(ShowSearch), typeof(bool), typeof(CommandBarView), new PropertyMetadata(true));
+
+    /// <summary>Identifies the <see cref="ShowTypeFilter"/> dependency property.</summary>
+    public static readonly DependencyProperty ShowTypeFilterProperty = DependencyProperty.Register(
+        nameof(ShowTypeFilter), typeof(bool), typeof(CommandBarView), new PropertyMetadata(true));
 
     /// <summary>Creates the command bar.</summary>
     public CommandBarView()
@@ -55,13 +68,22 @@ public partial class CommandBarView : UserControl
         set => SetValue(ShowSearchProperty, value);
     }
 
+    /// <summary>True when the bar is wide enough to draw the type filter beside the search field.</summary>
+    public bool ShowTypeFilter
+    {
+        get => (bool)GetValue(ShowTypeFilterProperty);
+        set => SetValue(ShowTypeFilterProperty, value);
+    }
+
     /// <summary>Which tier a given bar width belongs to. Exposed so a test can pin the rules.</summary>
     /// <param name="width">Width available to the bar, in DIP.</param>
-    /// <returns>Whether labels and the search field fit.</returns>
-    public static (bool Labels, bool Search) TierFor(double width)
+    /// <returns>Whether labels, the search field and the type filter fit.</returns>
+    public static (bool Labels, bool Search, bool Filter) TierFor(double width)
     {
         bool labels = width >= LabelBreakpoint;
-        return (labels, width >= (labels ? LabelBreakpoint : SearchBreakpoint));
+        bool search = width >= (labels ? LabelBreakpoint : SearchBreakpoint);
+        bool filter = search && width >= (labels ? FilterBreakpointWithLabels : FilterBreakpointWithGlyphs);
+        return (labels, search, filter);
     }
 
     /// <summary>
@@ -92,9 +114,10 @@ public partial class CommandBarView : UserControl
             return;
         }
 
-        (bool labels, bool search) = TierFor(e.NewSize.Width);
+        (bool labels, bool search, bool filter) = TierFor(e.NewSize.Width);
         ShowLabels = labels;
         ShowSearch = search;
+        ShowTypeFilter = filter;
     }
 
     private void OnDensityClick(object sender, RoutedEventArgs e) => Open(DensityButton, alignRight: false);
