@@ -7,7 +7,18 @@ separately in `docs/FORMAT.md` and only changes with a major release.
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+- The preview pane shows a waveform, the running time, sample rate, channels and bit rate of
+  an audio file (MP3, WAV, FLAC, M4A, AAC, WMA, Ogg, Opus) instead of a hex dump. The samples
+  come from Windows' own decoders through Media Foundation, read straight out of the vault
+  stream and reduced to peaks as they pass: nothing is written to disk and the file is never
+  held in memory whole. The waveform covers at most the first ten minutes and says so. Codecs
+  Windows cannot decode still get the figures and a note to export the file. Playback is not
+  offered.
+- The preview pane renders Markdown (`.md`, `.markdown`): headings, paragraphs, lists, block
+  quotes, code, rules, emphasis, links and images as their text, pipe tables as preformatted
+  text. The renderer is the app's own bounded parser; nothing is fetched, followed or
+  interpreted as HTML.
 
 ## [1.1.1] - 2026-09-11
 

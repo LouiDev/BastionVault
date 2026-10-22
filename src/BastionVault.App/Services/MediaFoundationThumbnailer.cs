@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 using System.Security.Cryptography;
+using static BastionVault.App.Services.MediaFoundationHelpers;
 using static BastionVault.App.Services.MediaFoundationInterop;
 
 namespace BastionVault.App.Services;
@@ -120,7 +120,7 @@ public sealed class MediaFoundationThumbnailer : IVideoThumbnailer
 
         try
         {
-            var adapter = new StreamAdapter(video, ct);
+            var adapter = new MediaFoundationStream(video, ct);
             if (MFCreateMFByteStreamOnStream(adapter, out byteStream) != Ok)
             {
                 return null;
@@ -173,18 +173,6 @@ public sealed class MediaFoundationThumbnailer : IVideoThumbnailer
         }
     }
 
-    /// <summary>Tells the source resolver what the file name claimed; a lie only costs a failed probe.</summary>
-    private static void HintContentType(IMFByteStream byteStream, string? contentType)
-    {
-        if (string.IsNullOrEmpty(contentType) || byteStream is not IMFAttributes attributes)
-        {
-            return;
-        }
-
-        Guid key = ByteStreamContentType;
-        attributes.SetString(ref key, contentType);
-    }
-
     private static (int Width, int Height) NativeFrameSize(IMFSourceReader reader)
     {
         if (reader.GetNativeMediaType(FirstVideoStream, 0, out IMFMediaType native) != Ok)
@@ -213,30 +201,6 @@ public sealed class MediaFoundationThumbnailer : IVideoThumbnailer
         uint width = (uint)(packed >> 32);
         uint height = (uint)(packed & 0xFFFF_FFFF);
         return width > int.MaxValue || height > int.MaxValue ? (0, 0) : ((int)width, (int)height);
-    }
-
-    private static TimeSpan? Duration(IMFSourceReader reader)
-    {
-        Guid key = PresentationDuration;
-        if (reader.GetPresentationAttribute(MediaSource, ref key, out PropVariant value) != Ok)
-        {
-            return null;
-        }
-
-        try
-        {
-            if (value.Type != VtUi8 || value.UInt64 > (ulong)TimeSpan.MaxValue.Ticks)
-            {
-                return null;
-            }
-
-            // Media Foundation counts 100-nanosecond units, the same as TimeSpan ticks.
-            return TimeSpan.FromTicks((long)value.UInt64);
-        }
-        finally
-        {
-            PropVariantClear(ref value);
-        }
     }
 
     private static VideoFrame? DecodeFrame(IMFSourceReader reader, TimeSpan? duration, int nativeWidth, int nativeHeight, int maxWidth, CancellationToken ct)
@@ -543,95 +507,4 @@ public sealed class MediaFoundationThumbnailer : IVideoThumbnailer
         return new VideoFrame(reduced, outWidth, outHeight);
     }
 
-    private static void Release(object? comObject)
-    {
-        if (comObject is not null && Marshal.IsComObject(comObject))
-        {
-            Marshal.FinalReleaseComObject(comObject);
-        }
-    }
-
-    [DllImport("ole32.dll", ExactSpelling = true)]
-    private static extern int PropVariantClear(ref PropVariant value);
-
-    /// <summary>
-    /// The vault stream as a COM <c>IStream</c>. Media Foundation reads and seeks through this on its own
-    /// threads; nothing else is supported, and the adapter never owns or disposes the stream.
-    /// </summary>
-    private sealed class StreamAdapter(Stream inner, CancellationToken ct) : IStream
-    {
-        private const int StreamType = 2; // STGTY_STREAM
-
-        private readonly Lock _gate = new();
-
-        public void Read(byte[] pv, int cb, IntPtr pcbRead)
-        {
-            ct.ThrowIfCancellationRequested();
-
-            int total = 0;
-            lock (_gate)
-            {
-                while (total < cb)
-                {
-                    int read = inner.Read(pv, total, cb - total);
-                    if (read <= 0)
-                    {
-                        break;
-                    }
-
-                    total += read;
-                }
-            }
-
-            if (pcbRead != IntPtr.Zero)
-            {
-                Marshal.WriteInt32(pcbRead, total);
-            }
-        }
-
-        public void Seek(long dlibMove, int dwOrigin, IntPtr plibNewPosition)
-        {
-            ct.ThrowIfCancellationRequested();
-
-            long position;
-            lock (_gate)
-            {
-                position = inner.Seek(dlibMove, (SeekOrigin)dwOrigin);
-            }
-
-            if (plibNewPosition != IntPtr.Zero)
-            {
-                Marshal.WriteInt64(plibNewPosition, position);
-            }
-        }
-
-        public void Stat(out STATSTG pstatstg, int grfStatFlag)
-        {
-            long length;
-            lock (_gate)
-            {
-                length = inner.Length;
-            }
-
-            pstatstg = new STATSTG { type = StreamType, cbSize = length };
-        }
-
-        public void Commit(int grfCommitFlags)
-        {
-        }
-
-        public void Write(byte[] pv, int cb, IntPtr pcbWritten) => throw new NotSupportedException();
-
-        public void SetSize(long libNewSize) => throw new NotSupportedException();
-
-        public void CopyTo(IStream pstm, long cb, IntPtr pcbRead, IntPtr pcbWritten) => throw new NotSupportedException();
-
-        public void Revert() => throw new NotSupportedException();
-
-        public void LockRegion(long libOffset, long cb, int dwLockType) => throw new NotSupportedException();
-
-        public void UnlockRegion(long libOffset, long cb, int dwLockType) => throw new NotSupportedException();
-
-        public void Clone(out IStream ppstm) => throw new NotSupportedException();
-    }
 }

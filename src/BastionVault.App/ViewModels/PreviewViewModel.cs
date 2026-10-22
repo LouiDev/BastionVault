@@ -28,6 +28,12 @@ public enum PreviewMode
     /// <summary>A still frame and the figures of a video; the frame is missing when no decoder is installed.</summary>
     Video,
 
+    /// <summary>A waveform and the figures of an audio file; the waveform is missing when no decoder is installed.</summary>
+    Audio,
+
+    /// <summary>A Markdown document, rendered.</summary>
+    Markdown,
+
     /// <summary>A hex dump of the first bytes.</summary>
     Hex,
 
@@ -43,12 +49,13 @@ public enum PreviewMode
 
 /// <summary>
 /// The preview pane. It reads a file's plaintext into memory through
-/// <see cref="IVaultSession.OpenReadAsync"/> - never to a temporary file - shows text, an image, a
-/// hex dump or one still frame of a video, and drops every buffer the moment the selection changes
-/// or the vault locks (UI-CONTRACT.md section 1.10). Reads are debounced so arrowing down a long list
-/// does not start a decrypt per row, and an in-flight read is cancelled when the selection moves on.
-/// A video is not read into memory at all: the seekable stream is handed to the
-/// <see cref="IVideoThumbnailer"/>, which pulls only the bytes the container's index and one frame need.
+/// <see cref="IVaultSession.OpenReadAsync"/> - never to a temporary file - shows text, rendered
+/// Markdown, an image, a hex dump, one still frame of a video or the waveform of an audio file, and
+/// drops every buffer the moment the selection changes or the vault locks (UI-CONTRACT.md section
+/// 1.10). Reads are debounced so arrowing down a long list does not start a decrypt per row, and an
+/// in-flight read is cancelled when the selection moves on. A video or an audio file is not read into
+/// memory at all: the seekable stream is handed to the <see cref="IVideoThumbnailer"/> or the
+/// <see cref="IAudioProber"/>, which pull only the bytes the container's index and the decode need.
 /// </summary>
 public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 {
@@ -64,10 +71,14 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     private readonly IVaultSession _session;
     private readonly ISettingsService _settings;
     private readonly IVideoThumbnailer _thumbnailer;
+    private readonly IAudioProber _audioProber;
     private readonly ILog _log;
 
     /// <summary>A video frame is never reduced below this width, whatever the pane's size at the time.</summary>
     public const int MinVideoFrameWidth = 640;
+
+    /// <summary>A waveform is never asked for fewer columns than this, whatever the pane's size at the time.</summary>
+    public const int MinWaveformColumns = 160;
 
     /// <summary>Bytes per hex line when the pane is wide enough for the familiar layout.</summary>
     public const int WideHexBytesPerLine = 16;
@@ -99,6 +110,15 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     private VideoFrame? _videoFrame;
 
     [ObservableProperty]
+    private float[]? _audioWaveform;
+
+    [ObservableProperty]
+    private string? _waveformNote;
+
+    [ObservableProperty]
+    private string? _markdown;
+
+    [ObservableProperty]
     private string? _message;
 
     [ObservableProperty]
@@ -117,22 +137,26 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     /// <param name="session">The open session.</param>
     /// <param name="settings">Application settings; the blur-when-inactive switch lives there.</param>
     /// <param name="thumbnailer">Reads one frame and the figures out of a video.</param>
+    /// <param name="audioProber">Reads the figures and a waveform out of an audio file.</param>
     /// <param name="log">Log.</param>
-    public PreviewViewModel(IVaultSession session, ISettingsService settings, IVideoThumbnailer thumbnailer, ILog log)
+    public PreviewViewModel(IVaultSession session, ISettingsService settings, IVideoThumbnailer thumbnailer, IAudioProber audioProber, ILog log)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(thumbnailer);
+        ArgumentNullException.ThrowIfNull(audioProber);
 
         _session = session;
         _settings = settings;
         _thumbnailer = thumbnailer;
+        _audioProber = audioProber;
         _log = log;
         IsEnabled = settings.Current.PreviewEnabled;
     }
 
     /// <summary>True when the pane should be blurred because the window is not the active one.</summary>
-    public bool IsBlurred => !IsWindowActive && _settings.Current.BlurPreviewWhenInactive && Mode is PreviewMode.Text or PreviewMode.Image or PreviewMode.Video or PreviewMode.Hex;
+    public bool IsBlurred => !IsWindowActive && _settings.Current.BlurPreviewWhenInactive
+        && Mode is PreviewMode.Text or PreviewMode.Markdown or PreviewMode.Image or PreviewMode.Video or PreviewMode.Audio or PreviewMode.Hex;
 
     /// <summary>How long the pane waits before reading, so arrowing through a list is free.</summary>
     internal TimeSpan Debounce { get; set; } = TimeSpan.FromMilliseconds(400);
@@ -318,6 +342,12 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
                 return;
             }
 
+            if (item.Preview == PreviewKind.Audio)
+            {
+                await LoadAudioAsync(item, ct).ConfigureAwait(true);
+                return;
+            }
+
             long cap = item.Preview == PreviewKind.Image ? MaxImageBytes : MaxTextBytes;
             if (item.Preview != PreviewKind.Binary && item.Length > cap)
             {
@@ -390,6 +420,111 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(IsBlurred));
     }
 
+    /// <summary>
+    /// Probes an audio file through the prober. As with video, the whole file is never held: the stream is
+    /// seekable, the media stack decodes through it, and only the figures and the peaks come back.
+    /// </summary>
+    private async Task LoadAudioAsync(EntryItemViewModel item, CancellationToken ct)
+    {
+        int columns = Math.Max(DecodeWidth / 2, MinWaveformColumns);
+        AudioProbe? probe = await Task.Run(
+            async () =>
+            {
+                await using Stream stream = await _session.OpenReadAsync(item.Id, ct).ConfigureAwait(false);
+                return await _audioProber.ProbeAsync(stream, item.ContentType, columns, ct).ConfigureAwait(false);
+            },
+            ct).ConfigureAwait(true);
+
+        ct.ThrowIfCancellationRequested();
+
+        if (_showing != item.Id)
+        {
+            ZeroWaveform(probe?.Waveform);
+            return;
+        }
+
+        InstrumentLine = AudioInstrumentLine(item, probe);
+        AudioWaveform = probe?.Waveform is { Length: > 0 } peaks ? peaks : null;
+        WaveformNote = WaveformNoteFor(probe);
+        Message = probe switch
+        {
+            null => "No preview for this audio file. Export it to play it.",
+            { Waveform: null } => "No decoder for this audio format is installed. Export it to play it.",
+            _ => null,
+        };
+        Mode = PreviewMode.Audio;
+        OnPropertyChanged(nameof(IsBlurred));
+    }
+
+    /// <summary>
+    /// "MP3 audio · 3:42 · 44.1 kHz · stereo · 320 kb/s · 8.6 MB", leaving out whatever the probe did not
+    /// learn; uncompressed formats add the sample width ("16-bit") after the rate.
+    /// </summary>
+    /// <param name="item">The entry on show.</param>
+    /// <param name="probe">What the prober found, or <see langword="null"/>.</param>
+    public static string AudioInstrumentLine(EntryItemViewModel item, AudioProbe? probe)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+
+        var parts = new List<string>(7) { item.TypeName };
+        if (probe?.Duration is { } duration)
+        {
+            parts.Add(FormatDuration(duration));
+        }
+
+        if (probe is { SampleRate: > 0 })
+        {
+            parts.Add(FormatSampleRate(probe.SampleRate));
+        }
+
+        if (probe is { BitsPerSample: > 0 })
+        {
+            parts.Add(string.Create(CultureInfo.InvariantCulture, $"{probe.BitsPerSample}-bit"));
+        }
+
+        if (probe is { Channels: > 0 })
+        {
+            parts.Add(FormatChannels(probe.Channels));
+        }
+
+        if (probe?.BitRate is > 0 and var bitRate)
+        {
+            parts.Add(string.Create(CultureInfo.InvariantCulture, $"{Math.Round(bitRate / 1000.0):N0} kb/s"));
+        }
+
+        parts.Add(OperationViewModel.FormatBytes(item.Length));
+        return string.Join(" · ", parts);
+    }
+
+    /// <summary>"44.1 kHz", "48 kHz", "22.05 kHz": kilohertz with the decimals the figure needs.</summary>
+    /// <param name="sampleRate">Samples per second.</param>
+    public static string FormatSampleRate(int sampleRate) =>
+        string.Create(CultureInfo.InvariantCulture, $"{sampleRate / 1000.0:0.###} kHz");
+
+    /// <summary>"mono", "stereo", "6 channels".</summary>
+    /// <param name="channels">Channel count.</param>
+    public static string FormatChannels(int channels) => channels switch
+    {
+        1 => "mono",
+        2 => "stereo",
+        _ => string.Create(CultureInfo.InvariantCulture, $"{channels} channels"),
+    };
+
+    /// <summary>
+    /// The caption under the waveform when it does not cover the whole file ("Waveform of the first 10:00"),
+    /// or <see langword="null"/> when it does or there is none.
+    /// </summary>
+    /// <param name="probe">What the prober found, or <see langword="null"/>.</param>
+    public static string? WaveformNoteFor(AudioProbe? probe)
+    {
+        if (probe is not { Waveform.Length: > 0, Duration: { } duration } || probe.WaveformCovers >= duration - TimeSpan.FromSeconds(1))
+        {
+            return null;
+        }
+
+        return $"Waveform of the first {FormatDuration(probe.WaveformCovers)}";
+    }
+
     /// <summary>"MP4 video · 1920×1080 · 12:34 · 512 MB", leaving out whatever the probe did not learn.</summary>
     /// <param name="item">The entry on show.</param>
     /// <param name="probe">What the thumbnailer found, or <see langword="null"/>.</param>
@@ -439,6 +574,14 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         }
     }
 
+    private static void ZeroWaveform(float[]? peaks)
+    {
+        if (peaks is not null)
+        {
+            Array.Clear(peaks);
+        }
+    }
+
     private void Render(EntryItemViewModel item, byte[] bytes)
     {
         if (item.Preview == PreviewKind.Image)
@@ -449,7 +592,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             return;
         }
 
-        if (item.Preview == PreviewKind.Text && !LooksBinary(bytes))
+        if (item.Preview is PreviewKind.Text or PreviewKind.Markdown && !LooksBinary(bytes))
         {
             try
             {
@@ -460,8 +603,18 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
                     span = span[3..];
                 }
 
-                Text = strict.GetString(span);
-                Mode = PreviewMode.Text;
+                string decoded = strict.GetString(span);
+                if (item.Preview == PreviewKind.Markdown)
+                {
+                    Markdown = decoded;
+                    Mode = PreviewMode.Markdown;
+                }
+                else
+                {
+                    Text = decoded;
+                    Mode = PreviewMode.Text;
+                }
+
                 OnPropertyChanged(nameof(IsBlurred));
                 return;
             }
@@ -558,6 +711,14 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             VideoFrame = null;
         }
 
+        if (AudioWaveform is not null)
+        {
+            ZeroWaveform(AudioWaveform);
+            AudioWaveform = null;
+        }
+
+        WaveformNote = null;
+        Markdown = null;
         Text = null;
     }
 

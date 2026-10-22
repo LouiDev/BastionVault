@@ -311,6 +311,7 @@ public partial class App : Application
             : new KdfPreflightService());
         services.AddSingleton<IClock>(SystemClock.Instance);
         services.AddSingleton<IVideoThumbnailer>(sp => new MediaFoundationThumbnailer(sp.GetRequiredService<ILog>()));
+        services.AddSingleton<IAudioProber>(sp => new MediaFoundationAudioProber(sp.GetRequiredService<ILog>()));
         services.AddSingleton(sp => new ThemeController(
             sp.GetRequiredService<ISettingsService>(),
             sp.GetRequiredService<IUiDispatcher>(),
@@ -340,7 +341,8 @@ public partial class App : Application
             sp.GetRequiredService<IUiDispatcher>(),
             sp.GetRequiredService<ILog>(),
             sp.GetRequiredService<OperationViewModel>(),
-            sp.GetRequiredService<IVideoThumbnailer>()));
+            sp.GetRequiredService<IVideoThumbnailer>(),
+            sp.GetRequiredService<IAudioProber>()));
 
         services.AddSingleton<ShellViewModel>();
         services.AddSingleton<ShellWindow>();

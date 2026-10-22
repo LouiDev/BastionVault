@@ -46,10 +46,12 @@ partially written export is deleted on failure. A crafted vault opened with its
 limits, recurse, or follow reserved/relative names on export (see FORMAT.md §6 and §7).
 A damaged primary index falls back to the authenticated index copy.
 Content that authenticates is still attacker-chosen: the preview pane hands image bytes to
-WIC and, for videos, the decrypted stream to Media Foundation's demuxers and decoders, a
-much larger parser surface than the format's own. Both run in-process with hardware
-(DXVA) decoding switched off for video, every failure is contained, and the preview can be
-turned off in Settings. A vault you did not fill yourself deserves that switch.
+WIC and, for videos and audio files, the decrypted stream to Media Foundation's demuxers and
+decoders, a much larger parser surface than the format's own. All of it runs in-process with
+hardware (DXVA) decoding switched off for video, every failure is contained, and the preview
+can be turned off in Settings. Markdown is turned into text runs by the app's own bounded
+parser, never into HTML, and nothing in it is fetched or followed. A vault you did not fill
+yourself deserves that switch.
 
 ### A5 — Traces on the local machine
 Bastion Vault never writes plaintext except on explicit export. Imported content is
@@ -68,7 +70,8 @@ derivation (own implementation); passwords are read from `PasswordBox.SecurePass
 into pinned UTF-8 buffers, never into `string` (NFC normalisation of a non-ASCII
 password creates one transient managed string, which cannot be zeroed). Not zeroable:
 WPF `PasswordBox` internals, decoded preview bitmaps (unmanaged WIC buffers), the video
-frame Media Foundation decodes and the buffers its demuxer keeps while probing, text shown
+frame or audio samples Media Foundation decodes and the buffers its demuxer keeps while
+probing (the audio waveform the app keeps is peaks only, not samples), text shown
 on screen, entry names in the in-memory tree while the vault is open or soft-locked. Bastion Vault
 does not disable the pagefile or Windows Error Reporting for you.
 

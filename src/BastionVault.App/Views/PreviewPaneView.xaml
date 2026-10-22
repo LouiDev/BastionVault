@@ -149,6 +149,36 @@
                            Visibility="{Binding Message, Converter={StaticResource Converter.NotEmptyToVisibility}}" />
             </Grid>
 
+            <!--
+                Audio: the waveform the OS decoder produced, mirrored around a centre line, or the reason
+                there is none. The figures (running time, rate, channels, bit rate) sit in the instrument
+                line above the seam. Playback is not offered, so there is no transport control here.
+            -->
+            <Grid Visibility="{Binding Mode, Converter={StaticResource Converter.EnumMatchVisibility}, ConverterParameter=Audio}">
+                <StackPanel VerticalAlignment="Center" Margin="12,0">
+                    <views:WaveformView Height="96"
+                                        Peaks="{Binding AudioWaveform}"
+                                        Fill="{DynamicResource Brush.TextSecondary}"
+                                        Baseline="{DynamicResource Brush.StrokeDivider}"
+                                        Visibility="{Binding AudioWaveform, Converter={StaticResource Converter.NotNullToVisibility}}" />
+                    <TextBlock Style="{StaticResource Text.Caption}"
+                               Margin="0,8,0,0"
+                               TextAlignment="Center"
+                               Text="{Binding WaveformNote}"
+                               Visibility="{Binding WaveformNote, Converter={StaticResource Converter.NotEmptyToVisibility}}" />
+                    <TextBlock Style="{StaticResource Text.BodySecondary}"
+                               Margin="12"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               Text="{Binding Message}"
+                               Visibility="{Binding Message, Converter={StaticResource Converter.NotEmptyToVisibility}}" />
+                </StackPanel>
+            </Grid>
+
+            <!-- Markdown, rendered in the theme's faces; links are text, nothing navigates. -->
+            <views:MarkdownPreview Markdown="{Binding Markdown}"
+                                   Visibility="{Binding Mode, Converter={StaticResource Converter.EnumMatchVisibility}, ConverterParameter=Markdown}" />
+
             <!-- Folder summary. -->
             <views:EmptyStateView Blueprint="{StaticResource Blueprint.Folder}"
                                   Headline="{Binding Title}"
