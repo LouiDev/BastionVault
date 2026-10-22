@@ -177,6 +177,11 @@ recipe is worth keeping:
      "Lock with N unsaved changes?" first; invoke "Lock without saving" by name.
    - Whatever `SendKeys` types goes to the foreground window. Check that the dialog you expect
      is actually open (find one of its controls) before typing a password into it.
+   - `Create vault` stays disabled until the acknowledgement check box ("I understand that if I
+     lose this password...") is ticked; toggle it through `TogglePattern` before invoking.
+   - `Start-Process -ArgumentList` with an array joins the elements with spaces and never quotes
+     them, so a `--test-pick-*` path with a space in it arrives as several arguments and the
+     tail is taken for a vault to open at start-up. Pass one string with each argument quoted.
 4. Capture with `System.Drawing.Graphics.CopyFromScreen` over the window's
    `BoundingRectangle` plus a small margin for the DWM shadow.
 5. Read the binding-trace file at the end. Anything past the header line is a defect.
@@ -287,13 +292,14 @@ to `SaveWriter`, `StagingStore` or `Exporter`.
   - The window title keeps the vault name while locked and appends "(locked)" (#25), so it
     agrees with the vault chip and the taskbar still identifies the window.
 - **Not exercised end to end**
-  - Drag and drop is unit-tested through `DropAsync`/`CanDrop`, but no synthesised drag has
-    been screenshotted, so the drag adorner and the 700 ms tree hover-expand are unverified
-    visually.
-  - The image preview has never been seen with real image bytes. Its *failure* path is
-    covered: an STA test drives a poisoned byte array through `ImagePreview.Rebuild`.
-  - High-contrast hot-swap (`Services/ThemeController.cs`) is implemented and registered but
-    has not been screenshotted under an actual high-contrast theme.
+  - (Closed by #26, 2026-10-22, at 100 % scaling.) The internal drag (adorner label, row and
+    tree drop highlight, 700 ms hover-expand, drop into the expanded subfolder, the refusal
+    label when the pointer leaves the window), the image preview with real PNG, JPEG and GIF
+    bytes, and the high-contrast hot swap in both directions were driven with `SendInput` and
+    UI Automation on a real vault and screenshotted. The one defect found is #44 (checked
+    toggle button loses its glyph under high contrast). Still not seen: a drop *from* Explorer
+    (`FileDropBehavior`), which needs a real shell drag source, and the same pass at 150 %,
+    which needs the display scale changed and a sign-out on the machine used.
   - (Closed by #27.) The Argon2 lane join and the two post-save reopen windows now have
     test-only seams: `Argon2.HashWithSegmentHook` (internal) runs a hook at the start of every
     segment fill, and `VaultSession.TestHooks` / `SaveTestHooks` run before the verification
