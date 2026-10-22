@@ -231,3 +231,47 @@ public sealed class FakeVideoThumbnailer : IVideoThumbnailer
         return Result;
     }
 }
+
+/// <summary>
+/// An <see cref="IAudioProber"/> that answers from a script, the audio twin of <see cref="FakeVideoThumbnailer"/>.
+/// </summary>
+public sealed class FakeAudioProber : IAudioProber
+{
+    /// <summary>The probe every call returns; <see langword="null"/> plays an unrecognised container.</summary>
+    public AudioProbe? Result { get; set; }
+
+    /// <summary>When set, a call waits on this before answering, so a test can cancel it mid-flight.</summary>
+    public TaskCompletionSource? Hold { get; set; }
+
+    /// <summary>Content-type hints received, in order.</summary>
+    public List<string?> ContentTypes { get; } = [];
+
+    /// <summary>Column counts received, in order.</summary>
+    public List<int> Columns { get; } = [];
+
+    /// <summary>Whether every stream handed in reported <see cref="Stream.CanSeek"/>.</summary>
+    public bool AllStreamsSeekable { get; private set; } = true;
+
+    /// <summary>Number of calls so far.</summary>
+    public int Calls { get; private set; }
+
+    /// <summary>A short waveform that is easy to recognise in assertions.</summary>
+    public static float[] SampleWaveform() => [0.1f, 0.5f, 1f, 0.5f, 0.1f, 0f, 0.25f, 0.75f];
+
+    /// <inheritdoc />
+    public async Task<AudioProbe?> ProbeAsync(Stream audio, string? contentType, int columns, CancellationToken ct)
+    {
+        Calls++;
+        ContentTypes.Add(contentType);
+        Columns.Add(columns);
+        AllStreamsSeekable &= audio.CanSeek;
+
+        if (Hold is { } hold)
+        {
+            await hold.Task.WaitAsync(ct).ConfigureAwait(false);
+        }
+
+        ct.ThrowIfCancellationRequested();
+        return Result;
+    }
+}

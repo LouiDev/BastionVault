@@ -16,7 +16,9 @@ public sealed class FileTypeCatalogTests
     [InlineData("backup.tar", "Tar archive", "Glyph.Archive", PreviewKind.Binary)]
     [InlineData("clip.mp4", "MP4 video", "Glyph.Video", PreviewKind.Video)]
     [InlineData("clip.mkv", "Matroska video", "Glyph.Video", PreviewKind.Video)]
-    [InlineData("song.flac", "FLAC audio", "Glyph.Audio", PreviewKind.Binary)]
+    [InlineData("song.flac", "FLAC audio", "Glyph.Audio", PreviewKind.Audio)]
+    [InlineData("voice memo.m4a", "MPEG-4 audio", "Glyph.Audio", PreviewKind.Audio)]
+    [InlineData("Itinerary.md", "Markdown document", "Glyph.Document", PreviewKind.Markdown)]
     [InlineData("signing.pfx", "PKCS 12 store", "Glyph.KeyFile", PreviewKind.Binary)]
     [InlineData("Program.cs", "C# source file", "Glyph.Code", PreviewKind.Text)]
     public void KnownExtensionsAreDescribed(string name, string type, string glyph, PreviewKind preview)
@@ -32,9 +34,12 @@ public sealed class FileTypeCatalogTests
     [InlineData("clip.mp4", "video/mp4")]
     [InlineData("clip.mov", "video/quicktime")]
     [InlineData("clip.webm", "video/webm")]
+    [InlineData("song.mp3", "audio/mpeg")]
+    [InlineData("take.wav", "audio/wav")]
     [InlineData("photo.jpg", null)]
     [InlineData("notes.txt", null)]
-    public void OnlyVideosCarryAContentTypeHint(string name, string? contentType)
+    [InlineData("notes.md", null)]
+    public void OnlyMediaCarriesAContentTypeHint(string name, string? contentType)
     {
         Assert.Equal(contentType, FileTypeCatalog.Describe(name).ContentType);
     }

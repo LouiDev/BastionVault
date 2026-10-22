@@ -99,6 +99,7 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
     /// <param name="log">Log.</param>
     /// <param name="operation">The shared long-operation runner.</param>
     /// <param name="thumbnailer">Reads one frame and the figures out of a video for the preview pane.</param>
+    /// <param name="audioProber">Reads the figures and a waveform out of an audio file for the preview pane.</param>
     public ExplorerViewModel(
         IVaultSession session,
         IDialogService dialogs,
@@ -109,7 +110,8 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
         IUiDispatcher dispatcher,
         ILog log,
         OperationViewModel operation,
-        IVideoThumbnailer thumbnailer)
+        IVideoThumbnailer thumbnailer,
+        IAudioProber audioProber)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(dialogs);
@@ -117,6 +119,7 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
         ArgumentNullException.ThrowIfNull(dispatcher);
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(thumbnailer);
+        ArgumentNullException.ThrowIfNull(audioProber);
 
         _session = session;
         _dialogs = dialogs;
@@ -137,7 +140,7 @@ public sealed partial class ExplorerViewModel : ObservableObject, IDisposable
         History.Changed += (_, _) => RaiseNavigationCanExecute();
 
         AddressBar = new AddressBarViewModel(session, id => NavigateTo(id));
-        Preview = new PreviewViewModel(session, settings, thumbnailer, log) { IsEnabled = _isPreviewVisible };
+        Preview = new PreviewViewModel(session, settings, thumbnailer, audioProber, log) { IsEnabled = _isPreviewVisible };
         StatusBar = new StatusBarViewModel(session, operation, UndoCommand);
         CommandBar = new CommandBarViewModel(this);
 

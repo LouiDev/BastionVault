@@ -48,13 +48,17 @@ public sealed class ExplorerTestContext : IDisposable
         Log = new MemoryLog();
         Operation = new OperationViewModel(Dispatcher, Log);
         Thumbnailer = new FakeVideoThumbnailer();
+        AudioProber = new FakeAudioProber();
 
         Explorer = new ExplorerViewModel(
-            Session, Dialogs, Files, Clipboard, OsClipboard, Settings, Dispatcher, Log, Operation, Thumbnailer);
+            Session, Dialogs, Files, Clipboard, OsClipboard, Settings, Dispatcher, Log, Operation, Thumbnailer, AudioProber);
     }
 
     /// <summary>The scripted video prober behind the preview pane.</summary>
     public FakeVideoThumbnailer Thumbnailer { get; }
+
+    /// <summary>The scripted audio prober behind the preview pane.</summary>
+    public FakeAudioProber AudioProber { get; }
 
     /// <summary>The session under the explorer.</summary>
     public IVaultSession Session { get; }

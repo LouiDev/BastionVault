@@ -14,6 +14,12 @@ public enum PreviewKind
     /// <summary>Ask the OS media stack for a still frame and the running time; never for playback.</summary>
     Video,
 
+    /// <summary>Ask the OS media stack for the figures and a waveform; never for playback.</summary>
+    Audio,
+
+    /// <summary>Decode as UTF-8 text and render the Markdown subset the preview understands.</summary>
+    Markdown,
+
     /// <summary>Nothing better than a hex dump of the first bytes.</summary>
     Binary,
 }
@@ -23,8 +29,8 @@ public enum PreviewKind
 /// <param name="GlyphKey">Resource key of the 16 px type icon.</param>
 /// <param name="Preview">How the preview pane should try to render the file.</param>
 /// <param name="ContentType">
-/// MIME type handed to the media stack as a hint for <see cref="PreviewKind.Video"/>; <see langword="null"/>
-/// for everything else.
+/// MIME type handed to the media stack as a hint for <see cref="PreviewKind.Video"/> and
+/// <see cref="PreviewKind.Audio"/>; <see langword="null"/> for everything else.
 /// </param>
 public sealed record FileTypeInfo(string FriendlyType, string GlyphKey, PreviewKind Preview, string? ContentType = null);
 
@@ -65,7 +71,8 @@ public static class FileTypeCatalog
         // Plain text and data
         ["txt"] = new("Text document", GlyphDocument, PreviewKind.Text),
         ["log"] = new("Log file", GlyphDocument, PreviewKind.Text),
-        ["md"] = new("Markdown document", GlyphDocument, PreviewKind.Text),
+        ["md"] = new("Markdown document", GlyphDocument, PreviewKind.Markdown),
+        ["markdown"] = new("Markdown document", GlyphDocument, PreviewKind.Markdown),
         ["csv"] = new("Comma-separated values", GlyphDocument, PreviewKind.Text),
         ["tsv"] = new("Tab-separated values", GlyphDocument, PreviewKind.Text),
         ["ini"] = new("Configuration file", GlyphCode, PreviewKind.Text),
@@ -129,11 +136,14 @@ public static class FileTypeCatalog
         ["avi"] = new("AVI video", GlyphVideo, PreviewKind.Video, "video/avi"),
         ["webm"] = new("WebM video", GlyphVideo, PreviewKind.Video, "video/webm"),
         ["wmv"] = new("Windows Media video", GlyphVideo, PreviewKind.Video, "video/x-ms-wmv"),
-        ["mp3"] = new("MP3 audio", GlyphAudio, PreviewKind.Binary),
-        ["wav"] = new("WAV audio", GlyphAudio, PreviewKind.Binary),
-        ["flac"] = new("FLAC audio", GlyphAudio, PreviewKind.Binary),
-        ["m4a"] = new("MPEG-4 audio", GlyphAudio, PreviewKind.Binary),
-        ["ogg"] = new("Ogg audio", GlyphAudio, PreviewKind.Binary),
+        ["mp3"] = new("MP3 audio", GlyphAudio, PreviewKind.Audio, "audio/mpeg"),
+        ["wav"] = new("WAV audio", GlyphAudio, PreviewKind.Audio, "audio/wav"),
+        ["flac"] = new("FLAC audio", GlyphAudio, PreviewKind.Audio, "audio/flac"),
+        ["m4a"] = new("MPEG-4 audio", GlyphAudio, PreviewKind.Audio, "audio/mp4"),
+        ["aac"] = new("AAC audio", GlyphAudio, PreviewKind.Audio, "audio/aac"),
+        ["wma"] = new("Windows Media audio", GlyphAudio, PreviewKind.Audio, "audio/x-ms-wma"),
+        ["ogg"] = new("Ogg audio", GlyphAudio, PreviewKind.Audio, "audio/ogg"),
+        ["opus"] = new("Opus audio", GlyphAudio, PreviewKind.Audio, "audio/ogg"),
 
         // Keys and secrets
         ["pem"] = new("PEM key or certificate", GlyphKeyFile, PreviewKind.Text),

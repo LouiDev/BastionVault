@@ -30,7 +30,7 @@ A full run is about 15 seconds:
 | Project              | Tests | Covers                                                    |
 |----------------------|-------|-----------------------------------------------------------|
 | `BastionVault.Core.Tests` |  747  | crypto vectors, the format, the session, the tamper matrix, golden fixtures |
-| `BastionVault.App.Tests`  |  307  | view models, converters, the keymap, the video thumbnailer, and real end-to-end runs |
+| `BastionVault.App.Tests`  |  377  | view models, converters, the keymap, the video thumbnailer, the audio prober, the Markdown parser and renderer, and real end-to-end runs |
 
 Useful filters:
 
@@ -274,6 +274,20 @@ to `SaveWriter`, `StagingStore` or `Exporter`.
   the stream when the selection moves on, but a demuxer that spins without reading cannot be
   interrupted from outside; nothing of the kind has been seen, and the preview switch in
   Settings is the way out if it ever is.
+- **Audio preview is a waveform and the figures, not a player.** `MediaFoundationAudioProber`
+  asks the same source reader for PCM and keeps one peak per 10 ms block while the samples
+  stream past, for at most the first ten minutes (`MaxWaveformDuration`); a longer file gets a
+  caption saying how much the waveform covers. Codec coverage is Windows': MP3, WAV, FLAC,
+  AAC/M4A and WMA work out of the box, Ogg and Opus need the optional Web Media Extensions. A
+  recognised container without a decoder shows the figures and a note; an unrecognised one gets
+  the export hint. Bit rate is the container's figure or, failing that, length over running time.
+- **Markdown preview is a bounded subset, rendered, with no way back to the source.** The
+  parser (`Services/MarkdownParser.cs`) knows ATX and setext headings, paragraphs, hard breaks,
+  fenced and indented code, block quotes, nested bulleted and numbered lists, rules, emphasis,
+  strong, strikethrough, inline code, links and images (as their text) and pipe tables (kept as
+  preformatted text). It never emits HTML and never follows a destination. A paragraph over
+  64 KB is shown unstyled and the document stops at 20,000 blocks. A "show source" toggle was
+  not built; export is the way to the raw file.
 - **Layout rules worth knowing** (each one was an open item after 1.0 and is now a pinned rule)
   - The side panes follow the window (#18): above 1180 px the tree and the preview keep the
     widths the user gave them; between 1180 and 1000 px both shrink in proportion towards

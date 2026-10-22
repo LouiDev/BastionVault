@@ -50,7 +50,8 @@ public sealed class VideoPreviewEndToEndTests : IDisposable
             _dispatcher,
             _log,
             new OperationViewModel(_dispatcher, _log),
-            new MediaFoundationThumbnailer(_log));
+            new MediaFoundationThumbnailer(_log),
+            new MediaFoundationAudioProber(_log));
     }
 
     private static async Task AssertPreviewShowsTheClipAsync(ExplorerViewModel explorer, IVaultSession session)

@@ -16,6 +16,7 @@ internal static class MediaFoundationInterop
     public const uint ApiVersion = 0x0002_0070;
 
     public const uint FirstVideoStream = 0xFFFFFFFC;
+    public const uint FirstAudioStream = 0xFFFFFFFD;
     public const uint AllStreams = 0xFFFFFFFE;
     public const uint MediaSource = 0xFFFFFFFF;
 
@@ -37,6 +38,15 @@ internal static class MediaFoundationInterop
     public static readonly Guid PresentationDuration = new("6c990d33-bb8e-477a-8598-0d5d96fcd88a");
     public static readonly Guid MediaTypeVideo = new("73646976-0000-0010-8000-00aa00389b71");
     public static readonly Guid VideoFormatRgb32 = new("00000016-0000-0010-8000-00aa00389b71");
+
+    // Audio (mfapi.h): the major type, the two uncompressed subtypes and the WAVEFORMATEX figures.
+    public static readonly Guid MediaTypeAudio = new("73647561-0000-0010-8000-00aa00389b71");
+    public static readonly Guid AudioFormatPcm = new("00000001-0000-0010-8000-00aa00389b71");
+    public static readonly Guid AudioFormatFloat = new("00000003-0000-0010-8000-00aa00389b71");
+    public static readonly Guid AudioNumChannels = new("37e48bf5-645e-4c5b-89de-ada9e29b696a");
+    public static readonly Guid AudioSamplesPerSecond = new("5faeeae7-0290-4c31-9e8a-c534f68d9dba");
+    public static readonly Guid AudioBitsPerSample = new("f2deb57f-40fa-4764-aa33-ed4f2d1ff669");
+    public static readonly Guid AudioAvgBytesPerSecond = new("1aab75c8-cfef-451c-ab95-ac034b8e1731");
 
     [DllImport("mfplat.dll", ExactSpelling = true)]
     public static extern int MFStartup(uint version, uint flags);

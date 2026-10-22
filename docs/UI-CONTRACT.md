@@ -236,6 +236,11 @@ public interface IVideoThumbnailer { Task<VideoProbe?> ProbeAsync(Stream video, 
     // One still frame (BGRA, reduced to maxWidth) plus dimensions and running time, read from the seekable
     // vault stream in memory only; null when the container is not recognised, Frame null when no decoder
     // is installed. Never throws for content. Implementation: Media Foundation source reader, DXVA off (#33).
+public interface IAudioProber { Task<AudioProbe?> ProbeAsync(Stream audio, string? contentType, int columns, CancellationToken ct); }
+    // Running time, channels, sample rate, sample width, bit rate and a waveform of `columns` peaks in [0, 1],
+    // read from the seekable vault stream in memory only: the reader decodes to PCM and only the peak of every
+    // 10 ms block is kept, for at most the first ten minutes (WaveformCovers says how much). null when the
+    // container is not recognised, Waveform null when no decoder is installed. Never throws for content.
 ```
 
 `AppSettings`: `Theme` (Dark|HighContrastAuto), `AutoLockMinutes` (default 10, 0 = off),
@@ -268,7 +273,7 @@ src/BastionVault.App/
            ShortcutsDialog, PendingChangesPopover  (+ ViewModels/Dialogs/*)                          [shell]
   Views/   ExplorerView.xaml (3 columns + splitters), CommandBarView.xaml, AddressBarView.xaml,
            FolderTreeView.xaml, EntryListView.xaml, PreviewPaneView.xaml, StatusBarView.xaml,
-           EmptyStateView.xaml                                                                       [explorer]
+           EmptyStateView.xaml, ImagePreview, VideoPreview, WaveformView, MarkdownPreview            [explorer]
   ViewModels/ ShellViewModel, OperationViewModel, StartViewModel, UnlockViewModel                     [shell]
               ExplorerViewModel, FolderNodeViewModel, EntryItemViewModel, AddressBarViewModel,
               PreviewViewModel, StatusBarViewModel, CommandBarViewModel, NavigationHistory          [explorer]
@@ -276,7 +281,8 @@ src/BastionVault.App/
   Services/ all interfaces above + implementations, PasswordBoxBinder, ThrottledProgress,
             VaultChangeMarshaller, JsonSettingsService, DpapiStore                                    [shell]
             InternalClipboard, NaturalStringComparer (StrCmpLogicalW), EntryComparer, FileTypeCatalog,
-            MediaFoundationThumbnailer (+ MediaFoundationInterop)                                     [explorer]
+            MediaFoundationThumbnailer, MediaFoundationAudioProber (+ MediaFoundationInterop,
+            MediaFoundationStream), MarkdownParser                                                   [explorer]
   Behaviors/ FileDropBehavior, ListDragBehavior, TreeDropBehavior, ColumnSortBehavior,
              InlineRenameBehavior, MarqueeSelectionBehavior (optional), FocusRingBehavior            [explorer]
   Converters/ ByteSize, RelativeDate, EntryKindToGlyph, FileTypeToGlyph, BoolToVisibility, StateToPip [explorer]

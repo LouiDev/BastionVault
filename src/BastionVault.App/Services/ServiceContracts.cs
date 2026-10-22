@@ -357,3 +357,45 @@ public interface IVideoThumbnailer
     /// </returns>
     Task<VideoProbe?> ProbeAsync(Stream video, string? contentType, int maxWidth, CancellationToken ct);
 }
+
+/// <summary>What the media stack could tell about an audio file without playing it.</summary>
+/// <param name="Duration">Running time, when the container declares one.</param>
+/// <param name="Channels">Channel count as declared by the container; zero when unknown.</param>
+/// <param name="SampleRate">Samples per second as declared by the container; zero when unknown.</param>
+/// <param name="BitsPerSample">Sample width for uncompressed formats (WAV, FLAC); zero when the format has none.</param>
+/// <param name="BitRate">Bits per second, declared or implied by length and running time; <see langword="null"/> when unknown.</param>
+/// <param name="Waveform">
+/// Peak amplitude per column in [0, 1], left to right, or <see langword="null"/> when no decoder for
+/// the codec is installed. The container was still recognised in that case; the caller shows the figures.
+/// </param>
+/// <param name="WaveformCovers">How much running time <paramref name="Waveform"/> spans; the whole file unless it is very long.</param>
+public sealed record AudioProbe(
+    TimeSpan? Duration,
+    int Channels,
+    int SampleRate,
+    int BitsPerSample,
+    long? BitRate,
+    float[]? Waveform,
+    TimeSpan WaveformCovers);
+
+/// <summary>
+/// Reads the figures and a waveform out of an audio stream, in memory only. The implementation wraps the
+/// OS media stack (Media Foundation), the second place that hands vault plaintext to code outside the
+/// process's own assemblies; keep it behind this seam.
+/// </summary>
+public interface IAudioProber
+{
+    /// <summary>
+    /// Probes an audio file. The stream must be seekable: containers keep their index wherever they like.
+    /// Nothing is written to disk, and the stream is not disposed.
+    /// </summary>
+    /// <param name="audio">Seekable plaintext stream of the file.</param>
+    /// <param name="contentType">MIME hint from the file name, for example <c>audio/mpeg</c>.</param>
+    /// <param name="columns">How many waveform columns the caller can draw.</param>
+    /// <param name="ct">Cancellation token; honoured between reads.</param>
+    /// <returns>
+    /// The probe, or <see langword="null"/> when the media stack is unavailable on this machine or does not
+    /// recognise the container. Never throws for bad content; only <see cref="OperationCanceledException"/>.
+    /// </returns>
+    Task<AudioProbe?> ProbeAsync(Stream audio, string? contentType, int columns, CancellationToken ct);
+}

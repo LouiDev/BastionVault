@@ -284,6 +284,6 @@ public sealed class RealVaultEndToEndTests : IDisposable
             _log,
             operation,
             session => new ExplorerViewModel(
-                session, _dialogs, _files, _clipboard, _osClipboard, _settings, _dispatcher, _log, operation, _thumbnailer));
+                session, _dialogs, _files, _clipboard, _osClipboard, _settings, _dispatcher, _log, operation, _thumbnailer, new FakeAudioProber()));
     }
 }

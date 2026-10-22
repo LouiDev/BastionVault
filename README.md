@@ -36,7 +36,8 @@ and keys are zeroed on lock. Details: [docs/FORMAT.md](docs/FORMAT.md) and
   from Explorer (import) and inside the vault (move), internal cut/copy/paste, undo/redo.
 - Import files and folders (streamed, reparse points skipped, conflict handling), export
   selection or everything (timestamps restored, Mark-of-the-Web), in-memory preview of
-  text and images, hex view for everything else.
+  text, rendered Markdown, images, a still frame of a video and the waveform of an audio
+  file, hex view for everything else.
 - Verify (every chunk, every blob hash, layout), Recover (salvage everything that still
   authenticates from a damaged vault), Properties with live KDF parameters, save counter and
   "last saved".
