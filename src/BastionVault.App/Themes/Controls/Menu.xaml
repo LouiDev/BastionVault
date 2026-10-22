@@ -125,8 +125,11 @@
                 <Setter TargetName="Check" Property="Visibility" Value="Visible" />
                 <Setter TargetName="Icon" Property="Visibility" Value="Collapsed" />
             </Trigger>
+            <!-- The popup itself is Bg2, so the highlighted item takes the raised state fill. -->
             <Trigger Property="IsHighlighted" Value="True">
-                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg3}" />
+                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.PressedFill}" />
+                <Setter TargetName="Header" Property="TextElement.Foreground" Value="{DynamicResource Brush.OnStateFill}" />
+                <Setter TargetName="Gesture" Property="Foreground" Value="{DynamicResource Brush.OnStateFill}" />
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">
                 <Setter TargetName="Header" Property="TextElement.Foreground" Value="{DynamicResource Brush.TextDisabled}" />
@@ -141,7 +144,7 @@
         <Grid>
             <Border x:Name="Root" Background="{TemplateBinding Background}"
                     CornerRadius="{DynamicResource Radius.Small}" Padding="10,0">
-                <ContentPresenter ContentSource="Header" RecognizesAccessKey="True"
+                <ContentPresenter x:Name="Header" ContentSource="Header" RecognizesAccessKey="True"
                                   VerticalAlignment="Center"
                                   TextElement.Foreground="{TemplateBinding Foreground}"
                                   TextElement.FontFamily="{TemplateBinding FontFamily}"
@@ -167,10 +170,12 @@
         </Grid>
         <ControlTemplate.Triggers>
             <Trigger Property="IsHighlighted" Value="True">
-                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg2}" />
+                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.HoverFill}" />
+                <Setter TargetName="Header" Property="TextElement.Foreground" Value="{DynamicResource Brush.OnStateFill}" />
             </Trigger>
             <Trigger Property="IsSubmenuOpen" Value="True">
-                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg3}" />
+                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.PressedFill}" />
+                <Setter TargetName="Header" Property="TextElement.Foreground" Value="{DynamicResource Brush.OnStateFill}" />
             </Trigger>
         </ControlTemplate.Triggers>
     </ControlTemplate>

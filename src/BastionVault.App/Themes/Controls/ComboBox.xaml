@@ -47,8 +47,10 @@
                                           TextElement.FontSize="{TemplateBinding FontSize}" />
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <!-- The drop-down is Bg2, so the hovered item takes the raised state fill. -->
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg3}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.PressedFill}" />
+                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.OnStateFill}" />
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.SelectRest}" />

@@ -40,6 +40,16 @@
     <Color x:Key="Color.SelectRest">#FF2B2724</Color>
     <Color x:Key="Color.SelectInactive">#FF232833</Color>
 
+    <!--
+        Interactive-state fills, kept apart from the Bg* surfaces on purpose (#44). In Lamplight
+        they are Bg2, Bg3 and TextPrimary by value; the High Contrast map gives them the system
+        Highlight / HighlightText pair, where Bg2 and Bg3 become the window ground and could not
+        show a hover, a press or a checked state at all.
+    -->
+    <Color x:Key="Color.HoverFill">#FF1C222D</Color>
+    <Color x:Key="Color.PressedFill">#FF232B38</Color>
+    <Color x:Key="Color.OnStateFill">#FFE7EAF0</Color>
+
     <!-- ══ Status ══ -->
     <Color x:Key="Color.DangerText">#FFFF6B6F</Color>
     <Color x:Key="Color.DangerFill">#FFB32830</Color>
@@ -70,6 +80,9 @@
     <SolidColorBrush x:Key="Brush.FocusInner" Color="{StaticResource Color.FocusInner}" />
     <SolidColorBrush x:Key="Brush.SelectRest" Color="{StaticResource Color.SelectRest}" />
     <SolidColorBrush x:Key="Brush.SelectInactive" Color="{StaticResource Color.SelectInactive}" />
+    <SolidColorBrush x:Key="Brush.HoverFill" Color="{StaticResource Color.HoverFill}" />
+    <SolidColorBrush x:Key="Brush.PressedFill" Color="{StaticResource Color.PressedFill}" />
+    <SolidColorBrush x:Key="Brush.OnStateFill" Color="{StaticResource Color.OnStateFill}" />
     <SolidColorBrush x:Key="Brush.DangerText" Color="{StaticResource Color.DangerText}" />
     <SolidColorBrush x:Key="Brush.DangerFill" Color="{StaticResource Color.DangerFill}" />
     <SolidColorBrush x:Key="Brush.Success" Color="{StaticResource Color.Success}" />

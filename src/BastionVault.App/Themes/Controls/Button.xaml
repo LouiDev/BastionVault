@@ -62,8 +62,9 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg3}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.PressedFill}" />
                             <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.StrokeControlHover}" />
+                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.OnStateFill}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg1}" />
@@ -194,11 +195,12 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg2}" />
-                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.HoverFill}" />
+                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.OnStateFill}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg3}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.PressedFill}" />
+                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.OnStateFill}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.TextDisabled}" />
@@ -323,11 +325,12 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg2}" />
-                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.HoverFill}" />
+                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.OnStateFill}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg3}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.PressedFill}" />
+                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.OnStateFill}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource Brush.TextDisabled}" />
@@ -371,23 +374,24 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg2}" />
-                            <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.HoverFill}" />
+                            <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource Brush.OnStateFill}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg3}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.PressedFill}" />
+                            <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource Brush.OnStateFill}" />
                         </Trigger>
                         <!--
                             While Windows owns the maximise button for Snap Layouts the pointer never
                             enters our client area, so the chrome behaviour reports the state through Tag.
                         -->
                         <Trigger Property="Tag" Value="Hover">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg2}" />
-                            <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.HoverFill}" />
+                            <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource Brush.OnStateFill}" />
                         </Trigger>
                         <Trigger Property="Tag" Value="Pressed">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg3}" />
-                            <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.PressedFill}" />
+                            <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource Brush.OnStateFill}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource Brush.TextDisabled}" />

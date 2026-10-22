@@ -28,8 +28,8 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Bg2}" />
-                            <Setter TargetName="Header" Property="TextElement.Foreground" Value="{DynamicResource Brush.TextPrimary}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.HoverFill}" />
+                            <Setter TargetName="Header" Property="TextElement.Foreground" Value="{DynamicResource Brush.OnStateFill}" />
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="Rail" Property="Visibility" Value="Visible" />
